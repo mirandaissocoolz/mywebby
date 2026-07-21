@@ -303,56 +303,29 @@
       position: relative;
       overflow: hidden;
     }
-    /* Ellipse 850 — 579.7 × 579.7 circle with:
-       - transparent→rgba(0,0,0,0.73) gradient (the shading)
-       - 7.71px white-25% stroke (creates the visible vertical line in
-         the middle of the dial, since the ellipse is rotated 90° and
-         clipped, only its vertical edges show through). */
-    .dial-ellipse {
+    /* Ellipse 850 — the LEFT-half semicircle overlay (matches Figma).
+       Rendered as a D-shape: full-height on the left, half-width, with
+       a curved outer edge (border-radius on the left) and a flat right
+       edge that produces the vertical divider down the middle of the dial.
+       - Subtle top→bottom gradient (transparent → 73% black).
+       - Inner white-25% stroke follows the whole D outline: shows as a
+         thin rim on the curved edge and as the visible vertical line
+         where the flat edge sits on the dial center. */
+    .dial-half {
       position: absolute;
-      width: 579.727px;
-      height: 579.727px;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      border-radius: 50%;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: 50%;
       background: linear-gradient(
-        100deg,
+        to bottom,
         rgba(0,0,0,0) 0%,
         rgba(0,0,0,0.73) 100%
       );
+      border-radius: 50% 0 0 50% / 50% 0 0 50%;
+      box-shadow: inset 0 0 0 15.4211px rgba(255,255,255,0.25);
       pointer-events: none;
     }
-    /* The visible vertical bisecting line — recreates the stroke edge
-       of the rotated ellipse where it cuts through the dial center. */
-    .dial-ellipse::after {
-      content: '';
-      position: absolute;
-      left: 50%;
-      top: 2%;
-      bottom: 2%;
-      width: 7.71px;
-      transform: translateX(-50%);
-      background: linear-gradient(
-        to bottom,
-        rgba(255,255,255,0) 0%,
-        rgba(255,255,255,0.25) 12%,
-        rgba(255,255,255,0.25) 88%,
-        rgba(255,255,255,0) 100%
-      );
-    }
-
-    /* Dome-shaped indicator arc that sits on top of the dial knob.
-       Native aspect ratio 774.724 × 484.86 (~1.6:1). */
-    .dial-indicator {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      width: 90%;
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-    }
-    .dial-indicator img { display: block; width: 100%; height: auto; }
 
     /* ── ROTARY ENCODER ──
        y-center aligned with the row-1 boom (💣) key center
@@ -592,10 +565,7 @@
 
       <div class="dial-container">
         <div class="dial-knob">
-          <div class="dial-ellipse"></div>
-        </div>
-        <div class="dial-indicator">
-          <img src="assets/dial-indicator.svg" alt="">
+          <div class="dial-half"></div>
         </div>
       </div>
 
