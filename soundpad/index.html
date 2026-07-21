@@ -118,7 +118,7 @@
     .plate-texture {
       position: absolute;
       inset: 0;
-      background-image: url('https://www.figma.com/api/mcp/asset/39bbd13a-a094-4711-b7f8-eeae2d5db777');
+      background-image: url('assets/texture-plate.png');
       background-size: 2811.179px 2811.179px;
       background-position: top left;
       mix-blend-mode: overlay;
@@ -228,6 +228,18 @@
     .keycap.purple .key-texture { background: linear-gradient(to bottom, #e3b6ff, #a064ec); }
     .keycap.blue   .key-texture { background: linear-gradient(to bottom, #c1ecff, #72beea); }
     .keycap.green  .key-texture { background: linear-gradient(to bottom, #98ffd4, #2fd266); }
+
+    /* Subtle keycap surface texture overlaid on the color gradient. */
+    .key-texture::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: url('assets/texture-keycap.png') center / cover;
+      mix-blend-mode: overlay;
+      opacity: 0.6;
+      pointer-events: none;
+    }
 
     /* Base oval: sheen highlight — shrinks on hover */
     .key-base {
@@ -341,6 +353,18 @@
         rgba(255,255,255,0) 100%
       );
     }
+
+    /* Dome-shaped indicator arc that sits on top of the dial knob.
+       Native aspect ratio 774.724 × 484.86 (~1.6:1). */
+    .dial-indicator {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 90%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+    .dial-indicator img { display: block; width: 100%; height: auto; }
 
     /* ── ROTARY ENCODER ──
        y-center aligned with the row-1 boom (💣) key center
@@ -581,6 +605,9 @@
       <div class="dial-container">
         <div class="dial-knob">
           <div class="dial-ellipse"></div>
+        </div>
+        <div class="dial-indicator">
+          <img src="assets/dial-indicator.svg" alt="">
         </div>
       </div>
 
