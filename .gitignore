@@ -1,0 +1,9 @@
+photowall/node_modules/
+photowall/DEMO/
+photowall/equipment photos/
+photowall/music audio/
+photowall/photos.csv
+photowall/make_csv.py
+photowall/package.json
+photowall/package-lock.json
+photowall/.claude/

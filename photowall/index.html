@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Photo Wall</title>
+  <meta property="og:title" content="Photo Wall">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="COVER.JPG">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Photo Wall">
+  <meta name="twitter:image" content="COVER.JPG">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rethink+Sans:wght@400;500&family=DM+Mono:ital,wght@0,300;1,300&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: white;
+      color: black;
+      font-family: 'Rethink Sans', system-ui, sans-serif;
+      font-weight: 400;
+      overflow: hidden;
+    }
+
+    /* ── Info icon (top right) — exact vector from Figma ── */
+    .info-icon {
+      position: fixed;
+      top: 50px;
+      right: 50px;
+      width: 29px;
+      height: 29px;
+      display: block;
+      cursor: pointer;
+      color: rgba(0, 0, 0, 0.5);
+      z-index: 40;
+      transition: color 0.15s;
+    }
+    .info-icon:hover { color: black; }
+    .info-icon svg { width: 100%; height: 100%; display: block; }
+
+    /* ── Custom scrollbar (draggable) ── */
+    /* 50px from the left edge of the screen. The track is interactive —
+       click anywhere on it to jump, or drag the thumb. */
+    .scrollbar {
+      position: fixed;
+      left: 50px;
+      top: 50%;
+      width: 24px;              /* wider hit area than the visible 9px bar */
+      height: 280px;
+      transform: translateY(-50%);
+      cursor: pointer;
+      touch-action: none;
+      z-index: 8;
+    }
+    .scrollbar-thumb {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 9px;
+      height: 137px;
+      background: rgba(217, 217, 217, 0.85);
+      border-radius: 9px;
+      will-change: top;
+      transition: background 0.15s;
+    }
+    .scrollbar:hover .scrollbar-thumb,
+    .scrollbar.dragging .scrollbar-thumb {
+      background: rgba(180, 180, 180, 0.95);
+    }
+
+    /* ── Thumbnail column ── */
+    /* Sits 56px to the right of the scrollbar's hit area (which starts at
+       x=50) — keeps the close spacing from the previous iteration. */
+    .thumbs-wrap {
+      position: fixed;
+      left: 115px;
+      top: 0;
+      height: 100vh;
+      width: 124px;
+      overflow: hidden;
+      cursor: grab;
+      touch-action: pan-x;      /* vertical handled here */
+      user-select: none;
+      -webkit-user-select: none;
+      z-index: 4;
+    }
+    .thumbs-wrap.dragging { cursor: grabbing; }
+
+    .thumbs-track {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 30px;
+      will-change: transform;
+    }
+
+    .thumb {
+      width: 124px;
+      height: 95px;
+      flex-shrink: 0;
+      overflow: hidden;
+      background: #efefef;
+      cursor: pointer;
+    }
+    .thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      pointer-events: none;
+      -webkit-user-drag: none;
+      /* Unselected thumbs are desaturated; the active one is full-color. */
+      filter: grayscale(1);
+      transition: filter 0.25s;
+    }
+    .thumb.is-selected img {
+      filter: grayscale(0);
+    }
+
+    /* ── Main stage ── */
+    /* Centered horizontally in the visible gap between the thumbnail
+       column (right edge ~239px) and the info icon (left edge ~79px from
+       the right). Midpoint of that gap is 80px right of viewport center. */
+    .stage {
+      position: fixed;
+      left: calc(50% + 80px);
+      top: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      z-index: 2;
+    }
+
+    .main-photo-wrap {
+      background: #f4f4f4;
+      overflow: hidden;
+      will-change: opacity;
+      transition: opacity 0.18s ease;
+      cursor: pointer;
+    }
+    .main-photo-wrap.wiggle {
+      animation: story-wiggle 0.55s ease-out;
+    }
+    .main-photo-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .meta {
+      margin-top: 18px;
+      padding-left: 2px;
+      line-height: 1.2;
+    }
+    .meta .title {
+      font-size: 21.25px;
+      color: black;
+    }
+    .meta .date {
+      margin-top: 10px;          /* breathing room between title and date */
+      font-size: 21.25px;
+      color: rgba(0, 0, 0, 0.5);
+    }
+
+    /* ── Loading screen ──
+       Full-screen white panel shown while photos download. A pixel-art
+       radiant loader animates in the center, with one line of greeting
+       text typing out underneath. Lines cycle through type → erase → next
+       until everything's ready, then the whole thing fades to reveal the
+       gallery. */
+    #loadingScreen {
+      position: fixed;
+      inset: 0;
+      background: white;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'DM Mono', ui-monospace, Menlo, monospace;
+      font-weight: 300;
+      color: black;
+      transition: opacity 0.45s ease;
+      /* The 100×100 canvas has ~34px of blank space above the visible
+         pattern (and ~30px below). Without compensation, flex centers on
+         the full canvas box, so the actual visible content lands ~17px
+         below viewport center. Padding-bottom shifts the centered block
+         upward by half its value, bringing the visible midpoint to 50%. */
+      padding-bottom: 34px;
+    }
+    #loadingScreen.fading {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .loading-top {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 9px;
+    }
+    #px-loader {
+      width: 100px;
+      height: 100px;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+    /* Font size shrinks with viewport so the longest line
+       ("she hopes you leave feeling inspired.", 38 chars) keeps ≥50px of
+       margin on both sides. Reserve one line-height of vertical space so
+       the layout doesn't jump as the line empties and refills. */
+    .loading-line {
+      font-size: clamp(11px, calc(3.4vw - 3px), 17px);
+      text-align: center;
+      white-space: pre;
+      min-height: 1.2em;
+    }
+    /* Hide the gallery until the loading sequence finishes so neither the
+       photo nor its controls flash behind the loader. Once `.ready` is
+       added on <body>, the elements fade in on the same clock as the
+       loading screen fades out — producing a smooth crossfade rather than
+       a snap-in. */
+    .info-icon, .scrollbar, .thumbs-wrap, .stage {
+      transition: opacity 0.55s ease;
+    }
+    body:not(.ready) .info-icon,
+    body:not(.ready) .scrollbar,
+    body:not(.ready) .thumbs-wrap,
+    body:not(.ready) .stage {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* ── Story modal ──
+       Full-screen overlay + centered story card, shown when the info icon
+       is clicked. The card wiggles briefly on first appearance. */
+    .story-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(217, 217, 217, 0.5);
+      backdrop-filter: blur(7px);
+      -webkit-backdrop-filter: blur(7px);
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.35s ease, visibility 0s linear 0.35s;
+    }
+    .story-overlay.open {
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.35s ease, visibility 0s linear 0s;
+    }
+
+    .story-card {
+      width: 482px;
+      max-width: calc(100vw - 80px);
+      max-height: calc(100vh - 80px);
+      overflow-y: auto;
+      background: white;
+      border: 2px dashed rgba(0, 0, 0, 0.5);
+      padding: 40px 40px 22px 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: default;
+      font-family: 'DM Mono', ui-monospace, Menlo, monospace;
+      font-weight: 300;
+    }
+    .story-overlay.open .story-card {
+      animation: story-wiggle 0.55s ease-out;
+    }
+    @keyframes story-wiggle {
+      0%   { transform: rotate(0deg) scale(0.96); }
+      20%  { transform: rotate(-2.5deg) scale(1.01); }
+      40%  { transform: rotate(2deg) scale(1.01); }
+      60%  { transform: rotate(-1.2deg) scale(1); }
+      80%  { transform: rotate(0.6deg) scale(1); }
+      100% { transform: rotate(0deg) scale(1); }
+    }
+
+    .story-inner {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 19px;
+    }
+    .story-text {
+      width: 100%;
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.5);
+      line-height: normal;
+      word-break: break-word;
+    }
+    .story-pic {
+      width: 100%;
+      aspect-ratio: 2751 / 1830;
+      overflow: hidden;
+    }
+    .story-pic img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      -webkit-user-drag: none;
+    }
+    .story-line {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+    .story-line > div {
+      width: 393px;
+      max-width: 100%;
+      height: 1px;
+      background: rgba(0, 0, 0, 0.2);
+    }
+    .story-title {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.5);
+    }
+    .story-arrow {
+      background: none;
+      border: 0;
+      padding: 4px 6px;
+      cursor: pointer;
+      color: inherit;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+    }
+    .story-arrow:hover { color: rgba(0, 0, 0, 0.85); }
+    .story-arrow svg {
+      display: block;
+      width: 16px;
+      height: 12px;
+    }
+
+    /* ── Contact card ── */
+    .story-socials {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      justify-content: center;
+    }
+    .story-socials a {
+      width: 25.778px;
+      height: 25.778px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(0, 0, 0, 0.5);
+      transition: transform 0.18s ease, color 0.18s ease;
+      will-change: transform;
+    }
+    .story-socials a:hover {
+      transform: translateY(-3px);
+      color: black;
+    }
+    .story-socials svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .story-text-center {
+      width: 100%;
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.5);
+      text-align: center;
+    }
+
+    /* ── Narrow layout ──
+       Triggers when the desktop side-by-side arrangement can't keep a 50px
+       gap between the main photo and the thumbnail column. At max photo
+       width (720) centered at 50%+80, that gap drops below 50 at innerWidth
+       < 1138, so that's the breakpoint. The thumbnail bar flips to a
+       horizontal row at the bottom; the scrollbar is hidden. */
+    @media (max-width: 1137px) {
+      .info-icon { top: 40px; }
+
+      .scrollbar { display: none; }
+
+      .thumbs-wrap {
+        left: 0;
+        top: auto;
+        bottom: 50px;
+        width: 100vw;
+        height: auto;            /* sized by .thumb height */
+        touch-action: pan-y;     /* horizontal handled here */
+      }
+      .thumbs-track {
+        flex-direction: row;
+        align-items: center;
+      }
+      /* Thumbnails shrink with the viewport, keeping their 124:95 aspect.
+         Linear scale: 80px wide at innerWidth = 400, 124px at 1138. */
+      .thumb {
+        width: clamp(80px, calc(6vw + 56px), 124px);
+        height: auto;
+        aspect-ratio: 124 / 95;
+      }
+
+      .stage {
+        left: 50%;
+        /* Center stage between info icon (~69px from top) and the top of
+           the thumbnail row (50 + 95 = 145px from the bottom). Midpoint of
+           that band is innerHeight/2 - 38, so shift the center up by 38px. */
+        transform: translate(-50%, calc(-50% - 38px));
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="info-icon" title="info" role="button" aria-label="info">
+    <svg viewBox="0 0 26.6667 26.6667" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M13.3333 18.1667V13.3333M13.3333 8.5H13.3454M25.4167 13.3333C25.4167 20.0067 20.0067 25.4167 13.3333 25.4167C6.65989 25.4167 1.25 20.0067 1.25 13.3333C1.25 6.65989 6.65989 1.25 13.3333 1.25C20.0067 1.25 25.4167 6.65989 25.4167 13.3333Z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <div class="scrollbar">
+    <div class="scrollbar-thumb" id="scrollbar"></div>
+  </div>
+
+  <div class="thumbs-wrap" id="thumbsWrap">
+    <div class="thumbs-track" id="thumbsTrack"></div>
+  </div>
+
+  <div class="stage">
+    <div class="main-photo-wrap" id="mainPhotoWrap">
+      <img id="mainPhoto" alt="">
+    </div>
+    <div class="meta">
+      <div class="title" id="metaTitle">—</div>
+      <div class="date" id="metaDate">—</div>
+    </div>
+  </div>
+
+  <div class="story-overlay" id="storyOverlay" role="dialog" aria-modal="true" aria-label="story">
+    <div class="story-card" id="storyCard" data-view="story">
+      <!-- Story view -->
+      <div class="story-inner" data-view-panel="story">
+        <p class="story-text">i first got into photography after a family trip to cuba. i still remember the entire plane ride home, i was obsessed with playing with apple preset filters — like the ones called vivid and vivid warm (yea...). i later begged my dad to buy me the most popular camera at the time THE CANON G7X MARK ii!! (which i still use today). much later, i was lucky to be apart of a media team where i taught myself how to edit photos.</p>
+        <div class="story-pic">
+          <img src="story/story_pic.jpg" alt="">
+        </div>
+        <div class="story-line"><div></div></div>
+        <div class="story-title">
+          <button class="story-arrow" data-nav="prev" aria-label="previous">
+            <svg viewBox="0 0 8 6" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M0 3 L8 3 M0 3 L3 0 M0 3 L3 6" stroke="currentColor" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <span>story</span>
+          <button class="story-arrow" data-nav="next" aria-label="next">
+            <svg viewBox="0 0 8 6" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M0 3 L8 3 M8 3 L5 0 M8 3 L5 6" stroke="currentColor" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Contact view -->
+      <div class="story-inner" data-view-panel="contact" style="display: none;">
+        <p class="story-text-center">let's be friends!</p>
+        <div class="story-socials">
+          <a href="https://www.instagram.com/mirandasu.mov/" target="_blank" rel="noopener" aria-label="instagram" data-social>
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="1.8" fill="none"/>
+              <circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.8" fill="none"/>
+              <circle cx="17.5" cy="6.5" r="1.1" fill="currentColor"/>
+            </svg>
+          </a>
+          <a href="https://x.com/mirandaiscoolz" target="_blank" rel="noopener" aria-label="x" data-social>
+            <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M17.53 3H20.5l-6.5 7.43L21.75 21H15.6l-4.82-6.3L5.27 21H2.3l6.96-7.96L1.92 3h6.3l4.36 5.77L17.53 3zm-1.04 16.2h1.64L7.6 4.7H5.84L16.49 19.2z"/>
+            </svg>
+          </a>
+          <a href="https://www.linkedin.com/in/miranda-suu/" target="_blank" rel="noopener" aria-label="linkedin" data-social>
+            <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.94v5.67H9.37V9h3.41v1.56h.05c.47-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.99 0 1.78-.77 1.78-1.72V1.72C24 .77 23.21 0 22.22 0z"/>
+            </svg>
+          </a>
+        </div>
+        <div class="story-line"><div></div></div>
+        <div class="story-title">
+          <button class="story-arrow" data-nav="prev" aria-label="previous">
+            <svg viewBox="0 0 8 6" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M0 3 L8 3 M0 3 L3 0 M0 3 L3 6" stroke="currentColor" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <span>contact</span>
+          <button class="story-arrow" data-nav="next" aria-label="next">
+            <svg viewBox="0 0 8 6" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M0 3 L8 3 M8 3 L5 0 M8 3 L5 6" stroke="currentColor" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="loadingScreen">
+    <div class="loading-top">
+      <canvas id="px-loader" width="100" height="100" aria-hidden="true"></canvas>
+      <p class="loading-line" id="loadingLine"></p>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://nioduagbvcawrgfhjfog.supabase.co';
+    const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pb2R1YWdidmNhd3JnZmhqZm9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4OTA3NjksImV4cCI6MjA5NzQ2Njc2OX0.PcgwFXrTjJpSWHbmwMkS2wtJtzlHki8WtYG95FP9I3k';
+
+    const THUMB_W = 124;
+    const THUMB_H = 95;
+    const GAP = 30;
+
+    // Layout flips between two arrangements:
+    //   - Desktop: vertical thumbnail column on the left, photo to the right
+    //   - Narrow:  horizontal thumbnail row at the bottom, photo above
+    // The trigger is when the photo would sit within 50px of the column on
+    // the desktop layout (see narrow-layout CSS for the math).
+    const NARROW_BREAKPOINT = 1138;
+    const isHorizontal = () => window.innerWidth < NARROW_BREAKPOINT;
+    // Mirror the .thumb CSS clamp(80px, 6vw + 56px, 124px) so JS-side
+    // layout math (padding, step) stays in sync with what's rendered.
+    const thumbW = () => isHorizontal()
+      ? Math.max(80, Math.min(THUMB_W, 0.06 * window.innerWidth + 56))
+      : THUMB_W;
+    const thumbH = () => thumbW() * (THUMB_H / THUMB_W);
+    const thumbSize = () => isHorizontal() ? thumbW() : thumbH();
+    const step = () => thumbSize() + GAP;
+
+    const MONTHS = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    function photoUrl(fileName) {
+      return `${SUPABASE_URL}/storage/v1/object/public/photos/${encodeURIComponent(fileName)}`;
+    }
+
+    async function fetchPhotos() {
+      const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/photos?select=id,file_name,title,taken_at,width,height&order=taken_at.desc`,
+        { headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` } }
+      );
+      return r.json();
+    }
+
+    function formatDate(s) {
+      if (!s) return '';
+      const d = new Date(s + 'T00:00:00');
+      return `${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+    }
+
+    function displayTitle(p) {
+      // Prefer the curated title column from Supabase; fall back to a
+      // humanized file name if it's missing.
+      if (p.title && p.title.trim()) return p.title;
+      return p.file_name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').toLowerCase();
+    }
+
+    // Fit a photo's natural w/h into the available stage area while
+    // preserving aspect ratio.
+    function fitPhoto(w, h) {
+      const available = stageBounds();
+      const aspect = w / h;
+      let rw = available.w;
+      let rh = rw / aspect;
+      if (rh > available.h) {
+        rh = available.h;
+        rw = rh * aspect;
+      }
+      return { w: Math.round(rw), h: Math.round(rh) };
+    }
+
+    function stageBounds() {
+      if (isHorizontal()) {
+        // Narrow layout: full width minus side padding; vertical space
+        // capped above the bottom thumb row.
+        const maxW = Math.min(720, window.innerWidth - 100);
+        // Reserve top info-icon area + meta + thumb row at bottom + buffers.
+        const maxH = Math.max(200, window.innerHeight - 320);
+        return { w: Math.max(200, maxW), h: maxH };
+      }
+      // The stage is centered in the gap between the thumbnail column
+      // (right edge ~239) and the info icon (left edge ~innerWidth-79).
+      // Reserve a small buffer on each side.
+      const LEFT_EDGE = 239 + 32;     // thumbs + buffer
+      const RIGHT_EDGE = 79 + 32;     // info icon + buffer (from right)
+      const maxW = Math.min(720, window.innerWidth - LEFT_EDGE - RIGHT_EDGE);
+      const maxH = Math.max(280, window.innerHeight - 220);
+      return { w: Math.max(280, maxW), h: maxH };
+    }
+
+    // ── Loading screen: radiant pixel loader ──
+    // Adapted from the user-supplied snippet. The minified `(0,r.w8)(l,c)`
+    // helper has been replaced with `withAlpha`, which turns a hex color +
+    // alpha float into an rgba() string.
+    function startPixelLoader() {
+      const cv = document.getElementById('px-loader');
+      if (!cv) return;
+      const SIZE = 100;
+      const SC = window.devicePixelRatio || 2;
+      cv.width = SIZE * SC;
+      cv.height = SIZE * SC;
+      const ctx = cv.getContext('2d');
+      ctx.scale(SC, SC);
+
+      function withAlpha(hex, alpha) {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r},${g},${b},${alpha})`;
+      }
+
+      function draw(time) {
+        const size = SIZE;
+        const color = '#949494';
+        ctx.clearRect(0, 0, size, size);
+        const cx = size / 2, cy = size / 2;
+        // Cell size scales with the canvas: a 48px loader uses 2px cells
+        // (the original snippet's default), and larger sizes scale up
+        // proportionally so the drawn pattern grows with SIZE.
+        const px = Math.max(1, Math.round(size / 24));
+        const setPx = (dx, dy, alpha) => {
+          ctx.fillStyle = withAlpha(color, alpha);
+          ctx.fillRect(Math.round(cx + dx * px), Math.round(cy + dy * px), px, px);
+        };
+
+        // Core 3x3 cluster + cardinal extensions, each pulsing at its own phase.
+        const core = [
+          [-1,-1],[0,-1],[1,-1],[-1,0],[0,0],[1,0],[-1,1],[0,1],[1,1],
+          [-2,0],[2,0],[0,-2],[0,2],
+        ];
+        core.forEach(([dx, dy]) => {
+          const alpha = 0.6 + 0.3 * Math.abs(Math.sin(0.002 * time + 0.4 * Math.hypot(dx, dy)));
+          setPx(dx, dy, alpha);
+        });
+
+        // Eight radial rays, each fading outward.
+        const rayLen = size > 30 ? 4 : 2;
+        for (let i = 0; i < 8; i++) {
+          const angle = (i / 8) * Math.PI * 2;
+          const intensity = 0.4 + 0.55 * Math.abs(Math.sin(0.0022 * time + 0.7 * i));
+          for (let r = 2; r <= rayLen; r++) {
+            const alpha = (0.2 + 0.6 * intensity) * (1 - (r - 2) / (rayLen - 0.5));
+            setPx(Math.round(Math.cos(angle) * r), Math.round(Math.sin(angle) * r), alpha);
+          }
+        }
+      }
+
+      const t0 = performance.now();
+      function loop() {
+        draw(performance.now() - t0);
+        requestAnimationFrame(loop);
+      }
+      requestAnimationFrame(loop);
+    }
+
+    // Global visitor counter — calls a Supabase RPC that atomically
+    // increments a single-row counter and returns the new total. The SQL
+    // for the RPC lives in the README; if it isn't deployed yet (or the
+    // request fails for any reason), we fall back to a localStorage count
+    // so the page still loads with something sensible to display.
+    async function nextVisitorNumber() {
+      try {
+        const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/increment_visitor_count`, {
+          method: 'POST',
+          headers: {
+            apikey: ANON_KEY,
+            Authorization: `Bearer ${ANON_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: '{}',
+        });
+        if (!r.ok) throw new Error('rpc ' + r.status);
+        const count = await r.json();
+        const n = Number(count);
+        if (Number.isFinite(n) && n > 0) return n;
+        throw new Error('bad rpc payload');
+      } catch (_) {
+        try {
+          const key = 'photowall_visitor_count';
+          const next = (parseInt(localStorage.getItem(key) || '0', 10) || 0) + 1;
+          localStorage.setItem(key, String(next));
+          return next;
+        } catch (__) {
+          return 1;
+        }
+      }
+    }
+
+    function wait(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    // Type `text` into `el` one character at a time, `delay` ms apart.
+    function typeText(el, text, delay) {
+      return new Promise(resolve => {
+        let i = 0;
+        el.textContent = '';
+        function step() {
+          if (i >= text.length) { resolve(); return; }
+          el.textContent += text.charAt(i++);
+          setTimeout(step, delay);
+        }
+        step();
+      });
+    }
+
+    // Erase the contents of `el` one character at a time, `delay` ms apart.
+    function eraseText(el, delay) {
+      return new Promise(resolve => {
+        function step() {
+          const t = el.textContent;
+          if (t.length === 0) { resolve(); return; }
+          el.textContent = t.slice(0, -1);
+          setTimeout(step, delay);
+        }
+        step();
+      });
+    }
+
+    function preloadImage(src) {
+      return new Promise(resolve => {
+        const img = new Image();
+        img.onload = resolve;
+        img.onerror = resolve;
+        img.src = src;
+      });
+    }
+
+    // Load `srcs` in priority order — earlier entries finish before later
+    // ones — with at most `concurrency` downloads in flight at a time. This
+    // prevents the browser from splitting bandwidth across every photo and
+    // guarantees the first (initially-shown) photo lands before any others.
+    // Resolves as soon as the first `minCount` have completed; the rest
+    // continue downloading in the background.
+    function preloadInOrder(srcs, minCount, concurrency) {
+      return new Promise(resolve => {
+        if (srcs.length === 0) { resolve(); return; }
+        const target = Math.min(srcs.length, Math.max(1, minCount));
+        let cursor = 0;
+        let done = 0;
+        let resolved = false;
+        const finish = () => {
+          done++;
+          if (!resolved && done >= target) {
+            resolved = true;
+            resolve();
+          }
+          startNext();
+        };
+        function startNext() {
+          if (cursor >= srcs.length) return;
+          const src = srcs[cursor++];
+          const img = new Image();
+          img.onload = finish;
+          img.onerror = finish;
+          img.src = src;
+        }
+        const workers = Math.min(concurrency, srcs.length);
+        for (let i = 0; i < workers; i++) startNext();
+      });
+    }
+
+    // Cycle through the greeting lines until `photosReady` resolves. Each
+    // line types out, holds, then erases before the next one types. The
+    // last line is held (not erased) while we wait on photos, so the
+    // screen lingers on a complete sentence rather than a blank state.
+    async function runLoadingSequence(visitorNum, photosReady) {
+      const line = document.getElementById('loadingLine');
+      const lines = [
+        `hello visitor #${visitorNum}!`,
+        "welcome to miranda's photowall.",
+        'she hopes you leave feeling inspired.',
+      ];
+
+      let photosDone = false;
+      photosReady.then(() => { photosDone = true; });
+
+      let i = 0;
+      while (true) {
+        const isLast = i === lines.length - 1;
+        await typeText(line, lines[i], 40);
+        if (isLast) {
+          // Hold the closing line until photos finish loading, then exit.
+          await photosReady;
+          await wait(900);
+          return;
+        }
+        await wait(1400);
+        await eraseText(line, 25);
+        await wait(250);
+        i++;
+        // If we ran out of lines but photos still aren't ready, loop back
+        // to the first line so the user always sees motion.
+        if (i >= lines.length) i = 0;
+        if (photosDone && i === 0) {
+          // Photos are ready and we're about to restart — jump straight
+          // to the closer instead of cycling again.
+          i = lines.length - 1;
+        }
+      }
+    }
+
+    async function main() {
+      // Kick off the loader animation immediately, in parallel with the
+      // photo fetch and typewriter sequence.
+      startPixelLoader();
+
+      const photosPromise = fetchPhotos();
+      const visitorNum = await nextVisitorNumber();
+      const photos = await photosPromise;
+      if (!photos || photos.length === 0) {
+        document.getElementById('loadingLine').textContent = 'no photos found';
+        return;
+      }
+
+      // Load photos in display order with a small concurrency cap so the
+      // first one (the initially-shown photo) finishes first. Reveal the
+      // gallery once the first few are loaded; the rest stream in. The
+      // main stage already fades each photo in via its own onload, so an
+      // unloaded one just briefly shows at low opacity.
+      const photosReady = preloadInOrder(
+        photos.map(p => photoUrl(p.file_name)),
+        5,   // minimum loaded before revealing
+        4    // concurrent downloads
+      );
+      // The typewriter sequence holds its final line until photosReady
+      // resolves, so awaiting it gates the fade on both signals at once.
+      await runLoadingSequence(visitorNum, photosReady);
+
+      const track = document.getElementById('thumbsTrack');
+      const wrap = document.getElementById('thumbsWrap');
+
+      // Pad the track so item 0 can sit at the viewport's center along the
+      // scroll axis (vertical center on desktop, horizontal on narrow) —
+      // and so item N-1 can sit there too.
+      function applyPadding() {
+        if (isHorizontal()) {
+          const pad = (window.innerWidth / 2) - (thumbSize() / 2);
+          track.style.paddingLeft = pad + 'px';
+          track.style.paddingRight = pad + 'px';
+          track.style.paddingTop = '';
+          track.style.paddingBottom = '';
+        } else {
+          const pad = (window.innerHeight / 2) - (thumbSize() / 2);
+          track.style.paddingTop = pad + 'px';
+          track.style.paddingBottom = pad + 'px';
+          track.style.paddingLeft = '';
+          track.style.paddingRight = '';
+        }
+      }
+      applyPadding();
+
+      const photoEls = photos.map((p, i) => {
+        const el = document.createElement('div');
+        el.className = 'thumb';
+        el.dataset.idx = i;
+        const img = document.createElement('img');
+        img.src = photoUrl(p.file_name);
+        img.loading = 'lazy';
+        img.alt = '';
+        el.appendChild(img);
+        // Click handling is done in pointerup below (so it works even
+        // when the wrap has captured the pointer for drag-gesture detection).
+        track.appendChild(el);
+        return el;
+      });
+
+      const maxIdx = photos.length - 1;
+      const maxScroll = () => maxIdx * step();
+      const clamp = (v) => Math.max(0, Math.min(maxScroll(), v));
+
+      // State — scrollPos is along the active scroll axis (Y on desktop,
+      // X on narrow). Item i is centered when scrollPos = i * step().
+      let scrollPos = 0;
+      let velocity = 0;         // px/sec
+      let isDragging = false;   // dragging the thumbnail column
+      let sbDragging = false;   // dragging the scrollbar thumb
+      let pointerSamples = [];
+      let dragMovement = 0;     // total |delta| during a thumbnail-drag gesture
+      let lastTs = null;
+      let selectedIdx = -1;
+
+      // Glide animation target (set by click / wheel snap / scrollbar release)
+      let glideTarget = null;
+
+      const mainPhoto = document.getElementById('mainPhoto');
+      const mainPhotoWrap = document.getElementById('mainPhotoWrap');
+      mainPhotoWrap.addEventListener('click', () => {
+        mainPhotoWrap.classList.remove('wiggle');
+        void mainPhotoWrap.offsetWidth;
+        mainPhotoWrap.classList.add('wiggle');
+      });
+      const metaTitle = document.getElementById('metaTitle');
+      const metaDate = document.getElementById('metaDate');
+      const scrollbarEl = document.getElementById('scrollbar');
+
+      // Two short sound effects. Each Audio is preloaded once and then
+      // cloned on every play so overlapping triggers don't cut each other
+      // off. `enter.mp3` accompanies "entering" moments (info modal open,
+      // page reveal); `next.mp3` is the click for the story-card arrows.
+      const enterSound = new Audio('sound%20effects/enter.mp3');
+      enterSound.preload = 'auto';
+      enterSound.volume = 0.7;
+      function playEnter() {
+        try { enterSound.cloneNode().play().catch(() => {}); } catch (_) {}
+      }
+      const nextSound = new Audio('sound%20effects/next.mp3');
+      nextSound.preload = 'auto';
+      nextSound.volume = 0.7;
+      function playNext() {
+        try { nextSound.cloneNode().play().catch(() => {}); } catch (_) {}
+      }
+      const infoIcon = document.querySelector('.info-icon');
+      const storyOverlay = document.getElementById('storyOverlay');
+      const storyCard = document.getElementById('storyCard');
+      const panels = storyCard.querySelectorAll('[data-view-panel]');
+
+      // Card has two views — "story" and "contact" — laid out in this order.
+      // Right arrow on the last view (or left arrow on the first) just
+      // wiggles the card instead of navigating off the ends.
+      const VIEWS = ['story', 'contact'];
+      function showView(name) {
+        panels.forEach((p) => {
+          p.style.display = p.dataset.viewPanel === name ? '' : 'none';
+        });
+        storyCard.dataset.view = name;
+      }
+      function wiggleCard() {
+        storyCard.style.animation = 'none';
+        void storyCard.offsetWidth;
+        storyCard.style.animation = '';
+      }
+      function openStory() {
+        playEnter();
+        showView('story');
+        wiggleCard();
+        storyOverlay.classList.add('open');
+      }
+      function closeStory() { storyOverlay.classList.remove('open'); }
+
+      infoIcon.addEventListener('click', openStory);
+      storyOverlay.addEventListener('click', (e) => {
+        if (e.target === storyOverlay) closeStory();
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && storyOverlay.classList.contains('open')) closeStory();
+      });
+
+      // Move between the card's views. `dir` is 'next' or 'prev'; at an edge
+      // the card wiggles instead of navigating off the ends.
+      function navigateView(dir) {
+        playNext();
+        const i = VIEWS.indexOf(storyCard.dataset.view);
+        const next = dir === 'next' ? i + 1 : i - 1;
+        if (next < 0 || next >= VIEWS.length) {
+          wiggleCard();
+        } else {
+          showView(VIEWS[next]);
+          wiggleCard();
+        }
+      }
+
+      // Arrow buttons in the card footer — delegate to navigateView.
+      storyCard.addEventListener('click', (e) => {
+        const navBtn = e.target.closest('[data-nav]');
+        if (navBtn) {
+          navigateView(navBtn.dataset.nav);
+          return;
+        }
+        // Social link — play the enter chime; default click opens in a new tab.
+        const social = e.target.closest('[data-social]');
+        if (social) playEnter();
+      });
+
+      // Keyboard: ← / → switch views while the card is open (desktop).
+      document.addEventListener('keydown', (e) => {
+        if (!storyOverlay.classList.contains('open')) return;
+        if (e.key === 'ArrowLeft') navigateView('prev');
+        else if (e.key === 'ArrowRight') navigateView('next');
+      });
+
+      // Touch: horizontal swipe on the card switches views (mobile).
+      let swipeStartX = 0, swipeStartY = 0, swipeTracking = false;
+      storyCard.addEventListener('touchstart', (e) => {
+        if (e.touches.length !== 1) return;
+        swipeStartX = e.touches[0].clientX;
+        swipeStartY = e.touches[0].clientY;
+        swipeTracking = true;
+      }, { passive: true });
+      storyCard.addEventListener('touchend', (e) => {
+        if (!swipeTracking) return;
+        swipeTracking = false;
+        const t = e.changedTouches[0];
+        const dx = t.clientX - swipeStartX;
+        const dy = t.clientY - swipeStartY;
+        if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+          navigateView(dx < 0 ? 'next' : 'prev');
+        }
+      }, { passive: true });
+
+      function setSelected(i) {
+        if (i === selectedIdx) return;
+        selectedIdx = i;
+        const p = photos[i];
+
+        const fit = fitPhoto(p.width || 4, p.height || 3);
+        mainPhotoWrap.style.width = fit.w + 'px';
+        mainPhotoWrap.style.height = fit.h + 'px';
+        mainPhotoWrap.style.opacity = '0.25';
+        mainPhoto.onload = () => { mainPhotoWrap.style.opacity = '1'; };
+        mainPhoto.src = photoUrl(p.file_name);
+
+        metaTitle.textContent = displayTitle(p);
+        metaDate.textContent = formatDate(p.taken_at);
+
+        photoEls.forEach((el, idx) => {
+          el.classList.toggle('is-selected', idx === i);
+        });
+      }
+
+      function glideTo(i) {
+        glideTarget = clamp(i * step());
+        velocity = 0;
+      }
+
+      // ── Input: pointer drag on the thumbnail column ──
+      // Same gesture handles both flick-scrolling and click-to-select:
+      // small total movement at release → click on the thumb under the
+      // pointer; larger movement → flick with momentum.
+      wrap.addEventListener('pointerdown', (e) => {
+        isDragging = true;
+        glideTarget = null;
+        velocity = 0;
+        dragMovement = 0;
+        pointerSamples = [{ x: e.clientX, y: e.clientY, t: performance.now() }];
+        wrap.setPointerCapture(e.pointerId);
+        wrap.classList.add('dragging');
+      });
+
+      wrap.addEventListener('pointermove', (e) => {
+        if (!isDragging) return;
+        const now = performance.now();
+        const last = pointerSamples[pointerSamples.length - 1];
+        const delta = isHorizontal() ? (e.clientX - last.x) : (e.clientY - last.y);
+        scrollPos = clamp(scrollPos - delta);
+        dragMovement += Math.abs(delta);
+        pointerSamples.push({ x: e.clientX, y: e.clientY, t: now });
+        while (pointerSamples.length > 2 && now - pointerSamples[0].t > 80) {
+          pointerSamples.shift();
+        }
+      });
+
+      function endDrag(e) {
+        if (!isDragging) return;
+        isDragging = false;
+        if (e && e.pointerId !== undefined) {
+          try { wrap.releasePointerCapture(e.pointerId); } catch (_) {}
+        }
+        wrap.classList.remove('dragging');
+
+        // Treat a near-stationary press as a click on the thumb under it.
+        if (dragMovement < 5 && e && typeof e.clientX === 'number') {
+          const hit = document.elementFromPoint(e.clientX, e.clientY);
+          const thumbEl = hit && hit.closest && hit.closest('.thumb');
+          if (thumbEl) {
+            glideTo(parseInt(thumbEl.dataset.idx, 10));
+            velocity = 0;
+            return;
+          }
+        }
+
+        // Otherwise compute release velocity from recent pointer samples.
+        if (pointerSamples.length >= 2) {
+          const f = pointerSamples[0];
+          const l = pointerSamples[pointerSamples.length - 1];
+          const delta = isHorizontal() ? (l.x - f.x) : (l.y - f.y);
+          const dt = Math.max(l.t - f.t, 1);
+          velocity = -delta / dt * 1000;
+        }
+      }
+      wrap.addEventListener('pointerup', endDrag);
+      wrap.addEventListener('pointercancel', endDrag);
+      wrap.addEventListener('pointerleave', endDrag);
+
+      // ── Input: scrollbar drag / click-to-jump ──
+      const sbTrack = document.querySelector('.scrollbar');
+      const sbThumb = document.getElementById('scrollbar');
+      const SB_TRACK_H = 280;
+      const SB_THUMB_H = 137;
+      const SB_RANGE = SB_TRACK_H - SB_THUMB_H;   // pixels the thumb can slide
+      let sbStartPointerY = 0;
+      let sbStartThumbTop = 0;
+
+      function scrollToThumbTop(top) {
+        const t = Math.max(0, Math.min(SB_RANGE, top));
+        scrollPos = clamp(SB_RANGE > 0 ? (t / SB_RANGE) * maxScroll() : 0);
+        velocity = 0;
+      }
+
+      sbTrack.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        const rect = sbTrack.getBoundingClientRect();
+        const localY = e.clientY - rect.top;
+        const currentTop = parseFloat(sbThumb.style.top) || 0;
+
+        sbDragging = true;
+        glideTarget = null;
+        velocity = 0;
+
+        const onThumb = localY >= currentTop && localY <= currentTop + SB_THUMB_H;
+        if (onThumb) {
+          sbStartPointerY = e.clientY;
+          sbStartThumbTop = currentTop;
+        } else {
+          // Jump: place thumb so its center sits at the click.
+          const newTop = localY - SB_THUMB_H / 2;
+          scrollToThumbTop(newTop);
+          sbStartPointerY = e.clientY;
+          sbStartThumbTop = Math.max(0, Math.min(SB_RANGE, newTop));
+        }
+        sbTrack.setPointerCapture(e.pointerId);
+        sbTrack.classList.add('dragging');
+      });
+
+      sbTrack.addEventListener('pointermove', (e) => {
+        if (!sbDragging) return;
+        const dy = e.clientY - sbStartPointerY;
+        scrollToThumbTop(sbStartThumbTop + dy);
+      });
+
+      function endSbDrag(e) {
+        if (!sbDragging) return;
+        sbDragging = false;
+        if (e && e.pointerId !== undefined) {
+          try { sbTrack.releasePointerCapture(e.pointerId); } catch (_) {}
+        }
+        sbTrack.classList.remove('dragging');
+        // Settle on the nearest thumbnail so the selection isn't between rows.
+        glideTarget = clamp(Math.round(scrollPos / step()) * step());
+      }
+      sbTrack.addEventListener('pointerup', endSbDrag);
+      sbTrack.addEventListener('pointercancel', endSbDrag);
+
+      // ── Input: wheel / trackpad ──
+      // Listen anywhere on the page so the user can scroll through photos
+      // without having to aim at the thumbnail strip. Skip while the story
+      // overlay is open so its own content can scroll normally.
+      window.addEventListener('wheel', (e) => {
+        if (storyOverlay.classList.contains('open')) return;
+        e.preventDefault();
+        const d = Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+        scrollPos = clamp(scrollPos + d);
+        velocity = 0;
+        glideTarget = null;
+      }, { passive: false });
+
+      // ── Input: ← / → arrow keys advance one photo at a time ──
+      document.addEventListener('keydown', (e) => {
+        if (storyOverlay.classList.contains('open')) return;
+        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+        e.preventDefault();
+        const dir = e.key === 'ArrowRight' ? 1 : -1;
+        const target = Math.max(0, Math.min(maxIdx, selectedIdx + dir));
+        glideTo(target);
+      });
+
+      // Track which orientation we last rendered in, so resize can detect
+      // a crossing of the breakpoint and re-seed the scroll position.
+      let lastHorizontal = isHorizontal();
+
+      window.addEventListener('resize', () => {
+        const nowHorizontal = isHorizontal();
+        if (nowHorizontal !== lastHorizontal) {
+          // Orientation flipped — clear the old-axis transform.
+          track.style.transform = '';
+          lastHorizontal = nowHorizontal;
+        }
+        // Always repad and reseat the scroll position on the current
+        // selection — both step() and the padding scale continuously with
+        // viewport width in the narrow layout.
+        applyPadding();
+        scrollPos = clamp(Math.max(0, selectedIdx) * step());
+        glideTarget = null;
+        velocity = 0;
+
+        // Refit current photo to new bounds.
+        const p = photos[selectedIdx];
+        if (p) {
+          const fit = fitPhoto(p.width || 4, p.height || 3);
+          mainPhotoWrap.style.width = fit.w + 'px';
+          mainPhotoWrap.style.height = fit.h + 'px';
+        }
+      });
+
+      // Start on the first (oldest) photo.
+      scrollPos = 0;
+      setSelected(0);
+
+      // Reveal the gallery (faded out until now) and fade the loading
+      // screen out on top of it. The CSS transition handles the fade; we
+      // remove the node after it completes so it can't intercept pointer
+      // events. The `enter` chime accompanies the reveal — if the browser
+      // is still gating autoplay on user interaction, the play() promise
+      // just rejects silently.
+      playEnter();
+      document.body.classList.add('ready');
+      const loadingScreen = document.getElementById('loadingScreen');
+      if (loadingScreen) {
+        loadingScreen.classList.add('fading');
+        setTimeout(() => loadingScreen.remove(), 500);
+      }
+
+      const FRICTION = 0.05;     // 5% velocity per second → quick settle
+      const SNAP_THRESHOLD = 30; // px/sec below which we begin snap
+
+      function frame(ts) {
+        if (lastTs !== null) {
+          const dt = (ts - lastTs) / 1000;
+          const userInteracting = isDragging || sbDragging;
+          const S = step();
+
+          if (glideTarget !== null && !userInteracting) {
+            // Critically-damped-ish glide toward the click target.
+            const dist = glideTarget - scrollPos;
+            if (Math.abs(dist) < 0.5) {
+              scrollPos = glideTarget;
+              glideTarget = null;
+            } else {
+              scrollPos += dist * Math.min(1, dt * 9);
+            }
+          } else if (!userInteracting) {
+            if (Math.abs(velocity) > 0.5) {
+              scrollPos = clamp(scrollPos + velocity * dt);
+              velocity *= Math.pow(FRICTION, dt);
+              if (Math.abs(velocity) < SNAP_THRESHOLD) {
+                velocity = 0;
+                glideTarget = clamp(Math.round(scrollPos / S) * S);
+              }
+            } else if (scrollPos % S !== 0) {
+              // Idle but unsnapped → glide to nearest.
+              glideTarget = clamp(Math.round(scrollPos / S) * S);
+            }
+          }
+        }
+        lastTs = ts;
+
+        const axis = isHorizontal() ? 'X' : 'Y';
+        track.style.transform = `translate${axis}(${(-scrollPos).toFixed(2)}px)`;
+
+        // Currently-centered photo
+        const i = Math.max(0, Math.min(maxIdx, Math.round(scrollPos / step())));
+        setSelected(i);
+
+        // Scrollbar position — fixed-size thumb sliding along the visible
+        // track. Only updated when the scrollbar is shown (desktop layout).
+        if (!isHorizontal()) {
+          const TRACK_H = 280;
+          const THUMB_H_BAR = 137;
+          const range = Math.max(1, maxScroll());
+          const prog = scrollPos / range;
+          const top = prog * (TRACK_H - THUMB_H_BAR);
+          scrollbarEl.style.top = top + 'px';
+        }
+
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    }
+
+    main();
+  </script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</body>
+</html>
