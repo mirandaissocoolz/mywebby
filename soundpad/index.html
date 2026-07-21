@@ -229,18 +229,6 @@
     .keycap.blue   .key-texture { background: linear-gradient(to bottom, #c1ecff, #72beea); }
     .keycap.green  .key-texture { background: linear-gradient(to bottom, #98ffd4, #2fd266); }
 
-    /* Subtle keycap surface texture overlaid on the color gradient. */
-    .key-texture::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      background: url('assets/texture-keycap.png') center / cover;
-      mix-blend-mode: overlay;
-      opacity: 0.6;
-      pointer-events: none;
-    }
-
     /* Base oval: sheen highlight — shrinks on hover */
     .key-base {
       position: absolute;
