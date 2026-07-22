@@ -1144,12 +1144,15 @@
         glideTarget = null;
       }, { passive: false });
 
-      // ── Input: ← / → arrow keys advance one photo at a time ──
+      // ── Input: ← / → / ↑ / ↓ arrow keys advance one photo at a time ──
+      // Right/Down → next photo; Left/Up → previous photo.
       document.addEventListener('keydown', (e) => {
         if (storyOverlay.classList.contains('open')) return;
-        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+        let dir = 0;
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') dir = 1;
+        else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') dir = -1;
+        else return;
         e.preventDefault();
-        const dir = e.key === 'ArrowRight' ? 1 : -1;
         const target = Math.max(0, Math.min(maxIdx, selectedIdx + dir));
         glideTo(target);
       });
