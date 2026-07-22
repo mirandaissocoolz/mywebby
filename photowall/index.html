@@ -169,56 +169,34 @@
     }
 
     /* ── Loading screen ──
-       Full-screen white panel shown while photos download. A pixel-art
-       radiant loader animates in the center, with one line of greeting
-       text typing out underneath. Lines cycle through type → erase → next
-       until everything's ready, then the whole thing fades to reveal the
-       gallery. */
+       Full-screen white panel with just the pixel star loader centered.
+       Hidden by default — only revealed if photos aren't ready within a
+       short window, so cached loads jump straight into the gallery. */
     #loadingScreen {
       position: fixed;
       inset: 0;
       background: white;
       z-index: 100;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      font-family: 'DM Mono', ui-monospace, Menlo, monospace;
-      font-weight: 300;
-      color: black;
       transition: opacity 0.45s ease;
-      /* The 100×100 canvas has ~34px of blank space above the visible
-         pattern (and ~30px below). Without compensation, flex centers on
-         the full canvas box, so the actual visible content lands ~17px
-         below viewport center. Padding-bottom shifts the centered block
-         upward by half its value, bringing the visible midpoint to 50%. */
-      padding-bottom: 34px;
+      opacity: 0;
+      visibility: hidden;
+    }
+    #loadingScreen.visible {
+      opacity: 1;
+      visibility: visible;
     }
     #loadingScreen.fading {
       opacity: 0;
       pointer-events: none;
-    }
-    .loading-top {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 9px;
     }
     #px-loader {
       width: 100px;
       height: 100px;
       image-rendering: pixelated;
       image-rendering: crisp-edges;
-    }
-    /* Font size shrinks with viewport so the longest line
-       ("she hopes you leave feeling inspired.", 38 chars) keeps ≥50px of
-       margin on both sides. Reserve one line-height of vertical space so
-       the layout doesn't jump as the line empties and refills. */
-    .loading-line {
-      font-size: clamp(11px, calc(3.4vw - 3px), 17px);
-      text-align: center;
-      white-space: pre;
-      min-height: 1.2em;
     }
     /* Hide the gallery until the loading sequence finishes so neither the
        photo nor its controls flash behind the loader. Once `.ready` is
@@ -337,7 +315,7 @@
       border: 0;
       padding: 4px 6px;
       cursor: pointer;
-      color: inherit;
+      color: rgba(0, 0, 0, 0.2);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -454,7 +432,7 @@
     <div class="story-card" id="storyCard" data-view="story">
       <!-- Story view -->
       <div class="story-inner" data-view-panel="story">
-        <p class="story-text">i first got into photography after a family trip to cuba. i still remember the entire plane ride home, i was obsessed with playing with apple preset filters — like the ones called vivid and vivid warm (yea...). i later begged my dad to buy me the most popular camera at the time THE CANON G7X MARK ii!! (which i still use today). much later, i was lucky to be apart of a media team where i taught myself how to edit photos.</p>
+        <p class="story-text">i first got into photography after a family trip to cuba. i still remember the entire plane ride home, i was obsessed with playing with apple preset filters — like the ones called vivid and vivid warm (yea...). i later begged my dad to buy me, the most popular camera at the time THE CANON G7X MARK ii!! (which i still use today). much later, i was lucky to be apart of a media team where i taught myself how to edit photos.</p>
         <div class="story-pic">
           <img src="story/story_pic.jpg" alt="">
         </div>
@@ -478,7 +456,7 @@
       <div class="story-inner" data-view-panel="contact" style="display: none;">
         <p class="story-text-center">let's be friends!</p>
         <div class="story-socials">
-          <a href="https://www.instagram.com/mirandasu.mov/" target="_blank" rel="noopener" aria-label="instagram" data-social>
+          <a href="https://www.instagram.com/mirandasuissocool/" target="_blank" rel="noopener" aria-label="instagram" data-social>
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
               <rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="1.8" fill="none"/>
               <circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.8" fill="none"/>
@@ -515,10 +493,7 @@
   </div>
 
   <div id="loadingScreen">
-    <div class="loading-top">
-      <canvas id="px-loader" width="100" height="100" aria-hidden="true"></canvas>
-      <p class="loading-line" id="loadingLine"></p>
-    </div>
+    <canvas id="px-loader" width="100" height="100" aria-hidden="true"></canvas>
   </div>
 
   <script>
@@ -706,37 +681,6 @@
       }
     }
 
-    function wait(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
-    // Type `text` into `el` one character at a time, `delay` ms apart.
-    function typeText(el, text, delay) {
-      return new Promise(resolve => {
-        let i = 0;
-        el.textContent = '';
-        function step() {
-          if (i >= text.length) { resolve(); return; }
-          el.textContent += text.charAt(i++);
-          setTimeout(step, delay);
-        }
-        step();
-      });
-    }
-
-    // Erase the contents of `el` one character at a time, `delay` ms apart.
-    function eraseText(el, delay) {
-      return new Promise(resolve => {
-        function step() {
-          const t = el.textContent;
-          if (t.length === 0) { resolve(); return; }
-          el.textContent = t.slice(0, -1);
-          setTimeout(step, delay);
-        }
-        step();
-      });
-    }
-
     function preloadImage(src) {
       return new Promise(resolve => {
         const img = new Image();
@@ -780,72 +724,38 @@
       });
     }
 
-    // Cycle through the greeting lines until `photosReady` resolves. Each
-    // line types out, holds, then erases before the next one types. The
-    // last line is held (not erased) while we wait on photos, so the
-    // screen lingers on a complete sentence rather than a blank state.
-    async function runLoadingSequence(visitorNum, photosReady) {
-      const line = document.getElementById('loadingLine');
-      const lines = [
-        `hello visitor #${visitorNum}!`,
-        "welcome to miranda's photowall.",
-        'she hopes you leave feeling inspired.',
-      ];
-
-      let photosDone = false;
-      photosReady.then(() => { photosDone = true; });
-
-      let i = 0;
-      while (true) {
-        const isLast = i === lines.length - 1;
-        await typeText(line, lines[i], 40);
-        if (isLast) {
-          // Hold the closing line until photos finish loading, then exit.
-          await photosReady;
-          await wait(900);
-          return;
-        }
-        await wait(1400);
-        await eraseText(line, 25);
-        await wait(250);
-        i++;
-        // If we ran out of lines but photos still aren't ready, loop back
-        // to the first line so the user always sees motion.
-        if (i >= lines.length) i = 0;
-        if (photosDone && i === 0) {
-          // Photos are ready and we're about to restart — jump straight
-          // to the closer instead of cycling again.
-          i = lines.length - 1;
-        }
-      }
-    }
-
     async function main() {
-      // Kick off the loader animation immediately, in parallel with the
-      // photo fetch and typewriter sequence.
-      startPixelLoader();
+      const loadingScreen = document.getElementById('loadingScreen');
 
-      const photosPromise = fetchPhotos();
-      const visitorNum = await nextVisitorNumber();
-      const photos = await photosPromise;
+      // Show the star loader only if photos aren't ready quickly. If
+      // everything is cached, this timer never fires and we skip the
+      // loading screen entirely.
+      let loaderShown = false;
+      const showTimer = setTimeout(() => {
+        loaderShown = true;
+        startPixelLoader();
+        loadingScreen.classList.add('visible');
+      }, 120);
+
+      // Fire-and-forget: still increment the visitor counter for tracking.
+      nextVisitorNumber().catch(() => {});
+
+      const photos = await fetchPhotos();
       if (!photos || photos.length === 0) {
-        document.getElementById('loadingLine').textContent = 'no photos found';
+        clearTimeout(showTimer);
+        loadingScreen.remove();
         return;
       }
 
-      // Load photos in display order with a small concurrency cap so the
-      // first one (the initially-shown photo) finishes first. Reveal the
-      // gallery once the first few are loaded; the rest stream in. The
-      // main stage already fades each photo in via its own onload, so an
-      // unloaded one just briefly shows at low opacity.
-      const photosReady = preloadInOrder(
+      // Load every photo in display order with a small concurrency cap so
+      // the first one (the initially-shown photo) finishes first. Wait for
+      // ALL of them before revealing the gallery.
+      await preloadInOrder(
         photos.map(p => photoUrl(p.file_name)),
-        5,   // minimum loaded before revealing
-        4    // concurrent downloads
+        photos.length,   // wait for every photo
+        4                // concurrent downloads
       );
-      // The typewriter sequence holds its final line until photosReady
-      // resolves, so awaiting it gates the fade on both signals at once.
-      await runLoadingSequence(visitorNum, photosReady);
+      clearTimeout(showTimer);
 
       const track = document.getElementById('thumbsTrack');
       const wrap = document.getElementById('thumbsWrap');
@@ -960,7 +870,10 @@
 
       infoIcon.addEventListener('click', openStory);
       storyOverlay.addEventListener('click', (e) => {
-        if (e.target === storyOverlay) closeStory();
+        if (e.target === storyOverlay) {
+          playNext();
+          closeStory();
+        }
       });
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && storyOverlay.classList.contains('open')) closeStory();
@@ -1224,10 +1137,11 @@
       // just rejects silently.
       playEnter();
       document.body.classList.add('ready');
-      const loadingScreen = document.getElementById('loadingScreen');
-      if (loadingScreen) {
+      if (loaderShown) {
         loadingScreen.classList.add('fading');
         setTimeout(() => loadingScreen.remove(), 500);
+      } else {
+        loadingScreen.remove();
       }
 
       const FRICTION = 0.05;     // 5% velocity per second → quick settle
