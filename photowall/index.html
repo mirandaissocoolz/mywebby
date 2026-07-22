@@ -534,7 +534,16 @@
         `${SUPABASE_URL}/rest/v1/photos?select=id,file_name,title,taken_at,width,height&order=taken_at.desc`,
         { headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` } }
       );
-      return r.json();
+      const rows = await r.json();
+      // Defensive: copy-pasted rows sometimes carry trailing whitespace or
+      // newlines that break the storage URL / display.
+      if (Array.isArray(rows)) {
+        for (const p of rows) {
+          if (typeof p.file_name === 'string') p.file_name = p.file_name.trim();
+          if (typeof p.title === 'string') p.title = p.title.trim();
+        }
+      }
+      return rows;
     }
 
     function formatDate(s) {
