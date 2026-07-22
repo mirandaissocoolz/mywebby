@@ -117,6 +117,13 @@
   .socials a.instagram:hover { color: #FC81C5; }
   .socials a.x:hover         { color: #FE7814; }
   .socials a.linkedin:hover  { color: #9977FE; }
+  /* After click, suppress hover until pointer leaves */
+  .socials a.just-clicked,
+  .socials a.just-clicked:hover {
+    color: #000;
+    opacity: 0.5;
+    transform: none;
+  }
 </style>
 </head>
 <body>
@@ -160,6 +167,11 @@
           sfx.currentTime = 0;
           sfx.play();
         } catch (e) {}
+        link.classList.add('just-clicked');
+        link.blur();
+      });
+      link.addEventListener('mouseleave', () => {
+        link.classList.remove('just-clicked');
       });
     });
   </script>
