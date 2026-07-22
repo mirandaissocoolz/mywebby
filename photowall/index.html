@@ -901,8 +901,22 @@
           return;
         }
         // Social link — play the enter chime; default click opens in a new tab.
+        // Force the icon back to the resting (no-hover) look so it doesn't
+        // stay darkened + lifted after focus returns from the new tab.
         const social = e.target.closest('[data-social]');
-        if (social) playEnter();
+        if (social) {
+          playEnter();
+          social.style.color = 'rgba(0, 0, 0, 0.5)';
+          social.style.transform = 'none';
+          const clear = () => {
+            social.style.color = '';
+            social.style.transform = '';
+            social.removeEventListener('mouseleave', clear);
+            social.removeEventListener('blur', clear);
+          };
+          social.addEventListener('mouseleave', clear);
+          social.addEventListener('blur', clear);
+        }
       });
 
       // Keyboard: ← / → switch views while the card is open (desktop).
