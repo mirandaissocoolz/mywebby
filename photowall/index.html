@@ -546,6 +546,16 @@
     function photoUrl(fileName) {
       return `${SUPABASE_URL}/storage/v1/object/public/photos/${encodeURIComponent(fileName)}`;
     }
+    // Supabase image transformation: serves a resized JPEG so we don't ship
+    // 5000×3500 originals when the user needs 124×95 (thumb) or ≤720px wide
+    // (stage). ~50–80KB per thumb vs. ~6MB originals.
+    function transformedUrl(fileName, width) {
+      return `${SUPABASE_URL}/storage/v1/render/image/public/photos/${encodeURIComponent(fileName)}?width=${width}&quality=80`;
+    }
+    // 2× the 124px thumb width for retina.
+    function thumbPhotoUrl(fileName) { return transformedUrl(fileName, 300); }
+    // Covers the 720px max stage width at 2× DPR.
+    function stagePhotoUrl(fileName) { return transformedUrl(fileName, 1500); }
 
     async function fetchPhotos() {
       const r = await fetch(
@@ -774,13 +784,15 @@
         return;
       }
 
-      // Load every photo in display order with a small concurrency cap so
-      // the first one (the initially-shown photo) finishes first. Wait for
-      // ALL of them before revealing the gallery.
+      // Only wait for the initially-shown stage photo before revealing.
+      // Everything else (thumbs, subsequent stage photos) streams on demand
+      // via the browser — thumbs use lazy loading, stage photos load when
+      // the user navigates to them. The transformed URLs are small enough
+      // (~50–200KB) that this feels instant on any decent connection.
       await preloadInOrder(
-        photos.map(p => photoUrl(p.file_name)),
-        photos.length,   // wait for every photo
-        4                // concurrent downloads
+        [stagePhotoUrl(photos[0].file_name)],
+        1,
+        1
       );
       clearTimeout(showTimer);
 
@@ -822,7 +834,7 @@
         el.className = 'thumb';
         el.dataset.idx = i;
         const img = document.createElement('img');
-        img.src = photoUrl(p.file_name);
+        img.src = thumbPhotoUrl(p.file_name);
         img.loading = 'lazy';
         img.alt = '';
         el.appendChild(img);
@@ -998,7 +1010,7 @@
         mainPhotoWrap.style.height = fit.h + 'px';
         mainPhotoWrap.style.opacity = '0.25';
         mainPhoto.onload = () => { mainPhotoWrap.style.opacity = '1'; };
-        mainPhoto.src = photoUrl(p.file_name);
+        mainPhoto.src = stagePhotoUrl(p.file_name);
 
         metaTitle.textContent = displayTitle(p);
         metaDate.textContent = formatDate(p.taken_at);
