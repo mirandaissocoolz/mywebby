@@ -12,7 +12,7 @@
   <meta name="twitter:image" content="COVER.JPG">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Rethink+Sans:wght@400;500&family=DM+Mono:ital,wght@0,300;1,300&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Rethink+Sans:wght@400;500;600&family=DM+Mono:ital,wght@0,300;1,300&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -99,6 +99,7 @@
     }
 
     .thumb {
+      position: relative;
       width: 124px;
       height: 95px;
       flex-shrink: 0;
@@ -119,6 +120,23 @@
     }
     .thumb.is-selected img {
       filter: grayscale(0);
+    }
+    /* "New" pill shown in the top-left of a thumbnail for the first 7 days
+       after a photo's taken_at date. Not shown on the main stage photo. */
+    .thumb-new-tag {
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      background: white;
+      color: black;
+      font-family: 'Rethink Sans', system-ui, sans-serif;
+      font-weight: 600;
+      font-size: 10px;
+      line-height: 1;
+      padding: 2px 4px;
+      border-radius: 4px;
+      pointer-events: none;
+      z-index: 1;
     }
 
     /* ── Main stage ── */
@@ -789,6 +807,16 @@
       }
       applyPadding();
 
+      // A photo counts as "new" for 7 days after its taken_at date.
+      const NEW_TAG_MS = 7 * 24 * 60 * 60 * 1000;
+      const now = Date.now();
+      function isNewPhoto(p) {
+        if (!p.taken_at) return false;
+        const t = new Date(p.taken_at + 'T00:00:00').getTime();
+        if (!Number.isFinite(t)) return false;
+        return now - t < NEW_TAG_MS && now - t >= 0;
+      }
+
       const photoEls = photos.map((p, i) => {
         const el = document.createElement('div');
         el.className = 'thumb';
@@ -798,6 +826,12 @@
         img.loading = 'lazy';
         img.alt = '';
         el.appendChild(img);
+        if (isNewPhoto(p)) {
+          const tag = document.createElement('span');
+          tag.className = 'thumb-new-tag';
+          tag.textContent = 'New';
+          el.appendChild(tag);
+        }
         // Click handling is done in pointerup below (so it works even
         // when the wrap has captured the pointer for drag-gesture detection).
         track.appendChild(el);
