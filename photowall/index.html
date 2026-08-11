@@ -43,110 +43,48 @@
     .info-icon:hover { color: black; }
     .info-icon svg { width: 100%; height: 100%; display: block; }
 
-    /* ── Custom scrollbar (draggable) ── */
-    /* 50px from the left edge of the screen. The track is interactive —
-       click anywhere on it to jump, or drag the thumb. */
-    .scrollbar {
+    /* ── Tick slider ──
+       A column of thin horizontal bars on the desktop layout (or a row of
+       vertical bars on narrow layouts). Each bar represents one photo; its
+       length decays with distance from the currently-selected photo, so the
+       longest bar always marks the viewer's position in the sequence. Sits
+       where the old scrollbar was, ~50px from the left edge. Click or drag
+       along the container to scrub through the photos. */
+    .ticks {
       position: fixed;
       left: 50px;
       top: 50%;
-      width: 24px;              /* wider hit area than the visible 9px bar */
-      height: 280px;
       transform: translateY(-50%);
-      cursor: pointer;
-      touch-action: none;
-      z-index: 8;
-    }
-    .scrollbar-thumb {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 9px;
-      height: 137px;
-      background: rgba(217, 217, 217, 0.85);
-      border-radius: 9px;
-      will-change: top;
-      transition: background 0.15s;
-    }
-    .scrollbar:hover .scrollbar-thumb,
-    .scrollbar.dragging .scrollbar-thumb {
-      background: rgba(180, 180, 180, 0.95);
-    }
-
-    /* ── Thumbnail column ── */
-    /* Sits 56px to the right of the scrollbar's hit area (which starts at
-       x=50) — keeps the close spacing from the previous iteration. */
-    .thumbs-wrap {
-      position: fixed;
-      left: 115px;
-      top: 0;
-      height: 100vh;
-      width: 124px;
-      overflow: hidden;
-      cursor: grab;
-      touch-action: pan-x;      /* vertical handled here */
-      user-select: none;
-      -webkit-user-select: none;
-      z-index: 4;
-    }
-    .thumbs-wrap.dragging { cursor: grabbing; }
-
-    .thumbs-track {
+      /* Vertical strip. Ticks share the LEFT edge; only widths vary
+         rightward, so the pyramid grows from a common baseline. */
+      height: 260px;
+      width: 62px;
       display: flex;
       flex-direction: column;
-      align-items: stretch;
-      gap: 30px;
-      will-change: transform;
-    }
-
-    .thumb {
-      position: relative;
-      width: 124px;
-      height: 95px;
-      flex-shrink: 0;
-      overflow: hidden;
-      background: #efefef;
+      align-items: flex-start;
+      justify-content: space-between;
       cursor: pointer;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      z-index: 8;
     }
-    .thumb img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-      pointer-events: none;
-      -webkit-user-drag: none;
-      /* Unselected thumbs are desaturated; the active one is full-color. */
-      filter: grayscale(1);
-      transition: filter 0.25s;
-    }
-    .thumb.is-selected img {
-      filter: grayscale(0);
-    }
-    /* "New" pill shown in the top-left of a thumbnail for the first 7 days
-       after a photo's taken_at date. Not shown on the main stage photo. */
-    .thumb-new-tag {
-      position: absolute;
-      top: 6px;
-      left: 6px;
-      background: white;
-      color: black;
-      font-family: 'Rethink Sans', system-ui, sans-serif;
-      font-weight: 600;
-      font-size: 10px;
-      line-height: 1;
-      padding: 2px 4px;
-      border-radius: 4px;
-      pointer-events: none;
-      z-index: 1;
+    .tick {
+      background: black;
+      border-radius: 999px;      /* fully rounded ends */
+      opacity: 0.2;              /* always visible; JS bumps the peak to 1 */
+      height: 4px;
+      width: 6px;
+      transition: opacity 0.18s ease;
     }
 
     /* ── Main stage ── */
-    /* Centered horizontally in the visible gap between the thumbnail
-       column (right edge ~239px) and the info icon (left edge ~79px from
-       the right). Midpoint of that gap is 80px right of viewport center. */
+    /* Centered horizontally in the visible gap between the tick slider
+       (right edge ~90px) and the info icon (left edge ~79px from the
+       right). The gap's midpoint is about 6px right of viewport center. */
     .stage {
       position: fixed;
-      left: calc(50% + 80px);
+      left: calc(50% + 6px);
       top: 50%;
       transform: translate(-50%, -50%);
       display: flex;
@@ -222,12 +160,11 @@
        added on <body>, the elements fade in on the same clock as the
        loading screen fades out — producing a smooth crossfade rather than
        a snap-in. */
-    .info-icon, .scrollbar, .thumbs-wrap, .stage {
+    .info-icon, .ticks, .stage {
       transition: opacity 0.55s ease;
     }
     body:not(.ready) .info-icon,
-    body:not(.ready) .scrollbar,
-    body:not(.ready) .thumbs-wrap,
+    body:not(.ready) .ticks,
     body:not(.ready) .stage {
       opacity: 0;
       pointer-events: none;
@@ -381,42 +318,37 @@
     }
 
     /* ── Narrow layout ──
-       Triggers when the desktop side-by-side arrangement can't keep a 50px
-       gap between the main photo and the thumbnail column. At max photo
-       width (720) centered at 50%+80, that gap drops below 50 at innerWidth
-       < 1138, so that's the breakpoint. The thumbnail bar flips to a
-       horizontal row at the bottom; the scrollbar is hidden. */
+       Flips the tick slider to a horizontal row at the bottom of the
+       screen, and centers the stage above it. */
     @media (max-width: 1137px) {
       .info-icon { top: 40px; }
 
-      .scrollbar { display: none; }
-
-      .thumbs-wrap {
-        left: 0;
+      .ticks {
+        left: 50%;
+        right: auto;
         top: auto;
         bottom: 50px;
-        width: 100vw;
-        height: auto;            /* sized by .thumb height */
-        touch-action: pan-y;     /* horizontal handled here */
-      }
-      .thumbs-track {
+        transform: translateX(-50%);
+        /* Centered strip — ticks share the BOTTOM edge so heights vary
+           upward from a common baseline. */
+        width: min(240px, 65vw);
+        height: 62px;
         flex-direction: row;
-        align-items: center;
+        justify-content: space-between;
+        align-items: flex-end;
+        padding: 0;
       }
-      /* Thumbnails shrink with the viewport, keeping their 124:95 aspect.
-         Linear scale: 80px wide at innerWidth = 400, 124px at 1138. */
-      .thumb {
-        width: clamp(80px, calc(6vw + 56px), 124px);
-        height: auto;
-        aspect-ratio: 124 / 95;
+      .tick {
+        /* Swap the fixed/dynamic dimensions when the slider is horizontal. */
+        width: 4px;
+        height: 6px;
       }
 
       .stage {
         left: 50%;
-        /* Center stage between info icon (~69px from top) and the top of
-           the thumbnail row (50 + 95 = 145px from the bottom). Midpoint of
-           that band is innerHeight/2 - 38, so shift the center up by 38px. */
-        transform: translate(-50%, calc(-50% - 38px));
+        /* Shifted up just enough to keep a comfortable gap between the
+           photo top and the info icon on tall (portrait) photos. */
+        transform: translate(-50%, calc(-50% - 15px));
       }
     }
   </style>
@@ -429,13 +361,7 @@
     </svg>
   </div>
 
-  <div class="scrollbar">
-    <div class="scrollbar-thumb" id="scrollbar"></div>
-  </div>
-
-  <div class="thumbs-wrap" id="thumbsWrap">
-    <div class="thumbs-track" id="thumbsTrack"></div>
-  </div>
+  <div class="ticks" id="ticks"></div>
 
   <div class="stage">
     <div class="main-photo-wrap" id="mainPhotoWrap">
@@ -519,25 +445,27 @@
     const SUPABASE_URL = 'https://nioduagbvcawrgfhjfog.supabase.co';
     const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pb2R1YWdidmNhd3JnZmhqZm9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4OTA3NjksImV4cCI6MjA5NzQ2Njc2OX0.PcgwFXrTjJpSWHbmwMkS2wtJtzlHki8WtYG95FP9I3k';
 
-    const THUMB_W = 124;
-    const THUMB_H = 95;
-    const GAP = 30;
-
     // Layout flips between two arrangements:
-    //   - Desktop: vertical thumbnail column on the left, photo to the right
-    //   - Narrow:  horizontal thumbnail row at the bottom, photo above
-    // The trigger is when the photo would sit within 50px of the column on
-    // the desktop layout (see narrow-layout CSS for the math).
+    //   - Desktop: vertical tick slider on the left, photo to the right
+    //   - Narrow:  horizontal tick slider at the bottom, photo above
     const NARROW_BREAKPOINT = 1138;
     const isHorizontal = () => window.innerWidth < NARROW_BREAKPOINT;
-    // Mirror the .thumb CSS clamp(80px, 6vw + 56px, 124px) so JS-side
-    // layout math (padding, step) stays in sync with what's rendered.
-    const thumbW = () => isHorizontal()
-      ? Math.max(80, Math.min(THUMB_W, 0.06 * window.innerWidth + 56))
-      : THUMB_W;
-    const thumbH = () => thumbW() * (THUMB_H / THUMB_W);
-    const thumbSize = () => isHorizontal() ? thumbW() : thumbH();
-    const step = () => thumbSize() + GAP;
+
+    // Tick length math. Each tick's "long" dimension (width on desktop,
+    // height on narrow) is largest at the currently-selected photo and
+    // decays exponentially with distance from it, forming a pyramid.
+    const TICK_MAX = 52;
+    const TICK_MIN = 6;
+    const TICK_DECAY = 0.32;
+    function tickLen(distance) {
+      const d = Math.abs(distance);
+      return TICK_MIN + (TICK_MAX - TICK_MIN) * Math.exp(-d * TICK_DECAY);
+    }
+
+    // Fixed number of ticks — the same set is always on-screen regardless
+    // of how many photos there are, so no ticks fade in or out as the peak
+    // moves. Odd number keeps the pyramid symmetric.
+    const MAX_TICKS = 21;
 
     const MONTHS = [
       'January', 'February', 'March', 'April', 'May', 'June',
@@ -595,16 +523,17 @@
     function stageBounds() {
       if (isHorizontal()) {
         // Narrow layout: full width minus side padding; vertical space
-        // capped above the bottom thumb row.
+        // capped so a portrait photo can't crowd the info icon at the top
+        // or overlap the tick strip at the bottom.
         const maxW = Math.min(720, window.innerWidth - 100);
-        // Reserve top info-icon area + meta + thumb row at bottom + buffers.
-        const maxH = Math.max(200, window.innerHeight - 320);
+        // Reserve info icon (~70) + meta (~71) + tick strip (~112) + gaps.
+        const maxH = Math.max(200, window.innerHeight - 340);
         return { w: Math.max(200, maxW), h: maxH };
       }
-      // The stage is centered in the gap between the thumbnail column
-      // (right edge ~239) and the info icon (left edge ~innerWidth-79).
-      // Reserve a small buffer on each side.
-      const LEFT_EDGE = 239 + 32;     // thumbs + buffer
+      // Stage is centered in the gap between the tick slider (right edge
+      // ~112) and the info icon (left edge ~innerWidth-79). Reserve a small
+      // buffer on each side.
+      const LEFT_EDGE = 112 + 32;     // ticks + buffer
       const RIGHT_EDGE = 79 + 32;     // info icon + buffer (from right)
       const maxW = Math.min(720, window.innerWidth - LEFT_EDGE - RIGHT_EDGE);
       const maxH = Math.max(280, window.innerHeight - 220);
@@ -718,40 +647,6 @@
       });
     }
 
-    // Load `srcs` in priority order — earlier entries finish before later
-    // ones — with at most `concurrency` downloads in flight at a time. This
-    // prevents the browser from splitting bandwidth across every photo and
-    // guarantees the first (initially-shown) photo lands before any others.
-    // Resolves as soon as the first `minCount` have completed; the rest
-    // continue downloading in the background.
-    function preloadInOrder(srcs, minCount, concurrency) {
-      return new Promise(resolve => {
-        if (srcs.length === 0) { resolve(); return; }
-        const target = Math.min(srcs.length, Math.max(1, minCount));
-        let cursor = 0;
-        let done = 0;
-        let resolved = false;
-        const finish = () => {
-          done++;
-          if (!resolved && done >= target) {
-            resolved = true;
-            resolve();
-          }
-          startNext();
-        };
-        function startNext() {
-          if (cursor >= srcs.length) return;
-          const src = srcs[cursor++];
-          const img = new Image();
-          img.onload = finish;
-          img.onerror = finish;
-          img.src = src;
-        }
-        const workers = Math.min(concurrency, srcs.length);
-        for (let i = 0; i < workers; i++) startNext();
-      });
-    }
-
     async function main() {
       const loadingScreen = document.getElementById('loadingScreen');
 
@@ -775,86 +670,32 @@
         return;
       }
 
-      // Only wait for the initially-shown photo (index 0) before revealing.
-      // Remaining photos download in the background — thumbnails use lazy
-      // loading, and the main stage swaps as the user navigates. This keeps
-      // the loading screen short while still ensuring the first photo is
-      // ready when the gallery appears.
-      const remainingSrcs = photos.slice(1).map(p => photoUrl(p.file_name));
-      preloadInOrder(remainingSrcs, remainingSrcs.length, 4);
-      await preloadInOrder([photoUrl(photos[0].file_name)], 1, 1);
+      // Only preload the initially-shown photo (index 0). Remaining photos
+      // load lazily as the viewer navigates — much lighter on Supabase
+      // bandwidth than pulling every photo up front.
+      await preloadImage(photoUrl(photos[0].file_name));
       clearTimeout(showTimer);
 
-      const track = document.getElementById('thumbsTrack');
-      const wrap = document.getElementById('thumbsWrap');
+      const ticksEl = document.getElementById('ticks');
 
-      // Pad the track so item 0 can sit at the viewport's center along the
-      // scroll axis (vertical center on desktop, horizontal on narrow) —
-      // and so item N-1 can sit there too.
-      function applyPadding() {
-        if (isHorizontal()) {
-          const pad = (window.innerWidth / 2) - (thumbSize() / 2);
-          track.style.paddingLeft = pad + 'px';
-          track.style.paddingRight = pad + 'px';
-          track.style.paddingTop = '';
-          track.style.paddingBottom = '';
-        } else {
-          const pad = (window.innerHeight / 2) - (thumbSize() / 2);
-          track.style.paddingTop = pad + 'px';
-          track.style.paddingBottom = pad + 'px';
-          track.style.paddingLeft = '';
-          track.style.paddingRight = '';
-        }
-      }
-      applyPadding();
-
-      // A photo counts as "new" for 7 days after its taken_at date.
-      const NEW_TAG_MS = 7 * 24 * 60 * 60 * 1000;
-      const now = Date.now();
-      function isNewPhoto(p) {
-        if (!p.taken_at) return false;
-        const t = new Date(p.taken_at + 'T00:00:00').getTime();
-        if (!Number.isFinite(t)) return false;
-        return now - t < NEW_TAG_MS && now - t >= 0;
-      }
-
-      const photoEls = photos.map((p, i) => {
+      // Render up to MAX_TICKS ticks across the strip. When there are more
+      // photos than that, each tick position spans a fractional range of
+      // photos — the pyramid still glides continuously as you navigate.
+      const numTicks = Math.min(MAX_TICKS, photos.length);
+      const tickEls = Array.from({ length: numTicks }, (_, i) => {
         const el = document.createElement('div');
-        el.className = 'thumb';
+        el.className = 'tick';
         el.dataset.idx = i;
-        const img = document.createElement('img');
-        img.src = photoUrl(p.file_name);
-        img.loading = 'lazy';
-        img.alt = '';
-        el.appendChild(img);
-        if (isNewPhoto(p)) {
-          const tag = document.createElement('span');
-          tag.className = 'thumb-new-tag';
-          tag.textContent = 'New';
-          el.appendChild(tag);
-        }
-        // Click handling is done in pointerup below (so it works even
-        // when the wrap has captured the pointer for drag-gesture detection).
-        track.appendChild(el);
+        ticksEl.appendChild(el);
         return el;
       });
 
       const maxIdx = photos.length - 1;
-      const maxScroll = () => maxIdx * step();
-      const clamp = (v) => Math.max(0, Math.min(maxScroll(), v));
 
-      // State — scrollPos is along the active scroll axis (Y on desktop,
-      // X on narrow). Item i is centered when scrollPos = i * step().
-      let scrollPos = 0;
-      let velocity = 0;         // px/sec
-      let isDragging = false;   // dragging the thumbnail column
-      let sbDragging = false;   // dragging the scrollbar thumb
-      let pointerSamples = [];
-      let dragMovement = 0;     // total |delta| during a thumbnail-drag gesture
-      let lastTs = null;
       let selectedIdx = -1;
-
-      // Glide animation target (set by click / wheel snap / scrollbar release)
+      // Glide state — a fractional index (0..maxIdx). The frame loop eases
+      // it toward `glideTarget` when set, then snaps to the nearest photo.
+      let posIdx = 0;
       let glideTarget = null;
 
       const mainPhoto = document.getElementById('mainPhoto');
@@ -866,7 +707,6 @@
       });
       const metaTitle = document.getElementById('metaTitle');
       const metaDate = document.getElementById('metaDate');
-      const scrollbarEl = document.getElementById('scrollbar');
 
       // Two short sound effects. Each Audio is preloaded once and then
       // cloned on every play so overlapping triggers don't cut each other
@@ -1003,150 +843,91 @@
 
         metaTitle.textContent = displayTitle(p);
         metaDate.textContent = formatDate(p.taken_at);
+      }
 
-        photoEls.forEach((el, idx) => {
-          el.classList.toggle('is-selected', idx === i);
-        });
+      // Convert the current fractional photo index (`posIdx`) into a tick-
+      // space position, so the pyramid's peak slides smoothly along the
+      // strip regardless of how many photos map to each tick.
+      function virtualTickPos() {
+        if (maxIdx <= 0) return 0;
+        return (posIdx / maxIdx) * (numTicks - 1);
+      }
+
+      const applyTickSize = (el, len) => {
+        if (isHorizontal()) {
+          el.style.height = len.toFixed(2) + 'px';
+          el.style.width = '';
+        } else {
+          el.style.width = len.toFixed(2) + 'px';
+          el.style.height = '';
+        }
+      };
+
+      // Render pass: every tick is always visible (no length-based fade),
+      // so no new ticks appear as the peak moves. The active tick (the one
+      // at the pyramid's peak) is fully opaque; all others sit at 20%.
+      function renderTicks() {
+        const vp = virtualTickPos();
+        const active = Math.max(0, Math.min(numTicks - 1, Math.round(vp)));
+        for (let i = 0; i < tickEls.length; i++) {
+          applyTickSize(tickEls[i], tickLen(i - vp));
+          tickEls[i].style.opacity = i === active ? '1' : '0.2';
+        }
       }
 
       function glideTo(i) {
-        glideTarget = clamp(i * step());
-        velocity = 0;
+        glideTarget = Math.max(0, Math.min(maxIdx, i));
       }
 
-      // ── Input: pointer drag on the thumbnail column ──
-      // Same gesture handles both flick-scrolling and click-to-select:
-      // small total movement at release → click on the thumb under the
-      // pointer; larger movement → flick with momentum.
-      wrap.addEventListener('pointerdown', (e) => {
-        isDragging = true;
-        glideTarget = null;
-        velocity = 0;
-        dragMovement = 0;
-        pointerSamples = [{ x: e.clientX, y: e.clientY, t: performance.now() }];
-        wrap.setPointerCapture(e.pointerId);
-        wrap.classList.add('dragging');
-      });
+      // ── Input: click / drag the tick slider ──
+      // Position within the container maps linearly to photo index. Both
+      // click and drag use the same mapping — a click just moves the pointer
+      // once, a drag continues to update while held.
+      let sliderDragging = false;
 
-      wrap.addEventListener('pointermove', (e) => {
-        if (!isDragging) return;
-        const now = performance.now();
-        const last = pointerSamples[pointerSamples.length - 1];
-        const delta = isHorizontal() ? (e.clientX - last.x) : (e.clientY - last.y);
-        scrollPos = clamp(scrollPos - delta);
-        dragMovement += Math.abs(delta);
-        pointerSamples.push({ x: e.clientX, y: e.clientY, t: now });
-        while (pointerSamples.length > 2 && now - pointerSamples[0].t > 80) {
-          pointerSamples.shift();
-        }
-      });
-
-      function endDrag(e) {
-        if (!isDragging) return;
-        isDragging = false;
-        if (e && e.pointerId !== undefined) {
-          try { wrap.releasePointerCapture(e.pointerId); } catch (_) {}
-        }
-        wrap.classList.remove('dragging');
-
-        // Treat a near-stationary press as a click on the thumb under it.
-        if (dragMovement < 5 && e && typeof e.clientX === 'number') {
-          const hit = document.elementFromPoint(e.clientX, e.clientY);
-          const thumbEl = hit && hit.closest && hit.closest('.thumb');
-          if (thumbEl) {
-            glideTo(parseInt(thumbEl.dataset.idx, 10));
-            velocity = 0;
-            return;
-          }
-        }
-
-        // Otherwise compute release velocity from recent pointer samples.
-        if (pointerSamples.length >= 2) {
-          const f = pointerSamples[0];
-          const l = pointerSamples[pointerSamples.length - 1];
-          const delta = isHorizontal() ? (l.x - f.x) : (l.y - f.y);
-          const dt = Math.max(l.t - f.t, 1);
-          velocity = -delta / dt * 1000;
-        }
-      }
-      wrap.addEventListener('pointerup', endDrag);
-      wrap.addEventListener('pointercancel', endDrag);
-      wrap.addEventListener('pointerleave', endDrag);
-
-      // ── Input: scrollbar drag / click-to-jump ──
-      const sbTrack = document.querySelector('.scrollbar');
-      const sbThumb = document.getElementById('scrollbar');
-      const SB_TRACK_H = 280;
-      const SB_THUMB_H = 137;
-      const SB_RANGE = SB_TRACK_H - SB_THUMB_H;   // pixels the thumb can slide
-      let sbStartPointerY = 0;
-      let sbStartThumbTop = 0;
-
-      function scrollToThumbTop(top) {
-        const t = Math.max(0, Math.min(SB_RANGE, top));
-        scrollPos = clamp(SB_RANGE > 0 ? (t / SB_RANGE) * maxScroll() : 0);
-        velocity = 0;
+      function pointerToIndex(e) {
+        const rect = ticksEl.getBoundingClientRect();
+        const raw = isHorizontal()
+          ? (e.clientX - rect.left) / Math.max(1, rect.width)
+          : (e.clientY - rect.top) / Math.max(1, rect.height);
+        const clamped = Math.max(0, Math.min(1, raw));
+        return Math.round(clamped * maxIdx);
       }
 
-      sbTrack.addEventListener('pointerdown', (e) => {
+      ticksEl.addEventListener('pointerdown', (e) => {
         e.preventDefault();
-        const rect = sbTrack.getBoundingClientRect();
-        const localY = e.clientY - rect.top;
-        const currentTop = parseFloat(sbThumb.style.top) || 0;
-
-        sbDragging = true;
-        glideTarget = null;
-        velocity = 0;
-
-        const onThumb = localY >= currentTop && localY <= currentTop + SB_THUMB_H;
-        if (onThumb) {
-          sbStartPointerY = e.clientY;
-          sbStartThumbTop = currentTop;
-        } else {
-          // Jump: place thumb so its center sits at the click.
-          const newTop = localY - SB_THUMB_H / 2;
-          scrollToThumbTop(newTop);
-          sbStartPointerY = e.clientY;
-          sbStartThumbTop = Math.max(0, Math.min(SB_RANGE, newTop));
-        }
-        sbTrack.setPointerCapture(e.pointerId);
-        sbTrack.classList.add('dragging');
+        sliderDragging = true;
+        ticksEl.setPointerCapture(e.pointerId);
+        glideTo(pointerToIndex(e));
       });
-
-      sbTrack.addEventListener('pointermove', (e) => {
-        if (!sbDragging) return;
-        const dy = e.clientY - sbStartPointerY;
-        scrollToThumbTop(sbStartThumbTop + dy);
+      ticksEl.addEventListener('pointermove', (e) => {
+        if (!sliderDragging) return;
+        glideTo(pointerToIndex(e));
       });
-
-      function endSbDrag(e) {
-        if (!sbDragging) return;
-        sbDragging = false;
+      function endSliderDrag(e) {
+        if (!sliderDragging) return;
+        sliderDragging = false;
         if (e && e.pointerId !== undefined) {
-          try { sbTrack.releasePointerCapture(e.pointerId); } catch (_) {}
+          try { ticksEl.releasePointerCapture(e.pointerId); } catch (_) {}
         }
-        sbTrack.classList.remove('dragging');
-        // Settle on the nearest thumbnail so the selection isn't between rows.
-        glideTarget = clamp(Math.round(scrollPos / step()) * step());
       }
-      sbTrack.addEventListener('pointerup', endSbDrag);
-      sbTrack.addEventListener('pointercancel', endSbDrag);
+      ticksEl.addEventListener('pointerup', endSliderDrag);
+      ticksEl.addEventListener('pointercancel', endSliderDrag);
 
       // ── Input: wheel / trackpad ──
-      // Listen anywhere on the page so the user can scroll through photos
-      // without having to aim at the thumbnail strip. Skip while the story
-      // overlay is open so its own content can scroll normally.
+      // Accumulate wheel deltas into fractional index steps so a normal
+      // trackpad flick advances by ~one photo per gesture. Skip while the
+      // story overlay is open so its own content can scroll normally.
+      const WHEEL_PIXELS_PER_PHOTO = 120;
       window.addEventListener('wheel', (e) => {
         if (storyOverlay.classList.contains('open')) return;
         e.preventDefault();
         const d = Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
-        scrollPos = clamp(scrollPos + d);
-        velocity = 0;
-        glideTarget = null;
+        const base = glideTarget !== null ? glideTarget : posIdx;
+        glideTo(base + d / WHEEL_PIXELS_PER_PHOTO);
       }, { passive: false });
 
       // ── Input: ← / → / ↑ / ↓ arrow keys advance one photo at a time ──
-      // Right/Down → next photo; Left/Up → previous photo.
       document.addEventListener('keydown', (e) => {
         if (storyOverlay.classList.contains('open')) return;
         let dir = 0;
@@ -1154,41 +935,25 @@
         else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') dir = -1;
         else return;
         e.preventDefault();
-        const target = Math.max(0, Math.min(maxIdx, selectedIdx + dir));
-        glideTo(target);
+        glideTo(Math.round(posIdx) + dir);
       });
 
-      // Track which orientation we last rendered in, so resize can detect
-      // a crossing of the breakpoint and re-seed the scroll position.
-      let lastHorizontal = isHorizontal();
-
       window.addEventListener('resize', () => {
-        const nowHorizontal = isHorizontal();
-        if (nowHorizontal !== lastHorizontal) {
-          // Orientation flipped — clear the old-axis transform.
-          track.style.transform = '';
-          lastHorizontal = nowHorizontal;
-        }
-        // Always repad and reseat the scroll position on the current
-        // selection — both step() and the padding scale continuously with
-        // viewport width in the narrow layout.
-        applyPadding();
-        scrollPos = clamp(Math.max(0, selectedIdx) * step());
-        glideTarget = null;
-        velocity = 0;
-
-        // Refit current photo to new bounds.
+        // Refit current photo to new bounds; also re-render ticks so their
+        // active dimension flips axes on a breakpoint crossing.
         const p = photos[selectedIdx];
         if (p) {
           const fit = fitPhoto(p.width || 4, p.height || 3);
           mainPhotoWrap.style.width = fit.w + 'px';
           mainPhotoWrap.style.height = fit.h + 'px';
         }
+        renderTicks();
       });
 
       // Start on the first (oldest) photo.
-      scrollPos = 0;
+      posIdx = 0;
       setSelected(0);
+      renderTicks();
 
       // Reveal the gallery (faded out until now) and fade the loading
       // screen out on top of it. The CSS transition handles the fade; we
@@ -1205,57 +970,34 @@
         loadingScreen.remove();
       }
 
-      const FRICTION = 0.05;     // 5% velocity per second → quick settle
-      const SNAP_THRESHOLD = 30; // px/sec below which we begin snap
-
+      let lastTs = null;
       function frame(ts) {
         if (lastTs !== null) {
           const dt = (ts - lastTs) / 1000;
-          const userInteracting = isDragging || sbDragging;
-          const S = step();
-
-          if (glideTarget !== null && !userInteracting) {
-            // Critically-damped-ish glide toward the click target.
-            const dist = glideTarget - scrollPos;
-            if (Math.abs(dist) < 0.5) {
-              scrollPos = glideTarget;
+          if (glideTarget !== null && !sliderDragging) {
+            const dist = glideTarget - posIdx;
+            if (Math.abs(dist) < 0.005) {
+              posIdx = glideTarget;
               glideTarget = null;
             } else {
-              scrollPos += dist * Math.min(1, dt * 9);
+              // Exponential ease toward target — fast at distance, gentle
+              // as it lands.
+              posIdx += dist * Math.min(1, dt * 10);
             }
-          } else if (!userInteracting) {
-            if (Math.abs(velocity) > 0.5) {
-              scrollPos = clamp(scrollPos + velocity * dt);
-              velocity *= Math.pow(FRICTION, dt);
-              if (Math.abs(velocity) < SNAP_THRESHOLD) {
-                velocity = 0;
-                glideTarget = clamp(Math.round(scrollPos / S) * S);
-              }
-            } else if (scrollPos % S !== 0) {
-              // Idle but unsnapped → glide to nearest.
-              glideTarget = clamp(Math.round(scrollPos / S) * S);
-            }
+          } else if (sliderDragging && glideTarget !== null) {
+            // While dragging, snap directly to the pointer's target so the
+            // ticks follow the finger with no lag.
+            posIdx = glideTarget;
           }
         }
         lastTs = ts;
 
-        const axis = isHorizontal() ? 'X' : 'Y';
-        track.style.transform = `translate${axis}(${(-scrollPos).toFixed(2)}px)`;
+        renderTicks();
 
-        // Currently-centered photo
-        const i = Math.max(0, Math.min(maxIdx, Math.round(scrollPos / step())));
+        // Update the main-stage photo to whichever tick is currently the
+        // tallest. Rounding posIdx gives snapping-on-the-fly behaviour.
+        const i = Math.max(0, Math.min(maxIdx, Math.round(posIdx)));
         setSelected(i);
-
-        // Scrollbar position — fixed-size thumb sliding along the visible
-        // track. Only updated when the scrollbar is shown (desktop layout).
-        if (!isHorizontal()) {
-          const TRACK_H = 280;
-          const THUMB_H_BAR = 137;
-          const range = Math.max(1, maxScroll());
-          const prog = scrollPos / range;
-          const top = prog * (TRACK_H - THUMB_H_BAR);
-          scrollbarEl.style.top = top + 'px';
-        }
 
         requestAnimationFrame(frame);
       }
