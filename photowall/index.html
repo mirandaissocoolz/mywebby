@@ -749,12 +749,10 @@
       //      cloning defeats the audio-unlock trick below.
       //   2. cloneNode doesn't copy IDL properties (like `volume`), so
       //      per-sound volume settings were being ignored on every clone.
-      const allSounds = [];
       function makeSound(path, volume = 0.7) {
         const a = new Audio(path);
         a.preload = 'auto';
         a.volume = volume;
-        allSounds.push(a);
         return () => {
           try {
             a.currentTime = 0;
@@ -777,7 +775,6 @@
         a.preload = 'auto';
         a.volume = 0.4;
         typePool.push(a);
-        allSounds.push(a);
       }
       let typePoolIdx = 0;
       function playTypeRaw() {
@@ -789,24 +786,33 @@
         } catch (_) {}
       }
 
-      // iOS Safari won't let an <audio> play unless play() is called
-      // synchronously inside a user-gesture handler. The typewriter tick
-      // fires from the animation-frame loop — not a user gesture — so it's
-      // silently blocked until the element is "unlocked". Unlock every
-      // sound once, on the first touch/click, by playing + immediately
-      // pausing it. After that, plays from anywhere are allowed.
+      // iOS/Chrome mobile won't let an <audio> play unless the first
+      // play() runs synchronously inside a user-gesture handler. That's
+      // fine for the celebration/select/caution/transition sounds — they
+      // all fire directly from click or tap handlers — but the typewriter
+      // tick fires from the animation-frame loop, not a user gesture, and
+      // is silently blocked until the element is "unlocked". So on the
+      // first touch/click we unlock ONLY the tick pool (using `muted` for
+      // a definitive silence during the unlock play). Everything else
+      // unlocks itself the first time the user actually triggers it.
       let audioUnlocked = false;
       function unlockAudio() {
         if (audioUnlocked) return;
         audioUnlocked = true;
-        allSounds.forEach((a) => {
-          const savedVol = a.volume;
-          a.volume = 0;
-          a.play().then(() => {
+        typePool.forEach((a) => {
+          a.muted = true;
+          const p = a.play();
+          if (p && p.then) {
+            p.then(() => {
+              a.pause();
+              a.currentTime = 0;
+              a.muted = false;
+            }).catch(() => { a.muted = false; });
+          } else {
             a.pause();
             a.currentTime = 0;
-            a.volume = savedVol;
-          }).catch(() => { a.volume = savedVol; });
+            a.muted = false;
+          }
         });
       }
       document.addEventListener('touchstart', unlockAudio, { once: true, passive: true });
