@@ -735,21 +735,34 @@
       const metaTitle = document.getElementById('metaTitle');
       const metaDate = document.getElementById('metaDate');
 
-      // Two short sound effects. Each Audio is preloaded once and then
-      // cloned on every play so overlapping triggers don't cut each other
-      // off. `enter.mp3` accompanies "entering" moments (info modal open,
-      // page reveal); `next.mp3` is the click for the story-card arrows.
-      const enterSound = new Audio('sound%20effects/enter.mp3');
-      enterSound.preload = 'auto';
-      enterSound.volume = 0.7;
-      function playEnter() {
-        try { enterSound.cloneNode().play().catch(() => {}); } catch (_) {}
+      // Short sound effects. Each Audio is preloaded once and then cloned
+      // on every play so overlapping triggers don't cut each other off.
+      //   celebration.wav — info-icon press
+      //   select.wav      — card-arrow navigating to a new view
+      //   caution.wav     — card-arrow at an edge (no new view, just wiggles)
+      function makeSound(path, volume = 0.7) {
+        const a = new Audio(path);
+        a.preload = 'auto';
+        a.volume = volume;
+        return () => { try { a.cloneNode().play().catch(() => {}); } catch (_) {} };
       }
-      const nextSound = new Audio('sound%20effects/next.mp3');
-      nextSound.preload = 'auto';
-      nextSound.volume = 0.7;
-      function playNext() {
-        try { nextSound.cloneNode().play().catch(() => {}); } catch (_) {}
+      const playCelebration = makeSound('sound%20effects/celebration.wav', 0.05);
+      const playSelect      = makeSound('sound%20effects/select.wav');
+      const playCaution     = makeSound('sound%20effects/caution.wav');
+      const playTransition  = makeSound('sound%20effects/transition_up.wav');
+      const playTypeRaw     = makeSound('sound%20effects/type_05.wav', 0.4);
+
+      // Typewriter tick played each time the selected photo advances. Fires
+      // once per new photo so the rhythm matches the scroll speed: slow
+      // scroll → sparse ticks, fast scroll → rapid ticks. Throttled to
+      // ~40 ticks/sec (25ms min interval) so a full-strip scrub doesn't
+      // fire hundreds of overlapping instances at once.
+      let lastTypeAt = 0;
+      function playType() {
+        const now = performance.now();
+        if (now - lastTypeAt < 25) return;
+        lastTypeAt = now;
+        playTypeRaw();
       }
       const infoIcon = document.querySelector('.info-icon');
       const storyOverlay = document.getElementById('storyOverlay');
@@ -774,7 +787,7 @@
         storyCard.classList.add('wiggle');
       }
       function openStory() {
-        playEnter();
+        playCelebration();
         showView('story');
         // Entrance uses the CSS slide-up transition on `.story-overlay.open
         // .story-card` — no wiggle on first appearance. Clear any lingering
@@ -787,7 +800,6 @@
       infoIcon.addEventListener('click', openStory);
       storyOverlay.addEventListener('click', (e) => {
         if (e.target === storyOverlay) {
-          playNext();
           closeStory();
         }
       });
@@ -796,14 +808,16 @@
       });
 
       // Move between the card's views. `dir` is 'next' or 'prev'; at an edge
-      // the card wiggles instead of navigating off the ends.
+      // the card wiggles instead of navigating off the ends — accompanied
+      // by a caution sound instead of the normal select chime.
       function navigateView(dir) {
-        playNext();
         const i = VIEWS.indexOf(storyCard.dataset.view);
         const next = dir === 'next' ? i + 1 : i - 1;
         if (next < 0 || next >= VIEWS.length) {
+          playCaution();
           wiggleCard();
         } else {
+          playSelect();
           showView(VIEWS[next]);
           wiggleCard();
         }
@@ -816,12 +830,12 @@
           navigateView(navBtn.dataset.nav);
           return;
         }
-        // Social link — play the enter chime; default click opens in a new tab.
-        // Force the icon back to the resting (no-hover) look so it doesn't
-        // stay darkened + lifted after focus returns from the new tab.
+        // Social link — default click opens in a new tab. Force the icon
+        // back to the resting (no-hover) look so it doesn't stay darkened
+        // + lifted after focus returns from the new tab.
         const social = e.target.closest('[data-social]');
         if (social) {
-          playEnter();
+          playTransition();
           social.style.color = 'rgba(0, 0, 0, 0.5)';
           social.style.transform = 'none';
           const clear = () => {
@@ -863,6 +877,9 @@
 
       function setSelected(i) {
         if (i === selectedIdx) return;
+        // Play the typewriter tick on every real photo change — but not on
+        // the very first call (which just seats the initial selection).
+        if (selectedIdx !== -1) playType();
         selectedIdx = i;
         const p = photos[i];
 
@@ -990,10 +1007,7 @@
       // Reveal the gallery (faded out until now) and fade the loading
       // screen out on top of it. The CSS transition handles the fade; we
       // remove the node after it completes so it can't intercept pointer
-      // events. The `enter` chime accompanies the reveal — if the browser
-      // is still gating autoplay on user interaction, the play() promise
-      // just rejects silently.
-      playEnter();
+      // events.
       document.body.classList.add('ready');
       if (loaderShown) {
         loadingScreen.classList.add('fading');
