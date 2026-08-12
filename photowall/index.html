@@ -766,7 +766,28 @@
       const playSelect      = makeSound('sound%20effects/select.wav');
       const playCaution     = makeSound('sound%20effects/caution.wav');
       const playTransition  = makeSound('sound%20effects/transition_up.wav');
-      const playTypeRaw     = makeSound('sound%20effects/type_05.wav', 0.4);
+
+      // Type sound uses a POOL of audio elements so rapid successive plays
+      // (each new photo passing) don't interrupt each other on the same
+      // element. Round-robin through the pool per call.
+      const TYPE_POOL_SIZE = 5;
+      const typePool = [];
+      for (let __i = 0; __i < TYPE_POOL_SIZE; __i++) {
+        const a = new Audio('sound%20effects/type_05.wav');
+        a.preload = 'auto';
+        a.volume = 0.4;
+        typePool.push(a);
+        allSounds.push(a);
+      }
+      let typePoolIdx = 0;
+      function playTypeRaw() {
+        const a = typePool[typePoolIdx];
+        typePoolIdx = (typePoolIdx + 1) % TYPE_POOL_SIZE;
+        try {
+          a.currentTime = 0;
+          a.play().catch(() => {});
+        } catch (_) {}
+      }
 
       // iOS Safari won't let an <audio> play unless play() is called
       // synchronously inside a user-gesture handler. The typewriter tick
@@ -791,17 +812,17 @@
       document.addEventListener('touchstart', unlockAudio, { once: true, passive: true });
       document.addEventListener('click', unlockAudio, { once: true });
 
-      // Typewriter tick played each time the selected photo advances. Fires
-      // once per new photo so the rhythm matches the scroll speed: slow
-      // scroll → sparse ticks, fast scroll → rapid ticks. Throttled to
-      // ~40 ticks/sec (25ms min interval) so a full-strip scrub doesn't
-      // fire hundreds of overlapping instances at once.
-      let lastTypeAt = 0;
-      function playType() {
-        const now = performance.now();
-        if (now - lastTypeAt < 25) return;
-        lastTypeAt = now;
-        playTypeRaw();
+      // Play one tick per photo actually passed in a transition. A single-
+      // step change fires immediately; a bigger jump (slider tap, fast
+      // swipe) schedules a burst of ticks spread 35ms apart so the ear
+      // counts each photo as it passes. Capped at 15 ticks so a full-strip
+      // scrub doesn't run for seconds.
+      function playType(jump) {
+        const count = Math.min(15, Math.max(1, jump || 1));
+        for (let n = 0; n < count; n++) {
+          if (n === 0) playTypeRaw();
+          else setTimeout(playTypeRaw, n * 35);
+        }
       }
       const infoIcon = document.querySelector('.info-icon');
       const storyOverlay = document.getElementById('storyOverlay');
@@ -916,9 +937,12 @@
 
       function setSelected(i) {
         if (i === selectedIdx) return;
-        // Play the typewriter tick on every real photo change — but not on
-        // the very first call (which just seats the initial selection).
-        if (selectedIdx !== -1) playType();
+        // Play one typewriter tick per photo actually passed. On single-
+        // step scrolls that's a single tick; on a big jump (slider tap,
+        // fast swipe) it's a burst so every photo is audibly counted.
+        // Skipped on the very first call (which just seats the initial
+        // selection).
+        if (selectedIdx !== -1) playType(Math.abs(i - selectedIdx));
         selectedIdx = i;
         const p = photos[i];
 
