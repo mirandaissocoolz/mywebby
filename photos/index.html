@@ -101,6 +101,7 @@
       will-change: opacity;
       transition: opacity 0.18s ease;
       cursor: pointer;
+      position: relative;
     }
     .main-photo-wrap.wiggle {
       animation: story-wiggle 0.55s ease-out;
@@ -110,6 +111,52 @@
       height: 100%;
       object-fit: cover;
       display: block;
+    }
+
+    /* "new" badge — pinned to the photo's top-left corner. Only shown when
+       the current photo's `new` column is true. Draggable: pointer moves
+       translate it around, release snaps it back to (0,0) with a spring-y
+       ease and a select chime. */
+    .new-badge {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 3px 5px 4px;
+      background: #fff;
+      color: #000;
+      font-family: 'Figtree', system-ui, sans-serif;
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 1;
+      letter-spacing: 0.02em;
+      cursor: grab;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+      z-index: 3;
+      transform: translate3d(0, 0, 0);
+      will-change: transform;
+    }
+    .new-badge.visible { display: inline-flex; }
+    .new-badge.dragging { cursor: grabbing; }
+    .new-badge.snapping {
+      transition: transform 0.35s cubic-bezier(0.2, 1.4, 0.4, 1);
+    }
+    /* One-shot "stamp" played when the badge appears on a new photo —
+       springy scale-in with a slight overshoot and a hair of tilt so it
+       feels like a sticker being pressed on. */
+    .new-badge.popping {
+      animation: badge-pop 0.55s cubic-bezier(0.34, 1.55, 0.5, 1);
+      transform-origin: 20% 30%;
+    }
+    @keyframes badge-pop {
+      0%   { opacity: 0; transform: translate3d(0, 0, 0) scale(0)    rotate(-8deg); }
+      55%  { opacity: 1; transform: translate3d(0, 0, 0) scale(1.18) rotate(2deg);  }
+      75%  {             transform: translate3d(0, 0, 0) scale(0.94) rotate(-1deg); }
+      100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1)    rotate(0deg);  }
     }
 
     .meta {
@@ -410,6 +457,7 @@
   <div class="stage">
     <div class="main-photo-wrap" id="mainPhotoWrap">
       <img id="mainPhoto" alt="" decoding="async">
+      <div class="new-badge" id="newBadge" aria-hidden="true">new</div>
     </div>
     <div class="meta">
       <div class="title" id="metaTitle">—</div>
@@ -523,7 +571,7 @@
 
     async function fetchPhotos() {
       const r = await fetch(
-        `${SUPABASE_URL}/rest/v1/photos?select=id,file_name,title,taken_at,width,height&order=taken_at.desc`,
+        `${SUPABASE_URL}/rest/v1/photos?select=id,file_name,title,taken_at,width,height,new&order=taken_at.desc`,
         { headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` } }
       );
       const rows = await r.json();
@@ -778,12 +826,52 @@
 
       const mainPhoto = document.getElementById('mainPhoto');
       const mainPhotoWrap = document.getElementById('mainPhotoWrap');
+      const newBadge = document.getElementById('newBadge');
       mainPhotoWrap.addEventListener('click', () => {
         mainPhotoWrap.classList.remove('wiggle');
         void mainPhotoWrap.offsetWidth;
         mainPhotoWrap.classList.add('wiggle');
         playCaution();
       });
+
+      // ── "new" badge drag ──
+      // Pointer-drag translates the badge freely; releasing snaps it back
+      // to (0,0) via a springy CSS transition and plays the select chime.
+      // Events are stopped so a drag doesn't also fire the mainPhotoWrap
+      // wiggle/caution behavior.
+      let badgeDrag = null; // { pointerId, startX, startY, moved }
+      newBadge.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+        newBadge.classList.remove('snapping');
+        newBadge.classList.add('dragging');
+        badgeDrag = { pointerId: e.pointerId, startX: e.clientX, startY: e.clientY, moved: false };
+        try { newBadge.setPointerCapture(e.pointerId); } catch (_) {}
+      });
+      newBadge.addEventListener('pointermove', (e) => {
+        if (!badgeDrag || e.pointerId !== badgeDrag.pointerId) return;
+        const dx = e.clientX - badgeDrag.startX;
+        const dy = e.clientY - badgeDrag.startY;
+        if (Math.abs(dx) > 2 || Math.abs(dy) > 2) badgeDrag.moved = true;
+        newBadge.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
+      });
+      function endBadgeDrag(e) {
+        if (!badgeDrag || e.pointerId !== badgeDrag.pointerId) return;
+        const moved = badgeDrag.moved;
+        badgeDrag = null;
+        newBadge.classList.remove('dragging');
+        try { newBadge.releasePointerCapture(e.pointerId); } catch (_) {}
+        if (moved) {
+          newBadge.classList.add('snapping');
+          newBadge.style.transform = 'translate3d(0, 0, 0)';
+          playSelect();
+          setTimeout(() => newBadge.classList.remove('snapping'), 400);
+        }
+      }
+      newBadge.addEventListener('pointerup',     endBadgeDrag);
+      newBadge.addEventListener('pointercancel', endBadgeDrag);
+      // Swallow the click that follows a drag so the wrap's wiggle/caution
+      // doesn't fire.
+      newBadge.addEventListener('click', (e) => e.stopPropagation());
       const metaTitle = document.getElementById('metaTitle');
       const metaDate = document.getElementById('metaDate');
 
@@ -860,7 +948,13 @@
       let audioUnlocked = false;
       function unlockAudio() {
         if (audioUnlocked || !soundsEnabled) return;
-        audioUnlocked = true;
+        // Try a muted play() on every element in the pool. Only flip the
+        // `audioUnlocked` flag once at least one play() actually resolves —
+        // some gestures (wheel scroll in particular) don't grant sticky
+        // user activation, so an early flip would gate out the real click
+        // that WOULD unlock us. Because we don't flip synchronously, the
+        // listeners below intentionally omit `{ once: true }` and re-run
+        // on subsequent gestures until one succeeds.
         typePool.forEach((a) => {
           a.muted = true;
           const p = a.play();
@@ -869,22 +963,25 @@
               a.pause();
               a.currentTime = 0;
               a.muted = false;
+              audioUnlocked = true;
             }).catch(() => { a.muted = false; });
           } else {
             a.pause();
             a.currentTime = 0;
             a.muted = false;
+            audioUnlocked = true;
           }
         });
       }
-      // Any of these gestures counts as an unlock. On laptop the very first
-      // interaction is usually a wheel scroll or arrow-key press — NOT a
-      // click — so without pointerdown/keydown here the type ticks stay
-      // blocked by autoplay policy until the user happens to click something.
-      document.addEventListener('touchstart',  unlockAudio, { once: true, passive: true });
-      document.addEventListener('pointerdown', unlockAudio, { once: true });
-      document.addEventListener('click',       unlockAudio, { once: true });
-      document.addEventListener('keydown',     unlockAudio, { once: true });
+      // Any of these gestures counts as an attempt to unlock. Wheel scroll
+      // is included because on a laptop it's usually the first interaction,
+      // even though it doesn't always grant sticky user activation — the
+      // retry-on-every-gesture logic above handles that case.
+      document.addEventListener('touchstart',  unlockAudio, { passive: true });
+      document.addEventListener('pointerdown', unlockAudio);
+      document.addEventListener('click',       unlockAudio);
+      document.addEventListener('keydown',     unlockAudio);
+      document.addEventListener('wheel',       unlockAudio, { passive: true });
 
       // Play one tick per photo actually passed in a transition. A single-
       // step change fires immediately; a bigger jump (slider tap, fast
@@ -1039,6 +1136,19 @@
 
         metaTitle.textContent = displayTitle(p);
         metaDate.textContent = formatDate(p.taken_at);
+
+        // Reset the badge to its resting spot on every photo change (in case
+        // it was mid-flight from a drag) and show/hide based on `new`. When
+        // it's shown, replay the subtle shake animation by pulling the
+        // class, forcing a reflow, then re-applying it.
+        newBadge.classList.remove('dragging', 'snapping', 'popping');
+        newBadge.style.transform = 'translate3d(0, 0, 0)';
+        const isNew = p.new === true;
+        newBadge.classList.toggle('visible', isNew);
+        if (isNew) {
+          void newBadge.offsetWidth;
+          newBadge.classList.add('popping');
+        }
       }
 
       // Convert the current fractional photo index (`posIdx`) into a tick-
