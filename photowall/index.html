@@ -943,12 +943,17 @@
 
       function setSelected(i) {
         if (i === selectedIdx) return;
-        // Play one typewriter tick per photo actually passed. On single-
-        // step scrolls that's a single tick; on a big jump (slider tap,
-        // fast swipe) it's a burst so every photo is audibly counted.
-        // Skipped on the very first call (which just seats the initial
-        // selection).
-        if (selectedIdx !== -1) playType(Math.abs(i - selectedIdx));
+        // Play one typewriter tick per photo actually passed. On mobile
+        // Chrome, audio play() calls that fire from rAF are DEFERRED for
+        // the duration of an active touch — so during a swipe or slider
+        // drag, sounds would only flush when the finger lifts. To avoid
+        // that, the input handlers (touchmove, wheel, keydown, tick
+        // pointer events) play the tick synchronously inside their user
+        // gesture. setSelected then only plays here for the residual
+        // glide after the gesture ends (when no touch is active).
+        if (selectedIdx !== -1 && !touchActive && !sliderDragging) {
+          playType(Math.abs(i - selectedIdx));
+        }
         selectedIdx = i;
         const p = photos[i];
 
@@ -997,6 +1002,22 @@
         glideTarget = Math.max(0, Math.min(maxIdx, i));
       }
 
+      // Called from every user-gesture handler that moves the position.
+      // Plays a tick synchronously (in the user gesture) for each photo
+      // boundary the new target crosses relative to the current posIdx.
+      // Then updates the glide target. This works around mobile Chrome's
+      // audio-defer during touch: sounds played from user handlers fire
+      // immediately, while sounds played from rAF get batched.
+      function moveAndPlay(newTarget) {
+        const clamped = Math.max(0, Math.min(maxIdx, newTarget));
+        const currentPhoto = Math.round(posIdx);
+        const newPhoto = Math.round(clamped);
+        if (newPhoto !== currentPhoto) {
+          playType(Math.abs(newPhoto - currentPhoto));
+        }
+        glideTarget = clamped;
+      }
+
       // ── Input: click / drag the tick slider ──
       // Position within the container maps linearly to photo index. Both
       // click and drag use the same mapping — a click just moves the pointer
@@ -1016,11 +1037,11 @@
         e.preventDefault();
         sliderDragging = true;
         ticksEl.setPointerCapture(e.pointerId);
-        glideTo(pointerToIndex(e));
+        moveAndPlay(pointerToIndex(e));
       });
       ticksEl.addEventListener('pointermove', (e) => {
         if (!sliderDragging) return;
-        glideTo(pointerToIndex(e));
+        moveAndPlay(pointerToIndex(e));
       });
       function endSliderDrag(e) {
         if (!sliderDragging) return;
@@ -1042,7 +1063,7 @@
         e.preventDefault();
         const d = Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
         const base = glideTarget !== null ? glideTarget : posIdx;
-        glideTo(base + d / WHEEL_PIXELS_PER_PHOTO);
+        moveAndPlay(base + d / WHEEL_PIXELS_PER_PHOTO);
       }, { passive: false });
 
       // ── Input: touch swipe (mobile) ──
@@ -1068,7 +1089,7 @@
         touchLastY = y;
         e.preventDefault();
         const base = glideTarget !== null ? glideTarget : posIdx;
-        glideTo(base + delta / TOUCH_PIXELS_PER_PHOTO);
+        moveAndPlay(base + delta / TOUCH_PIXELS_PER_PHOTO);
       }, { passive: false });
       window.addEventListener('touchend', () => { touchActive = false; });
       window.addEventListener('touchcancel', () => { touchActive = false; });
@@ -1081,7 +1102,7 @@
         else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') dir = -1;
         else return;
         e.preventDefault();
-        glideTo(Math.round(posIdx) + dir);
+        moveAndPlay(Math.round(posIdx) + dir);
       });
 
       window.addEventListener('resize', () => {
