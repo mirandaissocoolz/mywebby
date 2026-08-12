@@ -394,7 +394,7 @@
 
   <div class="stage">
     <div class="main-photo-wrap" id="mainPhotoWrap">
-      <img id="mainPhoto" alt="">
+      <img id="mainPhoto" alt="" decoding="async">
     </div>
     <div class="meta">
       <div class="title" id="metaTitle">—</div>
@@ -699,17 +699,33 @@
         return;
       }
 
-      // Preload EVERY photo up-front, behind the loading screen, so that
-      // once the gallery reveals there's no per-photo network wait when
-      // the viewer scrolls. Downloads run in parallel with a small
-      // concurrency cap so the browser doesn't queue 80+ requests at once
-      // and so slow devices aren't overwhelmed.
+      // Preload EVERY photo up-front, behind the loading screen. Two
+      // reasons to go beyond a plain `new Image().src = ...`:
+      //   1. Chrome mobile has a small memory cache and will EVICT
+      //      images it thinks aren't in use. Keeping a live `Image`
+      //      reference in `preloadedImages` prevents eviction — the
+      //      browser can't drop an image that's still referenced.
+      //   2. Even a cached image has to be decoded when it appears in a
+      //      new `<img>`. `img.decode()` runs the decode up-front so the
+      //      main stage swap doesn't stall on it.
+      const preloadedImages = new Map();  // url -> Image (kept alive)
+      async function preloadOne(src) {
+        const img = new Image();
+        img.decoding = 'async';
+        await new Promise((resolve) => {
+          img.onload = resolve;
+          img.onerror = resolve;
+          img.src = src;
+        });
+        try { await img.decode(); } catch (_) {}
+        preloadedImages.set(src, img);
+      }
       async function preloadAll(srcs, concurrency = 6) {
         let cursor = 0;
         const worker = async () => {
           while (cursor < srcs.length) {
             const i = cursor++;
-            await preloadImage(srcs[i]);
+            await preloadOne(srcs[i]);
           }
         };
         await Promise.all(Array.from({ length: concurrency }, worker));
@@ -718,7 +734,7 @@
       // possible; the rest download in parallel behind it.
       const firstSrc = photoUrl(photos[0].file_name);
       const restSrcs = photos.slice(1).map(p => photoUrl(p.file_name));
-      await preloadImage(firstSrc);
+      await preloadOne(firstSrc);
       await preloadAll(restSrcs, 6);
       clearTimeout(showTimer);
 
@@ -769,8 +785,10 @@
       // Sounds are disabled on touch-primary devices (phones, tablets).
       // Mobile browsers introduce audio-defer/latency during touch that
       // makes sync sound effects feel glitchy — the site is quieter and
-      // smoother without them on mobile.
-      const soundsEnabled = !window.matchMedia('(pointer: coarse)').matches;
+      // smoother without them on mobile. `(hover: none)` is the reliable
+      // idiom for "device has no hover capability" — matches phones,
+      // tablets, but not touchscreen laptops that still have a mouse.
+      const soundsEnabled = !window.matchMedia('(hover: none)').matches;
       function makeSound(path, volume = 0.7) {
         if (!soundsEnabled) return () => {};
         const a = new Audio(path);
