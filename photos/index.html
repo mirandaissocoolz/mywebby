@@ -97,7 +97,6 @@
 
     .main-photo-wrap {
       background: #f4f4f4;
-      overflow: hidden;
       will-change: opacity;
       transition: opacity 0.18s ease;
       cursor: pointer;
@@ -145,18 +144,15 @@
     .new-badge.snapping {
       transition: transform 0.35s cubic-bezier(0.2, 1.4, 0.4, 1);
     }
-    /* One-shot "stamp" played when the badge appears on a new photo —
-       springy scale-in with a slight overshoot and a hair of tilt so it
-       feels like a sticker being pressed on. */
-    .new-badge.popping {
-      animation: badge-pop 0.55s cubic-bezier(0.34, 1.55, 0.5, 1);
-      transform-origin: 20% 30%;
-    }
-    @keyframes badge-pop {
-      0%   { opacity: 0; transform: translate3d(0, 0, 0) scale(0)    rotate(-8deg); }
-      55%  { opacity: 1; transform: translate3d(0, 0, 0) scale(1.18) rotate(2deg);  }
-      75%  {             transform: translate3d(0, 0, 0) scale(0.94) rotate(-1deg); }
-      100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1)    rotate(0deg);  }
+    /* Bump the badge on desktop-sized viewports. Mobile keeps the 14px
+       default set above; the 1138px+ layout gets a chunkier sticker. */
+    @media (min-width: 1138px) {
+      .new-badge {
+        top: 16px;
+        left: 16px;
+        padding: 7px 12px 9px;
+        font-size: 30px;
+      }
     }
 
     .meta {
@@ -1137,18 +1133,11 @@
         metaTitle.textContent = displayTitle(p);
         metaDate.textContent = formatDate(p.taken_at);
 
-        // Reset the badge to its resting spot on every photo change (in case
-        // it was mid-flight from a drag) and show/hide based on `new`. When
-        // it's shown, replay the subtle shake animation by pulling the
-        // class, forcing a reflow, then re-applying it.
-        newBadge.classList.remove('dragging', 'snapping', 'popping');
+        // Reset the badge to its resting spot on every photo change (in
+        // case it was mid-flight from a drag) and show/hide based on `new`.
+        newBadge.classList.remove('dragging', 'snapping');
         newBadge.style.transform = 'translate3d(0, 0, 0)';
-        const isNew = p.new === true;
-        newBadge.classList.toggle('visible', isNew);
-        if (isNew) {
-          void newBadge.offsetWidth;
-          newBadge.classList.add('popping');
-        }
+        newBadge.classList.toggle('visible', p.new === true);
       }
 
       // Convert the current fractional photo index (`posIdx`) into a tick-
