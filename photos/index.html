@@ -126,6 +126,7 @@
       padding: 3px 5px 4px;
       background: #fff;
       color: #000;
+      border-radius: 3px;
       font-family: 'Figtree', system-ui, sans-serif;
       font-weight: 400;
       font-size: 14px;
@@ -883,13 +884,21 @@
       //      cloning defeats the audio-unlock trick below.
       //   2. cloneNode doesn't copy IDL properties (like `volume`), so
       //      per-sound volume settings were being ignored on every clone.
-      // Sounds are disabled on touch-primary devices (phones, tablets).
-      // Mobile browsers introduce audio-defer/latency during touch that
-      // makes sync sound effects feel glitchy — the site is quieter and
-      // smoother without them on mobile. `(hover: none)` is the reliable
-      // idiom for "device has no hover capability" — matches phones,
-      // tablets, but not touchscreen laptops that still have a mouse.
-      const soundsEnabled = !window.matchMedia('(hover: none)').matches;
+      // All click-triggered sounds (celebration, select, caution, transition)
+      // are enabled everywhere — they fire straight from user gestures so
+      // there's no async playback stall.
+      const soundsEnabled = true;
+      // The typewriter tick, on the other hand, is scheduled from the RAF
+      // loop and can fire dozens of times per second during a fast scrub.
+      // Two environments visibly stutter under that load:
+      //   1. Safari (macOS + iOS): its WebAudio path is much heavier per
+      //      play() than Chrome, and pool playback drops photo frames.
+      //   2. Touch-primary devices (phones, tablets): mobile browsers
+      //      introduce audio-defer latency on top of the same overhead.
+      // On both, we drop just the tick — every other sound still plays.
+      const isMobile = window.matchMedia('(hover: none)').matches;
+      const isSafari = /^((?!chrome|android|crios|fxios|edg).)*safari/i.test(navigator.userAgent);
+      const typeSoundEnabled = !isMobile && !isSafari;
       function makeSound(path, volume = 0.7) {
         if (!soundsEnabled) return () => {};
         const a = new Audio(path);
@@ -909,11 +918,11 @@
 
       // Type sound uses a POOL of audio elements so rapid successive plays
       // (each new photo passing) don't interrupt each other on the same
-      // element. Round-robin through the pool per call. Disabled entirely
-      // on touch-primary devices — see `soundsEnabled` above.
+      // element. Round-robin through the pool per call. Skipped entirely
+      // on Safari and touch-primary devices — see `typeSoundEnabled` above.
       const TYPE_POOL_SIZE = 5;
       const typePool = [];
-      if (soundsEnabled) {
+      if (typeSoundEnabled) {
         for (let __i = 0; __i < TYPE_POOL_SIZE; __i++) {
           const a = new Audio('sound%20effects/type_05.wav');
           a.preload = 'auto';
@@ -923,7 +932,7 @@
       }
       let typePoolIdx = 0;
       function playTypeRaw() {
-        if (!soundsEnabled) return;
+        if (!typeSoundEnabled) return;
         const a = typePool[typePoolIdx];
         typePoolIdx = (typePoolIdx + 1) % TYPE_POOL_SIZE;
         try {
@@ -943,41 +952,49 @@
       // unlocks itself the first time the user actually triggers it.
       let audioUnlocked = false;
       function unlockAudio() {
-        if (audioUnlocked || !soundsEnabled) return;
-        // Try a muted play() on every element in the pool. Only flip the
-        // `audioUnlocked` flag once at least one play() actually resolves —
-        // some gestures (wheel scroll in particular) don't grant sticky
-        // user activation, so an early flip would gate out the real click
-        // that WOULD unlock us. Because we don't flip synchronously, the
-        // listeners below intentionally omit `{ once: true }` and re-run
-        // on subsequent gestures until one succeeds.
+        // Only the type-tick pool needs a proactive unlock (it plays from
+        // RAF, not a gesture); the other sounds unlock themselves the first
+        // time they're triggered inside a real click/tap handler. So when
+        // the tick is disabled we've got nothing to prime.
+        if (audioUnlocked || !typeSoundEnabled) return;
+        // Prime every element in the pool with an UNMUTED, volume-0 play.
+        // Using `muted = true` here would be a lie: Chrome's autoplay policy
+        // explicitly permits muted playback without user activation, so a
+        // muted play() resolves even when no real gesture has occurred,
+        // fooling us into flipping `audioUnlocked` before the browser will
+        // actually let us play sound. A volume-0 unmuted play, by contrast,
+        // still requires user activation — so its promise only resolves
+        // when we're truly inside a real gesture (click/pointerdown/keydown/
+        // touchstart). Retry on every gesture until one succeeds.
         typePool.forEach((a) => {
-          a.muted = true;
+          const v = a.volume;
+          a.volume = 0;
           const p = a.play();
           if (p && p.then) {
             p.then(() => {
               a.pause();
               a.currentTime = 0;
-              a.muted = false;
+              a.volume = v;
               audioUnlocked = true;
-            }).catch(() => { a.muted = false; });
+            }).catch(() => {
+              a.volume = v;
+            });
           } else {
             a.pause();
             a.currentTime = 0;
-            a.muted = false;
+            a.volume = v;
             audioUnlocked = true;
           }
         });
       }
-      // Any of these gestures counts as an attempt to unlock. Wheel scroll
-      // is included because on a laptop it's usually the first interaction,
-      // even though it doesn't always grant sticky user activation — the
-      // retry-on-every-gesture logic above handles that case.
+      // Only listen for events that actually grant user activation. Wheel /
+      // scroll do NOT grant activation per the HTML spec, so listening for
+      // them here would just churn — the retry-on-every-gesture logic above
+      // handles catching the first real gesture whenever it happens.
       document.addEventListener('touchstart',  unlockAudio, { passive: true });
       document.addEventListener('pointerdown', unlockAudio);
       document.addEventListener('click',       unlockAudio);
       document.addEventListener('keydown',     unlockAudio);
-      document.addEventListener('wheel',       unlockAudio, { passive: true });
 
       // Play one tick per photo actually passed in a transition. A single-
       // step change fires immediately; a bigger jump (slider tap, fast
