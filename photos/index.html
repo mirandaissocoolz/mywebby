@@ -916,81 +916,62 @@
       const playCaution     = makeSound('sound%20effects/caution.wav');
       const playTransition  = makeSound('sound%20effects/transition_up.wav');
 
-      // Type sound uses a POOL of audio elements so rapid successive plays
-      // (each new photo passing) don't interrupt each other on the same
-      // element. Round-robin through the pool per call. Skipped entirely
-      // on Safari and touch-primary devices — see `typeSoundEnabled` above.
-      const TYPE_POOL_SIZE = 5;
-      const typePool = [];
+      // The type-tick fires from the RAF loop, not a user gesture, and the
+      // repeated <audio> approach kept getting caught out by browser
+      // autoplay policies (Safari especially treats each <audio> as
+      // needing its OWN priming play inside a gesture). Web Audio is more
+      // reliable here: one AudioContext, unlocked once via resume() in the
+      // first user gesture, then any number of cheap BufferSources can be
+      // started from anywhere (RAF, timers, wherever) with no per-element
+      // dance. A fresh BufferSource per tick also removes the pool since
+      // sources can overlap freely on the same decoded buffer.
+      let typeAudioCtx = null;
+      let typeBuffer = null;
       if (typeSoundEnabled) {
-        for (let __i = 0; __i < TYPE_POOL_SIZE; __i++) {
-          const a = new Audio('sound%20effects/type_05.wav');
-          a.preload = 'auto';
-          a.volume = 0.4;
-          typePool.push(a);
-        }
-      }
-      let typePoolIdx = 0;
-      function playTypeRaw() {
-        if (!typeSoundEnabled) return;
-        const a = typePool[typePoolIdx];
-        typePoolIdx = (typePoolIdx + 1) % TYPE_POOL_SIZE;
         try {
-          a.currentTime = 0;
-          a.play().catch(() => {});
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (AC) {
+            typeAudioCtx = new AC();
+            fetch('sound%20effects/type_05.wav')
+              .then(r => r.arrayBuffer())
+              .then(buf => new Promise((res, rej) => {
+                // Safari's older decodeAudioData only supports the callback
+                // form; Chrome/Firefox accept either. Wrap to a promise.
+                const p = typeAudioCtx.decodeAudioData(buf, res, rej);
+                if (p && p.then) p.then(res, rej);
+              }))
+              .then((decoded) => { typeBuffer = decoded; })
+              .catch(() => {});
+          }
+        } catch (_) {}
+      }
+      function playTypeRaw() {
+        if (!typeSoundEnabled || !typeAudioCtx || !typeBuffer) return;
+        try {
+          const src  = typeAudioCtx.createBufferSource();
+          const gain = typeAudioCtx.createGain();
+          src.buffer     = typeBuffer;
+          gain.gain.value = 0.4;
+          src.connect(gain).connect(typeAudioCtx.destination);
+          src.start(0);
         } catch (_) {}
       }
 
-      // iOS/Chrome mobile won't let an <audio> play unless the first
-      // play() runs synchronously inside a user-gesture handler. That's
-      // fine for the celebration/select/caution/transition sounds — they
-      // all fire directly from click or tap handlers — but the typewriter
-      // tick fires from the animation-frame loop, not a user gesture, and
-      // is silently blocked until the element is "unlocked". So on the
-      // first touch/click we unlock ONLY the tick pool (using `muted` for
-      // a definitive silence during the unlock play). Everything else
-      // unlocks itself the first time the user actually triggers it.
+      // Unlock: on the first real user gesture, resume the AudioContext.
+      // Suspended contexts silently drop start() calls, so the tick stays
+      // inaudible until this fires — but the resume permission is granted
+      // document-wide (no per-element or per-buffer priming needed).
       let audioUnlocked = false;
       function unlockAudio() {
-        // Only the type-tick pool needs a proactive unlock (it plays from
-        // RAF, not a gesture); the other sounds unlock themselves the first
-        // time they're triggered inside a real click/tap handler. So when
-        // the tick is disabled we've got nothing to prime.
-        if (audioUnlocked || !typeSoundEnabled) return;
-        // Prime every element in the pool with an UNMUTED, volume-0 play.
-        // Using `muted = true` here would be a lie: Chrome's autoplay policy
-        // explicitly permits muted playback without user activation, so a
-        // muted play() resolves even when no real gesture has occurred,
-        // fooling us into flipping `audioUnlocked` before the browser will
-        // actually let us play sound. A volume-0 unmuted play, by contrast,
-        // still requires user activation — so its promise only resolves
-        // when we're truly inside a real gesture (click/pointerdown/keydown/
-        // touchstart). Retry on every gesture until one succeeds.
-        typePool.forEach((a) => {
-          const v = a.volume;
-          a.volume = 0;
-          const p = a.play();
-          if (p && p.then) {
-            p.then(() => {
-              a.pause();
-              a.currentTime = 0;
-              a.volume = v;
-              audioUnlocked = true;
-            }).catch(() => {
-              a.volume = v;
-            });
-          } else {
-            a.pause();
-            a.currentTime = 0;
-            a.volume = v;
-            audioUnlocked = true;
-          }
-        });
+        if (audioUnlocked || !typeSoundEnabled || !typeAudioCtx) return;
+        audioUnlocked = true;
+        if (typeAudioCtx.state === 'suspended') {
+          typeAudioCtx.resume().catch(() => { audioUnlocked = false; });
+        }
       }
       // Only listen for events that actually grant user activation. Wheel /
       // scroll do NOT grant activation per the HTML spec, so listening for
-      // them here would just churn — the retry-on-every-gesture logic above
-      // handles catching the first real gesture whenever it happens.
+      // them here would just churn.
       document.addEventListener('touchstart',  unlockAudio, { passive: true });
       document.addEventListener('pointerdown', unlockAudio);
       document.addEventListener('click',       unlockAudio);
