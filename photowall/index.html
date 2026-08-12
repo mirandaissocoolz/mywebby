@@ -75,7 +75,9 @@
       opacity: 0.2;              /* always visible; JS bumps the peak to 1 */
       height: 4px;
       width: 6px;
-      transition: opacity 0.18s ease;
+      /* No opacity transition — the peak moves per-frame, so an eased
+         fade would leave a visible dark trail of "just-was-the-peak"
+         ticks that haven't finished easing back to 0.2. */
     }
 
     /* ── Main stage ── */
@@ -743,10 +745,19 @@
       function makeSound(path, volume = 0.7) {
         const a = new Audio(path);
         a.preload = 'auto';
-        a.volume = volume;
-        return () => { try { a.cloneNode().play().catch(() => {}); } catch (_) {} };
+        // `cloneNode` copies HTML attributes but NOT IDL properties like
+        // `volume`, so the clone must have its volume re-applied every
+        // play — otherwise every clone falls back to full volume (1.0)
+        // and any per-sound `volume` setting is silently ignored.
+        return () => {
+          try {
+            const c = a.cloneNode();
+            c.volume = volume;
+            c.play().catch(() => {});
+          } catch (_) {}
+        };
       }
-      const playCelebration = makeSound('sound%20effects/celebration.wav', 0.05);
+      const playCelebration = makeSound('sound%20effects/celebration.wav', 0.2);
       const playSelect      = makeSound('sound%20effects/select.wav');
       const playCaution     = makeSound('sound%20effects/caution.wav');
       const playTransition  = makeSound('sound%20effects/transition_up.wav');
@@ -975,6 +986,34 @@
         const base = glideTarget !== null ? glideTarget : posIdx;
         glideTo(base + d / WHEEL_PIXELS_PER_PHOTO);
       }, { passive: false });
+
+      // ── Input: touch swipe (mobile) ──
+      // Vertical swipes on the background navigate photos the same way as
+      // wheel/arrow keys — swipe up = next, swipe down = previous. Touches
+      // inside the tick strip or the story modal are ignored so those have
+      // their own handling. Uses a per-pixel ratio slightly tighter than
+      // the wheel handler because touch swipes tend to be longer.
+      const TOUCH_PIXELS_PER_PHOTO = 70;
+      let touchLastY = 0;
+      let touchActive = false;
+      window.addEventListener('touchstart', (e) => {
+        if (storyOverlay.classList.contains('open')) return;
+        if (e.target.closest && e.target.closest('#ticks')) return;
+        if (e.touches.length !== 1) return;
+        touchLastY = e.touches[0].clientY;
+        touchActive = true;
+      }, { passive: true });
+      window.addEventListener('touchmove', (e) => {
+        if (!touchActive) return;
+        const y = e.touches[0].clientY;
+        const delta = touchLastY - y;   // swipe up → positive → next photo
+        touchLastY = y;
+        e.preventDefault();
+        const base = glideTarget !== null ? glideTarget : posIdx;
+        glideTo(base + delta / TOUCH_PIXELS_PER_PHOTO);
+      }, { passive: false });
+      window.addEventListener('touchend', () => { touchActive = false; });
+      window.addEventListener('touchcancel', () => { touchActive = false; });
 
       // ── Input: ← / → / ↑ / ↓ arrow keys advance one photo at a time ──
       document.addEventListener('keydown', (e) => {
