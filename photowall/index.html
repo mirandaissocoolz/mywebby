@@ -699,10 +699,27 @@
         return;
       }
 
-      // Only preload the initially-shown photo (index 0). Remaining photos
-      // load lazily as the viewer navigates — much lighter on Supabase
-      // bandwidth than pulling every photo up front.
-      await preloadImage(photoUrl(photos[0].file_name));
+      // Preload EVERY photo up-front, behind the loading screen, so that
+      // once the gallery reveals there's no per-photo network wait when
+      // the viewer scrolls. Downloads run in parallel with a small
+      // concurrency cap so the browser doesn't queue 80+ requests at once
+      // and so slow devices aren't overwhelmed.
+      async function preloadAll(srcs, concurrency = 6) {
+        let cursor = 0;
+        const worker = async () => {
+          while (cursor < srcs.length) {
+            const i = cursor++;
+            await preloadImage(srcs[i]);
+          }
+        };
+        await Promise.all(Array.from({ length: concurrency }, worker));
+      }
+      // First photo has priority so the stage can populate as soon as
+      // possible; the rest download in parallel behind it.
+      const firstSrc = photoUrl(photos[0].file_name);
+      const restSrcs = photos.slice(1).map(p => photoUrl(p.file_name));
+      await preloadImage(firstSrc);
+      await preloadAll(restSrcs, 6);
       clearTimeout(showTimer);
 
       const ticksEl = document.getElementById('ticks');
@@ -749,7 +766,13 @@
       //      cloning defeats the audio-unlock trick below.
       //   2. cloneNode doesn't copy IDL properties (like `volume`), so
       //      per-sound volume settings were being ignored on every clone.
+      // Sounds are disabled on touch-primary devices (phones, tablets).
+      // Mobile browsers introduce audio-defer/latency during touch that
+      // makes sync sound effects feel glitchy — the site is quieter and
+      // smoother without them on mobile.
+      const soundsEnabled = !window.matchMedia('(pointer: coarse)').matches;
       function makeSound(path, volume = 0.7) {
+        if (!soundsEnabled) return () => {};
         const a = new Audio(path);
         a.preload = 'auto';
         a.volume = volume;
@@ -767,17 +790,21 @@
 
       // Type sound uses a POOL of audio elements so rapid successive plays
       // (each new photo passing) don't interrupt each other on the same
-      // element. Round-robin through the pool per call.
+      // element. Round-robin through the pool per call. Disabled entirely
+      // on touch-primary devices — see `soundsEnabled` above.
       const TYPE_POOL_SIZE = 5;
       const typePool = [];
-      for (let __i = 0; __i < TYPE_POOL_SIZE; __i++) {
-        const a = new Audio('sound%20effects/type_05.wav');
-        a.preload = 'auto';
-        a.volume = 0.4;
-        typePool.push(a);
+      if (soundsEnabled) {
+        for (let __i = 0; __i < TYPE_POOL_SIZE; __i++) {
+          const a = new Audio('sound%20effects/type_05.wav');
+          a.preload = 'auto';
+          a.volume = 0.4;
+          typePool.push(a);
+        }
       }
       let typePoolIdx = 0;
       function playTypeRaw() {
+        if (!soundsEnabled) return;
         const a = typePool[typePoolIdx];
         typePoolIdx = (typePoolIdx + 1) % TYPE_POOL_SIZE;
         try {
@@ -797,7 +824,7 @@
       // unlocks itself the first time the user actually triggers it.
       let audioUnlocked = false;
       function unlockAudio() {
-        if (audioUnlocked) return;
+        if (audioUnlocked || !soundsEnabled) return;
         audioUnlocked = true;
         typePool.forEach((a) => {
           a.muted = true;
@@ -943,17 +970,9 @@
 
       function setSelected(i) {
         if (i === selectedIdx) return;
-        // Play one typewriter tick per photo actually passed. On mobile
-        // Chrome, audio play() calls that fire from rAF are DEFERRED for
-        // the duration of an active touch — so during a swipe or slider
-        // drag, sounds would only flush when the finger lifts. To avoid
-        // that, the input handlers (touchmove, wheel, keydown, tick
-        // pointer events) play the tick synchronously inside their user
-        // gesture. setSelected then only plays here for the residual
-        // glide after the gesture ends (when no touch is active).
-        if (selectedIdx !== -1 && !touchActive && !sliderDragging) {
-          playType(Math.abs(i - selectedIdx));
-        }
+        // One typewriter tick per photo passed. Skipped on the very first
+        // call (which just seats the initial selection).
+        if (selectedIdx !== -1) playType(Math.abs(i - selectedIdx));
         selectedIdx = i;
         const p = photos[i];
 
@@ -1002,22 +1021,6 @@
         glideTarget = Math.max(0, Math.min(maxIdx, i));
       }
 
-      // Called from every user-gesture handler that moves the position.
-      // Plays a tick synchronously (in the user gesture) for each photo
-      // boundary the new target crosses relative to the current posIdx.
-      // Then updates the glide target. This works around mobile Chrome's
-      // audio-defer during touch: sounds played from user handlers fire
-      // immediately, while sounds played from rAF get batched.
-      function moveAndPlay(newTarget) {
-        const clamped = Math.max(0, Math.min(maxIdx, newTarget));
-        const currentPhoto = Math.round(posIdx);
-        const newPhoto = Math.round(clamped);
-        if (newPhoto !== currentPhoto) {
-          playType(Math.abs(newPhoto - currentPhoto));
-        }
-        glideTarget = clamped;
-      }
-
       // ── Input: click / drag the tick slider ──
       // Position within the container maps linearly to photo index. Both
       // click and drag use the same mapping — a click just moves the pointer
@@ -1037,11 +1040,11 @@
         e.preventDefault();
         sliderDragging = true;
         ticksEl.setPointerCapture(e.pointerId);
-        moveAndPlay(pointerToIndex(e));
+        glideTo(pointerToIndex(e));
       });
       ticksEl.addEventListener('pointermove', (e) => {
         if (!sliderDragging) return;
-        moveAndPlay(pointerToIndex(e));
+        glideTo(pointerToIndex(e));
       });
       function endSliderDrag(e) {
         if (!sliderDragging) return;
@@ -1063,7 +1066,7 @@
         e.preventDefault();
         const d = Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
         const base = glideTarget !== null ? glideTarget : posIdx;
-        moveAndPlay(base + d / WHEEL_PIXELS_PER_PHOTO);
+        glideTo(base + d / WHEEL_PIXELS_PER_PHOTO);
       }, { passive: false });
 
       // ── Input: touch swipe (mobile) ──
@@ -1089,7 +1092,7 @@
         touchLastY = y;
         e.preventDefault();
         const base = glideTarget !== null ? glideTarget : posIdx;
-        moveAndPlay(base + delta / TOUCH_PIXELS_PER_PHOTO);
+        glideTo(base + delta / TOUCH_PIXELS_PER_PHOTO);
       }, { passive: false });
       window.addEventListener('touchend', () => { touchActive = false; });
       window.addEventListener('touchcancel', () => { touchActive = false; });
@@ -1102,7 +1105,7 @@
         else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') dir = -1;
         else return;
         e.preventDefault();
-        moveAndPlay(Math.round(posIdx) + dir);
+        glideTo(Math.round(posIdx) + dir);
       });
 
       window.addEventListener('resize', () => {
