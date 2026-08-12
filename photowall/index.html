@@ -742,18 +742,23 @@
       //   celebration.wav — info-icon press
       //   select.wav      — card-arrow navigating to a new view
       //   caution.wav     — card-arrow at an edge (no new view, just wiggles)
+      // Every sound uses ONE reusable Audio element (reset with
+      // `currentTime = 0` before each play), rather than `cloneNode()`.
+      //   1. iOS Safari treats each cloned element as un-unlocked and
+      //      silently blocks it until touched inside a user gesture —
+      //      cloning defeats the audio-unlock trick below.
+      //   2. cloneNode doesn't copy IDL properties (like `volume`), so
+      //      per-sound volume settings were being ignored on every clone.
+      const allSounds = [];
       function makeSound(path, volume = 0.7) {
         const a = new Audio(path);
         a.preload = 'auto';
-        // `cloneNode` copies HTML attributes but NOT IDL properties like
-        // `volume`, so the clone must have its volume re-applied every
-        // play — otherwise every clone falls back to full volume (1.0)
-        // and any per-sound `volume` setting is silently ignored.
+        a.volume = volume;
+        allSounds.push(a);
         return () => {
           try {
-            const c = a.cloneNode();
-            c.volume = volume;
-            c.play().catch(() => {});
+            a.currentTime = 0;
+            a.play().catch(() => {});
           } catch (_) {}
         };
       }
@@ -762,6 +767,29 @@
       const playCaution     = makeSound('sound%20effects/caution.wav');
       const playTransition  = makeSound('sound%20effects/transition_up.wav');
       const playTypeRaw     = makeSound('sound%20effects/type_05.wav', 0.4);
+
+      // iOS Safari won't let an <audio> play unless play() is called
+      // synchronously inside a user-gesture handler. The typewriter tick
+      // fires from the animation-frame loop — not a user gesture — so it's
+      // silently blocked until the element is "unlocked". Unlock every
+      // sound once, on the first touch/click, by playing + immediately
+      // pausing it. After that, plays from anywhere are allowed.
+      let audioUnlocked = false;
+      function unlockAudio() {
+        if (audioUnlocked) return;
+        audioUnlocked = true;
+        allSounds.forEach((a) => {
+          const savedVol = a.volume;
+          a.volume = 0;
+          a.play().then(() => {
+            a.pause();
+            a.currentTime = 0;
+            a.volume = savedVol;
+          }).catch(() => { a.volume = savedVol; });
+        });
+      }
+      document.addEventListener('touchstart', unlockAudio, { once: true, passive: true });
+      document.addEventListener('click', unlockAudio, { once: true });
 
       // Typewriter tick played each time the selected photo advances. Fires
       // once per new photo so the rhythm matches the scroll speed: slow
