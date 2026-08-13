@@ -144,15 +144,15 @@
       position: fixed;
       bottom: 40px;
       right: 20px;
-      width: 282px;                       /* 242px inner + 20px padding × 2 */
+      width: 240px;                       /* scaled ~15% from Figma's 282px */
       background: #fff;
-      border-radius: 13px;
-      padding: 20px;
+      border-radius: 11px;
+      padding: 17px;
       box-shadow: -2px 0 10px rgba(0, 0, 0, 0.15);
       font-family: 'Figtree', system-ui, sans-serif;
       display: none;                      /* toggled by .visible */
       flex-direction: column;
-      gap: 21px;
+      gap: 18px;
       /* Pivot at TOP-RIGHT (not bottom-right) so the retracted nub stays in
          the exact same viewport spot no matter how tall the card grows.
          With a bottom-right pivot, rotation swings the top of the card
@@ -162,10 +162,10 @@
       /* Retracted: rotated -5.92° and translated so only the "Gear" word
          at the card's top-left corner peeks in from the viewport's
          bottom-right. X and Y peek values are sized independently: X wide
-         enough to show "Gear" plus its left padding (~70px), Y tight
+         enough to show "Gear" plus its left padding (~60px), Y tight
          enough to stop just below the word so the "Camera" label below
-         stays hidden (~45px = 20px padding + 21px title + ~4px slack). */
-      transform: translate(calc(100% - 70px), calc(100% - 45px)) rotate(-5.92deg);
+         stays hidden (~40px = 17px padding + 18px title + ~5px slack). */
+      transform: translate(calc(100% - 60px), calc(100% - 40px)) rotate(-5.92deg);
       transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
       cursor: default;
       /* Above the tick slider (z-index: 8) so an overlap on narrow
@@ -188,7 +188,7 @@
     .gear-card:hover { transform: translate(0, 0) rotate(0deg); }
     .gear-title {
       margin: 0;
-      font-size: 21.25px;
+      font-size: 18px;
       font-weight: 400;
       color: rgba(0, 0, 0, 0.5);
       line-height: 1;
@@ -196,25 +196,25 @@
     .gear-list {
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 12px;
     }
     .gear-item {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 5px;
     }
     /* JS toggles .empty when a field is null/blank — the entire row hides. */
     .gear-item.empty { display: none; }
     .gear-label {
       margin: 0;
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 400;
       color: rgba(0, 0, 0, 0.2);
       line-height: 1;
     }
     .gear-value {
       margin: 0;
-      font-size: 21.25px;
+      font-size: 18px;
       font-weight: 400;
       color: #000;
       line-height: 1.15;
