@@ -142,7 +142,7 @@
        breakpoint so the layout doesn't shift with the value strings. */
     .gear-card {
       position: fixed;
-      bottom: 20px;
+      bottom: 40px;
       right: 20px;
       width: 282px;                       /* 242px inner + 20px padding × 2 */
       background: #fff;
@@ -153,15 +153,36 @@
       display: none;                      /* toggled by .visible */
       flex-direction: column;
       gap: 21px;
-      transform-origin: bottom right;
-      /* Retracted: rotated 5.92° and translated so only a ~70px top-left
-         nub peeks in from the bottom-right corner of the viewport. */
-      transform: translate(calc(100% - 70px), calc(100% - 70px)) rotate(-5.92deg);
+      /* Pivot at TOP-RIGHT (not bottom-right) so the retracted nub stays in
+         the exact same viewport spot no matter how tall the card grows.
+         With a bottom-right pivot, rotation swings the top of the card
+         wider on taller cards, producing a ~0.1 × cardHeight horizontal
+         drift; a top-right pivot cancels that against the translate. */
+      transform-origin: top right;
+      /* Retracted: rotated -5.92° and translated so only the "Gear" word
+         at the card's top-left corner peeks in from the viewport's
+         bottom-right. X and Y peek values are sized independently: X wide
+         enough to show "Gear" plus its left padding (~70px), Y tight
+         enough to stop just below the word so the "Camera" label below
+         stays hidden (~45px = 20px padding + 21px title + ~4px slack). */
+      transform: translate(calc(100% - 70px), calc(100% - 45px)) rotate(-5.92deg);
       transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
       cursor: default;
       /* Above the tick slider (z-index: 8) so an overlap on narrow
          layouts keeps the card fully interactive. */
       z-index: 12;
+    }
+    /* Invisible halo around the card that keeps :hover active even when
+       the animating rotate + translate briefly sweeps the card's painted
+       shape out from under the cursor. Without it, the transition can
+       cause a flicker loop: hover ends → retract starts → card slides
+       back under the cursor → hover restarts → repeat. The halo doesn't
+       affect layout or paint — only pointer hit-testing. */
+    .gear-card::before {
+      content: '';
+      position: absolute;
+      inset: -80px;
+      z-index: -1;
     }
     .gear-card.visible { display: flex; }
     .gear-card:hover { transform: translate(0, 0) rotate(0deg); }
