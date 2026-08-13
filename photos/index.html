@@ -222,7 +222,9 @@
     }
     @media (max-width: 1137px) {
       /* Narrow layout: fixed but smaller so the card doesn't dominate the
-         mobile viewport. Rotated peek stays proportional. */
+         mobile viewport. X peek shows the full "Gear" word (~58px); Y
+         peek is tighter so the "Camera" label below doesn't sneak into
+         view — 16px padding + 17px title ≈ 33px, plus a few pixels slack. */
       .gear-card {
         bottom: 14px;
         right: 14px;
@@ -230,7 +232,7 @@
         padding: 16px;
         gap: 16px;
         border-radius: 11px;
-        transform: translate(calc(100% - 58px), calc(100% - 58px)) rotate(-5.92deg);
+        transform: translate(calc(100% - 58px), calc(100% - 43px)) rotate(-5.92deg);
       }
       .gear-title { font-size: 17px; }
       .gear-label { font-size: 13px; }
