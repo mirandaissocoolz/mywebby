@@ -113,9 +113,7 @@
     }
 
     /* "new" badge — pinned to the photo's top-left corner. Only shown when
-       the current photo's `new` column is true. Draggable: pointer moves
-       translate it around, release snaps it back to (0,0) with a spring-y
-       ease and a select chime. */
+       the current photo's `new` column is true. */
     .new-badge {
       position: absolute;
       top: 10px;
@@ -132,19 +130,9 @@
       font-size: 14px;
       line-height: 1;
       letter-spacing: 0.02em;
-      cursor: grab;
-      user-select: none;
-      -webkit-user-select: none;
-      touch-action: none;
       z-index: 3;
-      transform: translate3d(0, 0, 0);
-      will-change: transform;
     }
     .new-badge.visible { display: inline-flex; }
-    .new-badge.dragging { cursor: grabbing; }
-    .new-badge.snapping {
-      transition: transform 0.35s cubic-bezier(0.2, 1.4, 0.4, 1);
-    }
     /* Bump the badge on desktop-sized viewports. Mobile keeps the 14px
        default set above; the 1138px+ layout gets a chunkier sticker. */
     @media (min-width: 1138px) {
@@ -846,44 +834,6 @@
         playCaution();
       });
 
-      // ── "new" badge drag ──
-      // Pointer-drag translates the badge freely; releasing snaps it back
-      // to (0,0) via a springy CSS transition and plays the select chime.
-      // Events are stopped so a drag doesn't also fire the mainPhotoWrap
-      // wiggle/caution behavior.
-      let badgeDrag = null; // { pointerId, startX, startY, moved }
-      newBadge.addEventListener('pointerdown', (e) => {
-        e.stopPropagation();
-        newBadge.classList.remove('snapping');
-        newBadge.classList.add('dragging');
-        badgeDrag = { pointerId: e.pointerId, startX: e.clientX, startY: e.clientY, moved: false };
-        try { newBadge.setPointerCapture(e.pointerId); } catch (_) {}
-      });
-      newBadge.addEventListener('pointermove', (e) => {
-        if (!badgeDrag || e.pointerId !== badgeDrag.pointerId) return;
-        const dx = e.clientX - badgeDrag.startX;
-        const dy = e.clientY - badgeDrag.startY;
-        if (Math.abs(dx) > 2 || Math.abs(dy) > 2) badgeDrag.moved = true;
-        newBadge.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
-      });
-      function endBadgeDrag(e) {
-        if (!badgeDrag || e.pointerId !== badgeDrag.pointerId) return;
-        const moved = badgeDrag.moved;
-        badgeDrag = null;
-        newBadge.classList.remove('dragging');
-        try { newBadge.releasePointerCapture(e.pointerId); } catch (_) {}
-        if (moved) {
-          newBadge.classList.add('snapping');
-          newBadge.style.transform = 'translate3d(0, 0, 0)';
-          playSelect();
-          setTimeout(() => newBadge.classList.remove('snapping'), 400);
-        }
-      }
-      newBadge.addEventListener('pointerup',     endBadgeDrag);
-      newBadge.addEventListener('pointercancel', endBadgeDrag);
-      // Swallow the click that follows a drag so the wrap's wiggle/caution
-      // doesn't fire.
-      newBadge.addEventListener('click', (e) => e.stopPropagation());
       const metaTitle = document.getElementById('metaTitle');
       const metaDate = document.getElementById('metaDate');
 
@@ -966,7 +916,7 @@
           const src  = typeAudioCtx.createBufferSource();
           const gain = typeAudioCtx.createGain();
           src.buffer     = typeBuffer;
-          gain.gain.value = 0.4;
+          gain.gain.value = 0.2;
           src.connect(gain).connect(typeAudioCtx.destination);
           src.start(0);
         } catch (_) {}
@@ -1148,8 +1098,13 @@
       function setSelected(i) {
         if (i === selectedIdx) return;
         // One typewriter tick per photo passed. Skipped on the very first
-        // call (which just seats the initial selection).
-        if (selectedIdx !== -1) playType(Math.abs(i - selectedIdx));
+        // call (which just seats the initial selection). Slider input is
+        // special-cased to a single tick regardless of jump size — the
+        // slider snaps posIdx directly to the target, so a click across
+        // many photos would otherwise fire a whole burst at once.
+        if (selectedIdx !== -1) {
+          playType(sliderDragging ? 1 : Math.abs(i - selectedIdx));
+        }
         selectedIdx = i;
         const p = photos[i];
 
@@ -1163,10 +1118,6 @@
         metaTitle.textContent = displayTitle(p);
         metaDate.textContent = formatDate(p.taken_at);
 
-        // Reset the badge to its resting spot on every photo change (in
-        // case it was mid-flight from a drag) and show/hide based on `new`.
-        newBadge.classList.remove('dragging', 'snapping');
-        newBadge.style.transform = 'translate3d(0, 0, 0)';
         newBadge.classList.toggle('visible', p.new === true);
       }
 
