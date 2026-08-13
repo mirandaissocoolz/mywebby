@@ -145,7 +145,7 @@
       bottom: 28px;
       right: 20px;
       width: 240px;                       /* scaled ~15% from Figma's 282px */
-      background: #fff;
+      background: #FFD683;
       border-radius: 11px;
       padding: 17px;
       box-shadow: -2px 0 10px rgba(0, 0, 0, 0.15);
@@ -915,22 +915,40 @@
         try { await img.decode(); } catch (_) {}
         preloadedImages.set(src, img);
       }
-      async function preloadAll(srcs, concurrency = 6) {
-        let cursor = 0;
-        const worker = async () => {
-          while (cursor < srcs.length) {
-            const i = cursor++;
-            await preloadOne(srcs[i]);
-          }
-        };
-        await Promise.all(Array.from({ length: concurrency }, worker));
+      // Resolves once `targetCount` sources have finished loading — the
+       // remaining downloads keep running in the background so the strip
+       // fills in behind the user without holding the loading screen. Used
+       // to release the gallery at 80% loaded instead of 100%.
+      function preloadUntil(srcs, targetCount, concurrency = 6) {
+        return new Promise((resolveOuter) => {
+          if (srcs.length === 0 || targetCount <= 0) return resolveOuter();
+          let cursor = 0;
+          let loaded = 0;
+          let released = false;
+          const worker = async () => {
+            while (cursor < srcs.length) {
+              const i = cursor++;
+              await preloadOne(srcs[i]);
+              loaded++;
+              if (!released && loaded >= targetCount) {
+                released = true;
+                resolveOuter();
+              }
+            }
+          };
+          for (let n = 0; n < concurrency; n++) worker();
+        });
       }
       // First photo has priority so the stage can populate as soon as
-      // possible; the rest download in parallel behind it.
+      // possible; the rest download in parallel behind it. We only await
+      // enough of them to reach 80% of the total set — the tail keeps
+      // downloading in the background so the strip fills in without
+      // blocking the loading screen.
       const firstSrc = photoUrl(photos[0].file_name);
       const restSrcs = photos.slice(1).map(p => photoUrl(p.file_name));
       await preloadOne(firstSrc);
-      await preloadAll(restSrcs, 6);
+      const targetLoaded = Math.max(1, Math.ceil(photos.length * 0.8));
+      await preloadUntil(restSrcs, Math.max(0, targetLoaded - 1), 6);
       clearTimeout(showTimer);
 
       const ticksEl = document.getElementById('ticks');
