@@ -969,13 +969,16 @@
           typeAudioCtx.resume().catch(() => { audioUnlocked = false; });
         }
       }
-      // Only listen for events that actually grant user activation. Wheel /
-      // scroll do NOT grant activation per the HTML spec, so listening for
-      // them here would just churn.
+      // Wheel/scroll don't grant user activation per the HTML spec, but in
+      // Chrome/Firefox (the only browsers where the tick is enabled) an
+      // AudioContext.resume() call from a wheel handler still succeeds — so
+      // scrolling through photos primes the tick on the very first frame
+      // instead of staying silent until an unrelated click.
       document.addEventListener('touchstart',  unlockAudio, { passive: true });
       document.addEventListener('pointerdown', unlockAudio);
       document.addEventListener('click',       unlockAudio);
       document.addEventListener('keydown',     unlockAudio);
+      window.addEventListener('wheel',         unlockAudio, { passive: true });
 
       // Play one tick per photo actually passed in a transition. A single-
       // step change fires immediately; a bigger jump (slider tap, fast
