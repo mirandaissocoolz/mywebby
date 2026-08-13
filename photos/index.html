@@ -159,7 +159,9 @@
       transform: translate(calc(100% - 70px), calc(100% - 70px)) rotate(-5.92deg);
       transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
       cursor: default;
-      z-index: 4;
+      /* Above the tick slider (z-index: 8) so an overlap on narrow
+         layouts keeps the card fully interactive. */
+      z-index: 12;
     }
     .gear-card.visible { display: flex; }
     .gear-card:hover { transform: translate(0, 0) rotate(0deg); }
@@ -1338,26 +1340,37 @@
       }, { passive: false });
 
       // ── Input: touch swipe (mobile) ──
-      // Vertical swipes on the background navigate photos the same way as
-      // wheel/arrow keys — swipe up = next, swipe down = previous. Touches
-      // inside the tick strip or the story modal are ignored so those have
-      // their own handling. Uses a per-pixel ratio slightly tighter than
-      // the wheel handler because touch swipes tend to be longer.
+      // Swipes on the background navigate photos — vertical (up = next,
+      // down = previous) and horizontal (left = next, right = previous)
+      // both work, whichever axis dominates each move. Touches inside the
+      // tick strip or the story modal are ignored so those have their own
+      // handling. Uses a per-pixel ratio slightly tighter than the wheel
+      // handler because touch swipes tend to be longer.
       const TOUCH_PIXELS_PER_PHOTO = 70;
+      let touchLastX = 0;
       let touchLastY = 0;
       let touchActive = false;
       window.addEventListener('touchstart', (e) => {
         if (storyOverlay.classList.contains('open')) return;
         if (e.target.closest && e.target.closest('#ticks')) return;
         if (e.touches.length !== 1) return;
+        touchLastX = e.touches[0].clientX;
         touchLastY = e.touches[0].clientY;
         touchActive = true;
       }, { passive: true });
       window.addEventListener('touchmove', (e) => {
         if (!touchActive) return;
+        const x = e.touches[0].clientX;
         const y = e.touches[0].clientY;
-        const delta = touchLastY - y;   // swipe up → positive → next photo
+        const dx = touchLastX - x;   // swipe left  → positive → next photo
+        const dy = touchLastY - y;   // swipe up    → positive → next photo
+        touchLastX = x;
         touchLastY = y;
+        // Use whichever axis dominates this frame so a mostly-horizontal
+        // swipe doesn't get diluted by tiny vertical wobble (and vice
+        // versa). Each frame's delta is small, so per-frame axis selection
+        // reads naturally across the whole gesture.
+        const delta = Math.abs(dx) > Math.abs(dy) ? dx : dy;
         e.preventDefault();
         const base = glideTarget !== null ? glideTarget : posIdx;
         glideTo(base + delta / TOUCH_PIXELS_PER_PHOTO);
