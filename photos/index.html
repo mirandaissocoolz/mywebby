@@ -376,6 +376,21 @@
       color: rgba(0, 0, 0, 0.5);
       transition: transform 0.18s ease, color 0.18s ease;
       will-change: transform;
+      position: relative;
+    }
+    /* Expanded hit area — the visible icon stays 25.778px, but hover /
+       click land from ~7px beyond every edge. */
+    .story-socials a::before {
+      content: '';
+      position: absolute;
+      inset: -7px;
+    }
+    /* X gets a wider zone still — its letterform leaves lots of empty
+       space inside the bounding box, so it feels less responsive than the
+       others without extra reach. The zone deliberately overlaps its
+       neighbors; DOM order puts X on top of the overlap so it wins there. */
+    .story-socials a[aria-label="x"]::before {
+      inset: -20px;
     }
     .story-socials a:hover {
       transform: translateY(-3px);
@@ -969,16 +984,22 @@
           typeAudioCtx.resume().catch(() => { audioUnlocked = false; });
         }
       }
-      // Wheel/scroll don't grant user activation per the HTML spec, but in
-      // Chrome/Firefox (the only browsers where the tick is enabled) an
-      // AudioContext.resume() call from a wheel handler still succeeds — so
-      // scrolling through photos primes the tick on the very first frame
-      // instead of staying silent until an unrelated click.
+      // Only user-activation events (click, keydown, pointerdown, touchend)
+      // unblock the AudioContext — wheel/scroll are explicitly excluded per
+      // the HTML spec, so they're not on this list. Bubble-phase document
+      // listeners cover the common path.
       document.addEventListener('touchstart',  unlockAudio, { passive: true });
       document.addEventListener('pointerdown', unlockAudio);
       document.addEventListener('click',       unlockAudio);
       document.addEventListener('keydown',     unlockAudio);
-      window.addEventListener('wheel',         unlockAudio, { passive: true });
+      // Capture-phase listeners on window as a full-screen catch-all: they
+      // fire on the way DOWN, before any descendant can swallow the event
+      // via stopPropagation (e.g. the "new" badge's drag handler). This
+      // guarantees the very first pointer input anywhere in the viewport
+      // unlocks the audio context without visibly hijacking the click or
+      // blocking hover states on underlying elements.
+      window.addEventListener('pointerdown', unlockAudio, { capture: true });
+      window.addEventListener('click',       unlockAudio, { capture: true });
 
       // Play one tick per photo actually passed in a transition. A single-
       // step change fires immediately; a bigger jump (slider tap, fast
@@ -1088,6 +1109,14 @@
           social.addEventListener('mouseleave', clear);
           social.addEventListener('blur', clear);
         }
+      });
+
+      // Play the select chime each time a social icon enters hover, so
+      // dragging the cursor across the row taps out a per-icon click.
+      // mouseenter (unlike mouseover) fires exactly once per icon entry
+      // and doesn't re-fire when moving between its child SVG nodes.
+      document.querySelectorAll('.story-socials [data-social]').forEach((el) => {
+        el.addEventListener('mouseenter', () => { playSelect(); });
       });
 
       // Keyboard: ← / → switch views while the card is open (desktop).
