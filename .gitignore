@@ -7,3 +7,5 @@ photowall/make_csv.py
 photowall/package.json
 photowall/package-lock.json
 photowall/.claude/
+.DS_Store
+photowall/
