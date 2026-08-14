@@ -125,7 +125,7 @@
       background: #fff;
       color: #000;
       border-radius: 3px;
-      font-family: 'Figtree', system-ui, sans-serif;
+      font-family: 'Rethink Sans', system-ui, sans-serif;
       font-weight: 400;
       font-size: 14px;
       line-height: 1;
@@ -145,11 +145,11 @@
       bottom: 28px;
       right: 20px;
       width: 240px;                       /* scaled ~15% from Figma's 282px */
-      background: #FFD683;
-      border-radius: 11px;
+      background: #E0D6FE;
+      border-radius: 6px;
       padding: 17px;
       box-shadow: -2px 0 10px rgba(0, 0, 0, 0.15);
-      font-family: 'Figtree', system-ui, sans-serif;
+      font-family: 'Rethink Sans', system-ui, sans-serif;
       display: none;                      /* toggled by .visible */
       flex-direction: column;
       gap: 18px;
@@ -177,11 +177,20 @@
        shape out from under the cursor. Without it, the transition can
        cause a flicker loop: hover ends → retract starts → card slides
        back under the cursor → hover restarts → repeat. The halo doesn't
-       affect layout or paint — only pointer hit-testing. */
+       affect layout or paint — only pointer hit-testing.
+
+       Top/left kept tight (10px) so the halo doesn't catch stray hovers
+       into the middle of the page. Right/bottom extended far past the
+       card so the whole bottom-right corner of the viewport — including
+       the gap between the peek and the screen edges — is still a hit
+       target for the "Gear" tab. */
     .gear-card::before {
       content: '';
       position: absolute;
-      inset: -80px;
+      top: -10px;
+      left: -10px;
+      right: -400px;
+      bottom: -400px;
       z-index: -1;
     }
     .gear-card.visible { display: flex; }
@@ -222,17 +231,18 @@
     }
     @media (max-width: 1137px) {
       /* Narrow layout: fixed but smaller so the card doesn't dominate the
-         mobile viewport. X peek shows the full "Gear" word (~58px); Y
+         mobile viewport. X peek shows the full "Gear" word (~50px); Y
          peek is tighter so the "Camera" label below doesn't sneak into
-         view — 16px padding + 17px title ≈ 33px, plus a few pixels slack. */
+         view — 16px padding + 17px title ≈ 33px, with just a few pixels
+         of slack so the word still clears the edge. */
       .gear-card {
         bottom: 26px;
         right: 14px;
         width: 220px;
         padding: 16px;
         gap: 16px;
-        border-radius: 11px;
-        transform: translate(calc(100% - 58px), calc(100% - 43px)) rotate(-5.92deg);
+        border-radius: 6px;
+        transform: translate(calc(100% - 50px), calc(100% - 36px)) rotate(-5.92deg);
       }
       .gear-title { font-size: 17px; }
       .gear-label { font-size: 13px; }
@@ -329,7 +339,7 @@
     .story-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(217, 217, 217, 0.5);
+      background: rgba(102, 102, 102, 0.5);   /* #666666 @ 50% */
       backdrop-filter: blur(7px);
       -webkit-backdrop-filter: blur(7px);
       z-index: 50;
@@ -353,13 +363,14 @@
       max-height: calc(100vh - 80px);
       overflow-y: auto;
       background: white;
-      border: 2px dashed rgba(0, 0, 0, 0.5);
-      padding: 40px 40px 22px 40px;
+      border-radius: 5px;
+      box-shadow: -2px 0 10px rgba(0, 0, 0, 0.25);
+      padding: 30px 29px 22px 29px;
       display: flex;
       flex-direction: column;
       align-items: center;
       cursor: default;
-      font-family: 'Figtree', system-ui, sans-serif;
+      font-family: 'Rethink Sans', system-ui, sans-serif;
       font-weight: 400;
       /* Slide-up entrance: sits below its resting position and faded out
          while the overlay is closed, then rises into place when `.open` is
@@ -399,9 +410,10 @@
     }
     .story-text {
       width: 100%;
-      font-size: 12px;
+      font-size: 13px;
+      font-weight: 300;
       color: rgba(0, 0, 0, 0.5);
-      line-height: 16px;
+      line-height: 17px;
       word-break: break-word;
     }
     .story-pic {
@@ -432,7 +444,8 @@
       align-items: center;
       justify-content: center;
       gap: 20px;
-      font-size: 12px;
+      font-size: 13px;
+      font-weight: 500;
       color: rgba(0, 0, 0, 0.5);
     }
     .story-arrow {
@@ -499,18 +512,19 @@
       display: block;
     }
     .story-text-center {
-      font-size: 12px;
+      font-size: 13px;
+      font-weight: 300;
       color: rgba(0, 0, 0, 0.5);
       text-align: center;
       white-space: nowrap;
     }
 
     /* Contact view sizes to fit its content instead of using the story
-       view's fixed 482px width, matching the Figma design. Horizontal
-       padding widens to 69px so the layout matches. */
+       view's fixed 482px width, matching the Figma design. Wider 60px
+       horizontal padding gives the socials row more breathing room. */
     .story-card[data-view="contact"] {
       width: fit-content;
-      padding: 40px 69px 22px 69px;
+      padding: 30px 60px 22px 60px;
     }
 
     /* ── Narrow layout ──
@@ -599,14 +613,14 @@
         <div class="story-line"><div></div></div>
         <div class="story-title">
           <button class="story-arrow" data-nav="prev" aria-label="previous">
-            <svg viewBox="0 0 8 6" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <path d="M0 3 L8 3 M0 3 L3 0 M0 3 L3 6" stroke="currentColor" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <svg viewBox="0 0 70.5 54.8333" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M66.5833 27.4167H3.91667M27.4167 3.91667L3.91667 27.4167L27.4167 50.9167" stroke="currentColor" stroke-width="7.83333" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
           <span>story</span>
           <button class="story-arrow" data-nav="next" aria-label="next">
-            <svg viewBox="0 0 8 6" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <path d="M0 3 L8 3 M8 3 L5 0 M8 3 L5 6" stroke="currentColor" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <svg viewBox="0 0 70.5 54.8333" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M3.91667 27.4167H66.5833M43.0833 3.91667L66.5833 27.4167L43.0833 50.9167" stroke="currentColor" stroke-width="7.83333" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
         </div>
@@ -637,14 +651,14 @@
         <div class="story-line"><div></div></div>
         <div class="story-title">
           <button class="story-arrow" data-nav="prev" aria-label="previous">
-            <svg viewBox="0 0 8 6" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <path d="M0 3 L8 3 M0 3 L3 0 M0 3 L3 6" stroke="currentColor" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <svg viewBox="0 0 70.5 54.8333" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M66.5833 27.4167H3.91667M27.4167 3.91667L3.91667 27.4167L27.4167 50.9167" stroke="currentColor" stroke-width="7.83333" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
           <span>contact</span>
           <button class="story-arrow" data-nav="next" aria-label="next">
-            <svg viewBox="0 0 8 6" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <path d="M0 3 L8 3 M8 3 L5 0 M8 3 L5 6" stroke="currentColor" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <svg viewBox="0 0 70.5 54.8333" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M3.91667 27.4167H66.5833M43.0833 3.91667L66.5833 27.4167L43.0833 50.9167" stroke="currentColor" stroke-width="7.83333" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
         </div>
@@ -787,36 +801,48 @@
 
       function draw(time) {
         const size = SIZE;
-        const color = '#949494';
+        // Two-tone palette: grey anchors the dense 3x3 heart of the star
+        // so the silhouette still reads, while the lavender (matches the
+        // gear card's #E0D6FE) tints the cardinal extensions and radial
+        // rays so the sparkle picks up the site's accent color.
+        const greyColor = '#949494';
+        const accentColor = '#E0D6FE';
         ctx.clearRect(0, 0, size, size);
         const cx = size / 2, cy = size / 2;
         // Cell size scales with the canvas: a 48px loader uses 2px cells
         // (the original snippet's default), and larger sizes scale up
         // proportionally so the drawn pattern grows with SIZE.
         const px = Math.max(1, Math.round(size / 24));
-        const setPx = (dx, dy, alpha) => {
+        const setPx = (dx, dy, alpha, color) => {
           ctx.fillStyle = withAlpha(color, alpha);
           ctx.fillRect(Math.round(cx + dx * px), Math.round(cy + dy * px), px, px);
         };
 
-        // Core 3x3 cluster + cardinal extensions, each pulsing at its own phase.
-        const core = [
+        // Inner 3x3 core: grey. Cardinal extensions one step further out:
+        // lavender — same pulse, different colour so the arms glow.
+        const coreInner = [
           [-1,-1],[0,-1],[1,-1],[-1,0],[0,0],[1,0],[-1,1],[0,1],[1,1],
-          [-2,0],[2,0],[0,-2],[0,2],
         ];
-        core.forEach(([dx, dy]) => {
+        const coreArms = [[-2,0],[2,0],[0,-2],[0,2]];
+        coreInner.forEach(([dx, dy]) => {
           const alpha = 0.6 + 0.3 * Math.abs(Math.sin(0.002 * time + 0.4 * Math.hypot(dx, dy)));
-          setPx(dx, dy, alpha);
+          setPx(dx, dy, alpha, greyColor);
+        });
+        coreArms.forEach(([dx, dy]) => {
+          const alpha = 0.6 + 0.3 * Math.abs(Math.sin(0.002 * time + 0.4 * Math.hypot(dx, dy)));
+          setPx(dx, dy, alpha, accentColor);
         });
 
-        // Eight radial rays, each fading outward.
+        // Eight radial rays, each fading outward. Cardinals stay grey to
+        // frame the core; diagonals go lavender for a soft sparkle halo.
         const rayLen = size > 30 ? 4 : 2;
         for (let i = 0; i < 8; i++) {
           const angle = (i / 8) * Math.PI * 2;
           const intensity = 0.4 + 0.55 * Math.abs(Math.sin(0.0022 * time + 0.7 * i));
+          const rayColor = i % 2 === 0 ? greyColor : accentColor;
           for (let r = 2; r <= rayLen; r++) {
             const alpha = (0.2 + 0.6 * intensity) * (1 - (r - 2) / (rayLen - 0.5));
-            setPx(Math.round(Math.cos(angle) * r), Math.round(Math.sin(angle) * r), alpha);
+            setPx(Math.round(Math.cos(angle) * r), Math.round(Math.sin(angle) * r), alpha, rayColor);
           }
         }
       }
