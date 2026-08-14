@@ -146,9 +146,8 @@
       right: 20px;
       width: 240px;                       /* scaled ~15% from Figma's 282px */
       background: #E0D6FE;
-      border-radius: 6px;
+      border-radius: 14px;
       padding: 17px;
-      box-shadow: -2px 0 10px rgba(0, 0, 0, 0.15);
       font-family: 'Rethink Sans', system-ui, sans-serif;
       display: none;                      /* toggled by .visible */
       flex-direction: column;
@@ -241,7 +240,7 @@
         width: 220px;
         padding: 16px;
         gap: 16px;
-        border-radius: 6px;
+        border-radius: 14px;
         transform: translate(calc(100% - 50px), calc(100% - 36px)) rotate(-5.92deg);
       }
       .gear-title { font-size: 17px; }
@@ -335,7 +334,8 @@
 
     /* ── Story modal ──
        Full-screen overlay + centered story card, shown when the info icon
-       is clicked. The card wiggles briefly on first appearance. */
+       is clicked. Combines the story text, photo, and social links into a
+       single panel — no more inter-view navigation. */
     .story-overlay {
       position: fixed;
       inset: 0;
@@ -358,20 +358,20 @@
     }
 
     .story-card {
-      width: 482px;
+      width: 542px;
       max-width: calc(100vw - 80px);
       max-height: calc(100vh - 80px);
       overflow-y: auto;
       background: white;
-      border-radius: 5px;
-      box-shadow: -2px 0 10px rgba(0, 0, 0, 0.25);
-      padding: 30px 29px 22px 29px;
+      border-radius: 15px;
+      padding: 35px 34px 26px 34px;
       display: flex;
       flex-direction: column;
       align-items: center;
       cursor: default;
       font-family: 'Rethink Sans', system-ui, sans-serif;
       font-weight: 400;
+      box-shadow: -1.8px 0 9px rgba(0, 0, 0, 0.15);
       /* Slide-up entrance: sits below its resting position and faded out
          while the overlay is closed, then rises into place when `.open` is
          applied on the overlay. Uses a soft-out cubic curve so the card
@@ -385,10 +385,8 @@
       transform: translateY(0);
       opacity: 1;
     }
-    /* View-switch wiggle — JS toggles this class when the arrows navigate
-       between the story and contact panels. Keeps the entrance clean while
-       still giving the arrows their playful shake. */
-    .story-card.wiggle,
+    /* Photo wiggle — playful "dead-end" feedback when the story photo is
+       tapped. Card itself no longer wiggles (nothing to navigate to). */
     .story-pic.wiggle {
       animation: story-wiggle 0.55s ease-out;
     }
@@ -405,21 +403,40 @@
       width: 100%;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      gap: 19px;
+      align-items: stretch;
+      gap: 18px;
+    }
+    .story-heading {
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+      width: 100%;
+    }
+    .story-label {
+      font-size: 15px;
+      font-weight: 400;
+      color: rgba(0, 0, 0, 0.2);
+      line-height: 19px;
     }
     .story-text {
-      width: 100%;
-      font-size: 13px;
-      font-weight: 300;
+      font-size: 15px;
+      font-weight: 400;
       color: rgba(0, 0, 0, 0.5);
-      line-height: 17px;
+      line-height: 19px;
       word-break: break-word;
+    }
+    .story-text em { font-style: italic; }
+    .story-body {
+      display: flex;
+      flex-direction: column;
+      gap: 17px;
+      width: 100%;
     }
     .story-pic {
       width: 100%;
       aspect-ratio: 2751 / 1830;
       overflow: hidden;
+      border-radius: 15px;
     }
     .story-pic img {
       width: 100%;
@@ -428,103 +445,46 @@
       display: block;
       -webkit-user-drag: none;
     }
+    /* Footer groups the divider + social links together with a tighter
+       12px gap, while the pic-to-footer gap stays at 17px. */
+    .story-footer {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+    }
     .story-line {
       width: 100%;
-      display: flex;
-      justify-content: center;
-    }
-    .story-line > div {
-      width: 100%;
-      max-width: 393px;
       height: 1px;
       background: rgba(0, 0, 0, 0.2);
     }
-    .story-title {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 20px;
-      font-size: 13px;
-      font-weight: 500;
-      color: rgba(0, 0, 0, 0.5);
-    }
-    .story-arrow {
-      background: none;
-      border: 0;
-      padding: 4px 6px;
-      cursor: pointer;
-      color: rgba(0, 0, 0, 0.2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 4px;
-    }
-    .story-arrow:hover { color: rgba(0, 0, 0, 0.85); }
-    .story-arrow svg {
-      display: block;
-      width: 16px;
-      height: 12px;
-    }
-
-    /* ── Contact card ── */
+    /* Social text links — Instagram / Twitter / LinkedIn as inline text
+       with a small up-right arrow. Hover pushes the arrow further right
+       instead of jumping the whole link upward. */
     .story-socials {
       display: flex;
-      gap: 14px;
+      gap: 26px;
       align-items: center;
-      justify-content: center;
     }
     .story-socials a {
-      width: 25.778px;
-      height: 25.778px;
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      justify-content: center;
+      gap: 3px;
+      font-size: 15px;
+      line-height: 19px;
+      font-weight: 400;
       color: rgba(0, 0, 0, 0.5);
-      transition: transform 0.18s ease, color 0.18s ease;
-      will-change: transform;
-      position: relative;
+      text-decoration: none;
+      transition: color 0.18s ease, gap 0.18s ease, transform 0.18s ease;
     }
-    /* Expanded hit area — the visible icon stays 25.778px, but hover /
-       click land from ~7px beyond every edge. */
-    .story-socials a::before {
-      content: '';
-      position: absolute;
-      inset: -7px;
-    }
-    /* X gets a wider zone still — its letterform leaves lots of empty
-       space inside the bounding box, so it feels less responsive than the
-       others without extra reach. The zone deliberately overlaps its
-       neighbors; DOM order puts X on top of the overlap so it wins there. */
-    .story-socials a[aria-label="x"]::before {
-      inset: -20px;
-    }
-    .story-socials a:hover {
-      transform: translateY(-3px);
-      /* Per-icon hover colors — Instagram pink, X orange, LinkedIn purple. */
-      color: black;
-    }
-    .story-socials a[aria-label="instagram"]:hover { color: #FC81C5; }
-    .story-socials a[aria-label="x"]:hover         { color: #FE7814; }
-    .story-socials a[aria-label="linkedin"]:hover  { color: #9977FE; }
-    .story-socials svg {
-      width: 100%;
-      height: 100%;
+    .story-socials a:hover { gap: 7px; color: black; transform: translateY(-2px); }
+    .story-socials a[data-social="instagram"]:hover { color: #FC81C5; }
+    .story-socials a[data-social="twitter"]:hover   { color: #FE7814; }
+    .story-socials a[data-social="linkedin"]:hover  { color: #9977FE; }
+    .story-socials a svg {
+      width: 13px;
+      height: 13px;
       display: block;
-    }
-    .story-text-center {
-      font-size: 13px;
-      font-weight: 300;
-      color: rgba(0, 0, 0, 0.5);
-      text-align: center;
-      white-space: nowrap;
-    }
-
-    /* Contact view sizes to fit its content instead of using the story
-       view's fixed 482px width, matching the Figma design. Wider 60px
-       horizontal padding gives the socials row more breathing room. */
-    .story-card[data-view="contact"] {
-      width: fit-content;
-      padding: 30px 60px 22px 60px;
     }
 
     /* ── Narrow layout ──
@@ -603,64 +563,39 @@
   </div>
 
   <div class="story-overlay" id="storyOverlay" role="dialog" aria-modal="true" aria-label="story">
-    <div class="story-card" id="storyCard" data-view="story">
-      <!-- Story view -->
-      <div class="story-inner" data-view-panel="story">
-        <p class="story-text">i first got into photography after a family trip to cuba. i still remember the entire plane ride home, i was obsessed with playing with apple preset filters — like the ones called vivid and vivid warm (yea...). i later begged my dad to buy me, the most popular camera at the time THE CANON G7X MARK ii!! (which i still use today). much later, i was lucky to be apart of a media team where i taught myself how to edit photos.</p>
-        <div class="story-pic">
-          <img src="story/story_pic.jpg" alt="">
+    <div class="story-card" id="storyCard">
+      <div class="story-inner">
+        <div class="story-heading">
+          <p class="story-label">My Story</p>
+          <p class="story-text">I first got into photography after a family trip to Cuba. I still remember the entire plane ride home experimenting with Apple's built-in photo filters, like <em>Vivid</em> and <em>Vivid warm</em> (yea...) Before long, I was convincing my dad to buy me the Canon G7X Mark ii (which I still use today). Years later, I joined a media team, where I learned photo editing. Today, I still love taking photos on family vacations (lol) and experimenting with cool photo ideas whenever possible.</p>
         </div>
-        <div class="story-line"><div></div></div>
-        <div class="story-title">
-          <button class="story-arrow" data-nav="prev" aria-label="previous">
-            <svg viewBox="0 0 70.5 54.8333" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <path d="M66.5833 27.4167H3.91667M27.4167 3.91667L3.91667 27.4167L27.4167 50.9167" stroke="currentColor" stroke-width="7.83333" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-          <span>story</span>
-          <button class="story-arrow" data-nav="next" aria-label="next">
-            <svg viewBox="0 0 70.5 54.8333" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <path d="M3.91667 27.4167H66.5833M43.0833 3.91667L66.5833 27.4167L43.0833 50.9167" stroke="currentColor" stroke-width="7.83333" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      <!-- Contact view -->
-      <div class="story-inner" data-view-panel="contact" style="display: none;">
-        <p class="story-text-center">let's be friends!</p>
-        <div class="story-socials">
-          <a href="https://www.instagram.com/mirandasuissocool/" target="_blank" rel="noopener" aria-label="instagram" data-social>
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="1.8" fill="none"/>
-              <circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.8" fill="none"/>
-              <circle cx="17.5" cy="6.5" r="1.1" fill="currentColor"/>
-            </svg>
-          </a>
-          <a href="https://x.com/mirandaiscoolz" target="_blank" rel="noopener" aria-label="x" data-social>
-            <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <path d="M17.53 3H20.5l-6.5 7.43L21.75 21H15.6l-4.82-6.3L5.27 21H2.3l6.96-7.96L1.92 3h6.3l4.36 5.77L17.53 3zm-1.04 16.2h1.64L7.6 4.7H5.84L16.49 19.2z"/>
-            </svg>
-          </a>
-          <a href="https://www.linkedin.com/in/miranda-suu/" target="_blank" rel="noopener" aria-label="linkedin" data-social>
-            <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.94v5.67H9.37V9h3.41v1.56h.05c.47-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.99 0 1.78-.77 1.78-1.72V1.72C24 .77 23.21 0 22.22 0z"/>
-            </svg>
-          </a>
-        </div>
-        <div class="story-line"><div></div></div>
-        <div class="story-title">
-          <button class="story-arrow" data-nav="prev" aria-label="previous">
-            <svg viewBox="0 0 70.5 54.8333" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <path d="M66.5833 27.4167H3.91667M27.4167 3.91667L3.91667 27.4167L27.4167 50.9167" stroke="currentColor" stroke-width="7.83333" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-          <span>contact</span>
-          <button class="story-arrow" data-nav="next" aria-label="next">
-            <svg viewBox="0 0 70.5 54.8333" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <path d="M3.91667 27.4167H66.5833M43.0833 3.91667L66.5833 27.4167L43.0833 50.9167" stroke="currentColor" stroke-width="7.83333" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
+        <div class="story-body">
+          <div class="story-pic">
+            <img src="story/story_pic.jpg" alt="">
+          </div>
+          <div class="story-footer">
+            <div class="story-line"></div>
+            <div class="story-socials">
+            <a href="https://www.instagram.com/mirandasuissocool/" target="_blank" rel="noopener" data-social="instagram">
+              Instagram
+              <svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M2 8L8 2M8 2H3.5M8 2V6.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              </svg>
+            </a>
+            <a href="https://x.com/mirandaiscoolz" target="_blank" rel="noopener" data-social="twitter">
+              Twitter
+              <svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M2 8L8 2M8 2H3.5M8 2V6.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              </svg>
+            </a>
+            <a href="https://www.linkedin.com/in/miranda-suu/" target="_blank" rel="noopener" data-social="linkedin">
+              LinkedIn
+              <svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M2 8L8 2M8 2H3.5M8 2V6.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              </svg>
+            </a>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1154,32 +1089,9 @@
       const infoIcon = document.querySelector('.info-icon');
       const storyOverlay = document.getElementById('storyOverlay');
       const storyCard = document.getElementById('storyCard');
-      const panels = storyCard.querySelectorAll('[data-view-panel]');
 
-      // Card has two views — "story" and "contact" — laid out in this order.
-      // Right arrow on the last view (or left arrow on the first) just
-      // wiggles the card instead of navigating off the ends.
-      const VIEWS = ['story', 'contact'];
-      function showView(name) {
-        panels.forEach((p) => {
-          p.style.display = p.dataset.viewPanel === name ? '' : 'none';
-        });
-        storyCard.dataset.view = name;
-      }
-      function wiggleCard() {
-        // Restart the wiggle animation by pulling the class, forcing a
-        // reflow, then re-applying it.
-        storyCard.classList.remove('wiggle');
-        void storyCard.offsetWidth;
-        storyCard.classList.add('wiggle');
-      }
       function openStory() {
         playCelebration();
-        showView('story');
-        // Entrance uses the CSS slide-up transition on `.story-overlay.open
-        // .story-card` — no wiggle on first appearance. Clear any lingering
-        // wiggle class from a previous session so the slide isn't stepped on.
-        storyCard.classList.remove('wiggle');
         storyOverlay.classList.add('open');
       }
       function closeStory() {
@@ -1189,39 +1101,14 @@
 
       infoIcon.addEventListener('click', openStory);
       storyOverlay.addEventListener('click', (e) => {
-        if (e.target === storyOverlay) {
-          closeStory();
-        }
+        if (e.target === storyOverlay) closeStory();
       });
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && storyOverlay.classList.contains('open')) closeStory();
       });
 
-      // Move between the card's views. `dir` is 'next' or 'prev'; at an edge
-      // the card wiggles instead of navigating off the ends — accompanied
-      // by a caution sound instead of the normal select chime.
-      function navigateView(dir) {
-        const i = VIEWS.indexOf(storyCard.dataset.view);
-        const next = dir === 'next' ? i + 1 : i - 1;
-        if (next < 0 || next >= VIEWS.length) {
-          playCaution();
-          wiggleCard();
-        } else {
-          playSelect();
-          showView(VIEWS[next]);
-          wiggleCard();
-        }
-      }
-
-      // Arrow buttons in the card footer — delegate to navigateView.
+      // Card click handling — wiggle the photo on tap, chime on social click.
       storyCard.addEventListener('click', (e) => {
-        const navBtn = e.target.closest('[data-nav]');
-        if (navBtn) {
-          navigateView(navBtn.dataset.nav);
-          return;
-        }
-        // Clicking the story photo wiggles JUST the photo + plays caution —
-        // same playful "dead-end" feedback as tapping the main photo.
         const pic = e.target.closest('.story-pic');
         if (pic) {
           pic.classList.remove('wiggle');
@@ -1230,9 +1117,6 @@
           playCaution();
           return;
         }
-        // Social link — default click opens in a new tab. Force the icon
-        // back to the resting (no-hover) look so it doesn't stay darkened
-        // + lifted after focus returns from the new tab.
         const social = e.target.closest('[data-social]');
         if (social) {
           playTransition();
@@ -1249,39 +1133,10 @@
         }
       });
 
-      // Play the select chime each time a social icon enters hover, so
-      // dragging the cursor across the row taps out a per-icon click.
-      // mouseenter (unlike mouseover) fires exactly once per icon entry
-      // and doesn't re-fire when moving between its child SVG nodes.
+      // Chime on social hover — one tick per link entered.
       document.querySelectorAll('.story-socials [data-social]').forEach((el) => {
         el.addEventListener('mouseenter', () => { playSelect(); });
       });
-
-      // Keyboard: ← / → switch views while the card is open (desktop).
-      document.addEventListener('keydown', (e) => {
-        if (!storyOverlay.classList.contains('open')) return;
-        if (e.key === 'ArrowLeft') navigateView('prev');
-        else if (e.key === 'ArrowRight') navigateView('next');
-      });
-
-      // Touch: horizontal swipe on the card switches views (mobile).
-      let swipeStartX = 0, swipeStartY = 0, swipeTracking = false;
-      storyCard.addEventListener('touchstart', (e) => {
-        if (e.touches.length !== 1) return;
-        swipeStartX = e.touches[0].clientX;
-        swipeStartY = e.touches[0].clientY;
-        swipeTracking = true;
-      }, { passive: true });
-      storyCard.addEventListener('touchend', (e) => {
-        if (!swipeTracking) return;
-        swipeTracking = false;
-        const t = e.changedTouches[0];
-        const dx = t.clientX - swipeStartX;
-        const dy = t.clientY - swipeStartY;
-        if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-          navigateView(dx < 0 ? 'next' : 'prev');
-        }
-      }, { passive: true });
 
       function setSelected(i) {
         if (i === selectedIdx) return;
