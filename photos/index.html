@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Photos</title>
-  <link rel="icon" type="image/png" href="/tab%20icon/Green%20Apple.png">
+  <link rel="icon" type="image/png" href="/tab%20icon/White%20Goose.png">
   <meta property="og:title" content="Photo Wall">
   <meta property="og:type" content="website">
   <meta property="og:image" content="COVER.JPG">
@@ -376,13 +376,14 @@
          while the overlay is closed, then rises into place when `.open` is
          applied on the overlay. Uses a soft-out cubic curve so the card
          eases into its final resting position rather than snapping. */
-      transform: translateY(40px);
+      transform: translateY(40px) scale(0.8);
+      transform-origin: center center;
       opacity: 0;
       transition: transform 0.45s cubic-bezier(0.2, 0.9, 0.3, 1),
                   opacity 0.35s ease;
     }
     .story-overlay.open .story-card {
-      transform: translateY(0);
+      transform: translateY(0) scale(0.8);
       opacity: 1;
     }
     /* Photo wiggle — playful "dead-end" feedback when the story photo is
@@ -412,19 +413,40 @@
       gap: 8px;
       width: 100%;
     }
+    /* Title row: "My Story" label on the left, year tag on the right. */
+    .story-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
     .story-label {
       font-size: 15px;
       font-weight: 400;
       color: rgba(0, 0, 0, 0.2);
       line-height: 19px;
     }
+    .story-year {
+      background: rgba(0, 0, 0, 0.2);
+      color: #fff;
+      font-family: 'Figtree', system-ui, sans-serif;
+      font-weight: 400;
+      font-size: 12px;
+      line-height: 1;
+      padding: 3px 4px;
+      border-radius: 2px;
+    }
     .story-text {
+      display: flex;
+      flex-direction: column;
+      gap: 19px;                 /* blank-line breather between paragraphs */
       font-size: 15px;
       font-weight: 400;
       color: rgba(0, 0, 0, 0.5);
       line-height: 19px;
       word-break: break-word;
     }
+    .story-text p { margin: 0; }
     .story-text em { font-style: italic; }
     .story-body {
       display: flex;
@@ -463,6 +485,7 @@
        instead of jumping the whole link upward. */
     .story-socials {
       display: flex;
+      flex-wrap: wrap;
       gap: 13px;
       align-items: center;
     }
@@ -481,10 +504,13 @@
     .story-socials a[data-social="instagram"]:hover { color: #FC81C5; }
     .story-socials a[data-social="twitter"]:hover   { color: #FE7814; }
     .story-socials a[data-social="linkedin"]:hover  { color: #9977FE; }
+    /* Both the leading brand logo and trailing arrow render at 13px. The
+       logo picks up currentColor, so hover accent flows through it too. */
     .story-socials a svg {
       width: 13px;
       height: 13px;
       display: block;
+      flex-shrink: 0;
     }
 
     /* ── Narrow layout ──
@@ -521,16 +547,9 @@
         transform: translate(-50%, calc(-50% - 15px));
       }
 
-      /* Mobile story card: shrink the whole card to 0.9x, tighten the
-         body + label copy, and wrap the socials row so LinkedIn can drop
-         to a second line on narrow widths. */
-      .story-card {
-        transform: translateY(40px) scale(0.9);
-        transform-origin: center center;
-      }
-      .story-overlay.open .story-card {
-        transform: translateY(0) scale(0.9);
-      }
+      /* Mobile story card: tighten the body + label copy, and wrap the
+         socials row so LinkedIn can drop to a second line on narrow widths.
+         Card scale (0.8) already applied by the base rule. */
       .story-label,
       .story-text {
         font-size: 13px;
@@ -585,8 +604,14 @@
     <div class="story-card" id="storyCard">
       <div class="story-inner">
         <div class="story-heading">
-          <p class="story-label">My Story</p>
-          <p class="story-text">I first got into photography after a family trip to Cuba. I still remember the entire plane ride home experimenting with Apple's built-in photo filters, like <em>Vivid</em> and <em>Vivid warm</em> (yea...) Before long, I was convincing my dad to buy me the Canon G7X Mark ii (which I still use today). Years later, I joined a media team, where I learned photo editing. Today, I still love taking photos on family vacations (lol) and experimenting with cool photo ideas whenever possible.</p>
+          <div class="story-title-row">
+            <p class="story-label">My Story</p>
+            <span class="story-year">2026</span>
+          </div>
+          <div class="story-text">
+            <p>I first got into photography after a family trip to Cuba. I still remember the entire plane ride home experimenting with Apple's built-in photo filters, like <em>Vivid</em> and <em>Vivid warm</em> (yea...) Before long, I was convincing my dad to buy me the Canon G7X Mark ii (which I still use today).</p>
+            <p>Years later, I joined a media team, where I learned photo editing. Today, I still love taking photos on family vacations (lol) and experimenting with cool photo ideas whenever possible.</p>
+          </div>
         </div>
         <div class="story-body">
           <div class="story-pic">
@@ -596,18 +621,29 @@
             <div class="story-line"></div>
             <div class="story-socials">
             <a href="https://www.instagram.com/mirandasuissocool/" target="_blank" rel="noopener" data-social="instagram">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="1.8" fill="none"/>
+                <circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.8" fill="none"/>
+                <circle cx="17.5" cy="6.5" r="1.1" fill="currentColor"/>
+              </svg>
               Instagram
               <svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                 <path d="M2 8L8 2M8 2H3.5M8 2V6.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
               </svg>
             </a>
             <a href="https://x.com/mirandaiscoolz" target="_blank" rel="noopener" data-social="twitter">
+              <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M17.53 3H20.5l-6.5 7.43L21.75 21H15.6l-4.82-6.3L5.27 21H2.3l6.96-7.96L1.92 3h6.3l4.36 5.77L17.53 3zm-1.04 16.2h1.64L7.6 4.7H5.84L16.49 19.2z"/>
+              </svg>
               Twitter
               <svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                 <path d="M2 8L8 2M8 2H3.5M8 2V6.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
               </svg>
             </a>
             <a href="https://www.linkedin.com/in/miranda-suu/" target="_blank" rel="noopener" data-social="linkedin">
+              <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.94v5.67H9.37V9h3.41v1.56h.05c.47-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.99 0 1.78-.77 1.78-1.72V1.72C24 .77 23.21 0 22.22 0z"/>
+              </svg>
               LinkedIn
               <svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                 <path d="M2 8L8 2M8 2H3.5M8 2V6.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
