@@ -4,7 +4,7 @@
     {
       "name": "photowall",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["--yes", "http-server", "/Users/home/Desktop/CODE/mirandaissoocool.com/photos", "-p", "8765", "-c-1"],
+      "runtimeArgs": ["--yes", "http-server", "/Users/home/Desktop/CODE/mirandaissoocool.com", "-p", "8765", "-c-1"],
       "url": "http://localhost:8765",
       "port": 8765
     }

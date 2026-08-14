@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Photos</title>
-  <link rel="icon" type="image/png" href="../tab%20icon/Green%20Apple.png">
+  <link rel="icon" type="image/png" href="/tab%20icon/Green%20Apple.png">
   <meta property="og:title" content="Photo Wall">
   <meta property="og:type" content="website">
   <meta property="og:image" content="COVER.JPG">
@@ -571,7 +571,7 @@
         </div>
         <div class="story-body">
           <div class="story-pic">
-            <img src="story/story_pic.jpg" alt="">
+            <img src="/photos/story/story_pic.jpg" alt="">
           </div>
           <div class="story-footer">
             <div class="story-line"></div>
@@ -999,10 +999,10 @@
           } catch (_) {}
         };
       }
-      const playCelebration = makeSound('sound%20effects/celebration.wav', 0.2);
-      const playSelect      = makeSound('sound%20effects/select.wav');
-      const playCaution     = makeSound('sound%20effects/caution.wav');
-      const playTransition  = makeSound('sound%20effects/transition_up.wav');
+      const playCelebration = makeSound('/photos/sound%20effects/celebration.wav', 0.2);
+      const playSelect      = makeSound('/photos/sound%20effects/select.wav');
+      const playCaution     = makeSound('/photos/sound%20effects/caution.wav');
+      const playTransition  = makeSound('/photos/sound%20effects/transition_up.wav');
 
       // The type-tick fires from the RAF loop, not a user gesture, and the
       // repeated <audio> approach kept getting caught out by browser
@@ -1020,7 +1020,7 @@
           const AC = window.AudioContext || window.webkitAudioContext;
           if (AC) {
             typeAudioCtx = new AC();
-            fetch('sound%20effects/type_05.wav')
+            fetch('/photos/sound%20effects/type_05.wav')
               .then(r => r.arrayBuffer())
               .then(buf => new Promise((res, rej) => {
                 // Safari's older decodeAudioData only supports the callback
