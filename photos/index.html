@@ -368,10 +368,13 @@
     .story-card {
       width: 600px;
       max-width: calc(100vw - 80px);
-      max-height: calc(100vh - 80px);
-      /* `auto` renders the scrollbar only when the card is taller than
-         the viewport allows — a big enough screen shows the story with
-         no rail at all. */
+      /* Only cap right at the viewport edge (minus a small 20px gutter)
+         so the card grows to its full natural height whenever the screen
+         can fit it — the scrollbar never appears when the content is
+         already fully on screen. */
+      max-height: calc(100vh - 20px);
+      /* `auto` renders the scrollbar only when the card really can't
+         fit the viewport. */
       overflow-y: auto;
       overflow-x: hidden;
       background: white;
