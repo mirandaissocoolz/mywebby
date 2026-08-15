@@ -362,6 +362,13 @@
       max-width: calc(100vw - 80px);
       max-height: calc(100vh - 80px);
       overflow-y: auto;
+      /* Minimal, floating scrollbar so it doesn't run flush against the
+         top-right / bottom-right radii and make the corners look squared.
+         Track has vertical margin equal to the radius so the thumb stays
+         inside the rounded region, and both track + thumb pick a subtle
+         color that blends with the card. */
+      scrollbar-width: thin;
+      scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
       background: white;
       border-radius: 15px;
       padding: 35px 34px 26px 34px;
@@ -385,6 +392,20 @@
     .story-overlay.open .story-card {
       transform: translateY(0) scale(0.9);
       opacity: 1;
+    }
+    /* WebKit scrollbar — matches the `scrollbar-color` fallback above, but
+       shortens the track so the thumb never touches the rounded corners. */
+    .story-card::-webkit-scrollbar { width: 6px; }
+    .story-card::-webkit-scrollbar-track {
+      background: transparent;
+      /* Bigger top/bottom margin shortens the visible track (and thus the
+         thumb) so the scrollbar reads as a compact accent rather than a
+         full-height rail against the card's rounded corners. */
+      margin: 60px 0;
+    }
+    .story-card::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 999px;
     }
     /* Photo wiggle — playful "dead-end" feedback when the story photo is
        tapped. Card itself no longer wiggles (nothing to navigate to). */
@@ -493,6 +514,22 @@
       gap: 17px;
       align-items: center;
     }
+    /* Icons-only fallback — added by JS when the three links would wrap
+       onto a second row at the current card width. Hides text labels and
+       scales the icon + arrow up ~50% so the tap targets stay readable. */
+    .story-socials.icons-only .story-social-label { display: none; }
+    .story-socials.icons-only a svg:first-of-type {
+      width: 24px;
+      height: 24px;
+      margin-right: 0;
+    }
+    .story-socials.icons-only a svg:last-of-type {
+      height: 20px;
+    }
+    .story-socials.icons-only a:hover svg:last-of-type {
+      width: 20px;
+      margin-left: 11px;
+    }
     .story-socials a {
       display: inline-flex;
       align-items: center;
@@ -582,27 +619,11 @@
         transform: translate(-50%, calc(-50% - 15px));
       }
 
-      /* Mobile story card: wrap the socials row so LinkedIn can drop
-         to a second line on narrow widths, and hide the text labels so
-         each link is just icon + arrow. */
+      /* Narrow layout keeps the socials row wrappable so JS can still
+         detect a wrap and collapse to icons if needed — but the labels
+         stay visible whenever the row fits on one line. */
       .story-socials {
         flex-wrap: wrap;
-      }
-      .story-social-label { display: none; }
-      /* Without the label, scale the icon + arrow up 50% so the pair
-         stays tappable and reads at a similar visual weight to the
-         desktop icon + text combo. */
-      .story-socials a svg:first-of-type {
-        width: 24px;
-        height: 24px;
-        margin-right: 0;
-      }
-      /* Mobile has no hover, so the arrow stays fully collapsed at all
-         times — icon-only social buttons, matching the Figma design. */
-      .story-socials a svg:last-of-type {
-        width: 0;
-        height: 20px;
-        margin-left: 0;
       }
     }
   </style>
@@ -1189,9 +1210,33 @@
       const storyOverlay = document.getElementById('storyOverlay');
       const storyCard = document.getElementById('storyCard');
 
+      // Show text labels next to each social icon as long as the row fits
+       // on one line at the current card width; collapse to icon-only when
+       // the row would wrap (LinkedIn drops to a second line). Measured by
+       // comparing each link's `offsetTop` — any difference means a wrap.
+       // Runs when the story opens and on resize while it's open, and
+       // temporarily removes `.icons-only` before measuring so the labels
+       // are back in the layout for the width check.
+      const storySocials = storyCard.querySelector('.story-socials');
+      function updateSocialLayout() {
+        if (!storySocials) return;
+        storySocials.classList.remove('icons-only');
+        const links = storySocials.querySelectorAll('a');
+        if (links.length < 2) return;
+        const firstTop = links[0].offsetTop;
+        for (let i = 1; i < links.length; i++) {
+          if (links[i].offsetTop !== firstTop) {
+            storySocials.classList.add('icons-only');
+            return;
+          }
+        }
+      }
+
       function openStory() {
         playCelebration();
         storyOverlay.classList.add('open');
+        // Measure on next frame so the card is in the DOM and laid out.
+        requestAnimationFrame(updateSocialLayout);
       }
       function closeStory() {
         storyOverlay.classList.remove('open');
@@ -1420,6 +1465,9 @@
           mainPhotoWrap.style.height = fit.h + 'px';
         }
         renderTicks();
+        // Re-check social row wrap so labels appear/disappear as the card
+        // grows or shrinks with the viewport.
+        if (storyOverlay.classList.contains('open')) updateSocialLayout();
       });
 
       // Start on the first (oldest) photo.
