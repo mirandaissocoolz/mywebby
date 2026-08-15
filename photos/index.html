@@ -152,19 +152,24 @@
       display: none;                      /* toggled by .visible */
       flex-direction: column;
       gap: 18px;
-      /* Pivot at TOP-RIGHT (not bottom-right) so the retracted nub stays in
-         the exact same viewport spot no matter how tall the card grows.
-         With a bottom-right pivot, rotation swings the top of the card
-         wider on taller cards, producing a ~0.1 × cardHeight horizontal
-         drift; a top-right pivot cancels that against the translate. */
-      transform-origin: top right;
-      /* Retracted: rotated -5.92° and translated so only the "Gear" word
-         at the card's top-left corner peeks in from the viewport's
-         bottom-right. X and Y peek values are sized independently: X wide
-         enough to show "Gear" plus its left padding (~60px), Y tight
-         enough to stop just below the word so the "Camera" label below
-         stays hidden (~40px = 17px padding + 18px title + ~5px slack). */
-      transform: translate(calc(100% - 60px), calc(100% - 40px)) rotate(-5.92deg);
+      /* Pivot at the TOP-LEFT — the exact corner where "Gear" sits. The
+         retracted peek is that corner, so rotating around it keeps the
+         visible tab anchored no matter how tall the card grows or which
+         Chromium build renders it (the old top-right pivot combined with
+         a percentage translate misplaced the tab in Opera). */
+      transform-origin: 0 0;
+      /* Retracted: rotated -5.92° and shifted so only the "Gear" word at
+         the card's top-left corner peeks in from the viewport's bottom-
+         right. X is a fixed pixel push (width is fixed per breakpoint):
+         180px = 240px card − 80px peek − (−20px right offset). 80px peek
+         (padding 17 + word ≈ 43 + generous cushion after the "r") so the
+         label sits with visible breathing room past the viewport edge. Y
+         stays adaptive via `calc(100% − Ypx)` so a card with fewer gear
+         items (shorter height) still lines up flush with the viewport
+         bottom. 12px = card's bottom offset (28px) − desired top-strip
+         peek (40px) subtracted from the card's height, showing just the
+         "Gear" label (17px pad + 18px title + ~5px slack). */
+      transform: translate(180px, calc(100% - 12px)) rotate(-5.92deg);
       transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
       cursor: default;
       /* Above the tick slider (z-index: 8) so an overlap on narrow
@@ -230,10 +235,13 @@
     }
     @media (max-width: 1137px) {
       /* Narrow layout: fixed but smaller so the card doesn't dominate the
-         mobile viewport. X peek shows the full "Gear" word (~50px); Y
+         mobile viewport. X peek shows the full "Gear" word with generous
+         cushion after the "r" (~75px, ≈ padding 16 + word 41 + slack); Y
          peek is tighter so the "Camera" label below doesn't sneak into
-         view — 16px padding + 17px title ≈ 33px, with just a few pixels
-         of slack so the word still clears the edge. */
+         view — 16px padding + 17px title ≈ 33px, with a few pixels of
+         slack so the word still clears the edge.
+         X translate: 220 width − 75 peek − (−14 right) = 159px.
+         Y translate: card height − (26 bottom − 36 peek) = height − 10px. */
       .gear-card {
         bottom: 26px;
         right: 14px;
@@ -241,7 +249,7 @@
         padding: 16px;
         gap: 16px;
         border-radius: 14px;
-        transform: translate(calc(100% - 50px), calc(100% - 36px)) rotate(-5.92deg);
+        transform: translate(159px, calc(100% - 10px)) rotate(-5.92deg);
       }
       .gear-title { font-size: 17px; }
       .gear-label { font-size: 13px; }
@@ -361,16 +369,18 @@
       width: 600px;
       max-width: calc(100vw - 80px);
       max-height: calc(100vh - 80px);
+      /* `auto` renders the scrollbar only when the card is taller than
+         the viewport allows — a big enough screen shows the story with
+         no rail at all. */
       overflow-y: auto;
-      /* Minimal, floating scrollbar so it doesn't run flush against the
-         top-right / bottom-right radii and make the corners look squared.
-         Track has vertical margin equal to the radius so the thumb stays
-         inside the rounded region, and both track + thumb pick a subtle
-         color that blends with the card. */
-      scrollbar-width: thin;
-      scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+      overflow-x: hidden;
       background: white;
       border-radius: 15px;
+      /* Force-clip everything the card paints (including the WebKit
+         scrollbar) to the same rounded shape as the border-radius, so
+         the rail can never poke past the top-right / bottom-right
+         corners on any browser or renderer. */
+      clip-path: inset(0 round 15px);
       padding: 35px 34px 26px 34px;
       display: flex;
       flex-direction: column;
@@ -393,19 +403,37 @@
       transform: translateY(0) scale(0.9);
       opacity: 1;
     }
-    /* WebKit scrollbar — matches the `scrollbar-color` fallback above, but
-       shortens the track so the thumb never touches the rounded corners. */
-    .story-card::-webkit-scrollbar { width: 6px; }
-    .story-card::-webkit-scrollbar-track {
-      background: transparent;
-      /* Bigger top/bottom margin shortens the visible track (and thus the
-         thumb) so the scrollbar reads as a compact accent rather than a
-         full-height rail against the card's rounded corners. */
-      margin: 60px 0;
-    }
+    /* Scrollbar lives on `.story-card` so the card's flex layout keeps
+       sizing correctly (moving overflow to a child breaks the natural
+       height flow). WebKit styling only — the Firefox `scrollbar-*`
+       shorthands, when set here, switch WebKit to its generic scrollbar
+       and disable the pseudo-elements that shorten the visible thumb. */
+    .story-card::-webkit-scrollbar { width: 8px; }
+    .story-card::-webkit-scrollbar-track { background: transparent; }
     .story-card::-webkit-scrollbar-thumb {
-      background: rgba(0, 0, 0, 0.2);
+      background: rgba(0, 0, 0, 0.25);
       border-radius: 999px;
+    }
+    /* Invisible buttons pinned at the top and bottom of the scrollbar
+       reserve dead space so the visible thumb region only takes up the
+       middle of the card — roughly half the card height — and always
+       stays clear of the 15px rounded corners. */
+    .story-card::-webkit-scrollbar-button:vertical:start,
+    .story-card::-webkit-scrollbar-button:vertical:end {
+      display: block;
+      height: 120px;
+      background: transparent;
+    }
+    /* Firefox fallback: thin, tinted scrollbar. Firefox has no
+       scrollbar-button equivalent so the rail runs the full length —
+       still clipped by the card's border-radius. */
+    @supports (scrollbar-width: thin) {
+      @-moz-document url-prefix() {
+        .story-card {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(0, 0, 0, 0.25) transparent;
+        }
+      }
     }
     /* Photo wiggle — playful "dead-end" feedback when the story photo is
        tapped. Card itself no longer wiggles (nothing to navigate to). */
@@ -625,6 +653,18 @@
       .story-socials {
         flex-wrap: wrap;
       }
+    }
+
+    /* Short + narrow viewport: the horizontal tick slider lives at
+       bottom: 50px with 62px height (112px band from the viewport
+       bottom). When the window is shorter than ~550px, the vertically-
+       centered photo + title/date meta sits low enough to collide with
+       that band. Drop the slider entirely rather than have the photo
+       caption sit on top of the ticks. Only applies on narrow layouts —
+       the desktop slider is on the left edge and doesn't run into the
+       photo. */
+    @media (max-width: 1137px) and (max-height: 550px) {
+      .ticks { display: none; }
     }
   </style>
 </head>
