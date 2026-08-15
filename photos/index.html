@@ -421,29 +421,29 @@
       width: 100%;
     }
     .story-label {
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 400;
       color: rgba(0, 0, 0, 0.2);
-      line-height: 19px;
+      line-height: 20px;
     }
     .story-year {
       background: rgba(0, 0, 0, 0.2);
       color: #fff;
       font-family: 'Figtree', system-ui, sans-serif;
       font-weight: 400;
-      font-size: 12px;
+      font-size: 16px;
       line-height: 1;
-      padding: 3px 4px;
+      padding: 3px 5px;
       border-radius: 2px;
     }
     .story-text {
       display: flex;
       flex-direction: column;
-      gap: 19px;                 /* blank-line breather between paragraphs */
-      font-size: 15px;
+      gap: 20px;                 /* blank-line breather between paragraphs */
+      font-size: 16px;
       font-weight: 400;
       color: rgba(0, 0, 0, 0.5);
-      line-height: 19px;
+      line-height: 20px;
       word-break: break-word;
     }
     .story-text p { margin: 0; }
@@ -492,12 +492,23 @@
     .story-socials a {
       display: inline-flex;
       align-items: center;
-      font-size: 15px;
-      line-height: 19px;
+      position: relative;
+      font-size: 16px;
+      line-height: 20px;
       font-weight: 400;
       color: rgba(0, 0, 0, 0.5);
       text-decoration: none;
       transition: color 0.18s ease, transform 0.18s ease;
+    }
+    /* Invisible halo that keeps :hover locked while the -2px lift is
+       playing. Without it, the transform can push the anchor out from
+       under a cursor that's near its bottom edge, firing an endless
+       mouseenter/mouseleave loop — which spams the hover chime. The halo
+       is inside the anchor's hit-testing but doesn't affect layout. */
+    .story-socials a::before {
+      content: '';
+      position: absolute;
+      inset: -6px -4px;
     }
     .story-socials a:hover { color: black; transform: translateY(-2px); }
     .story-socials a[data-social="instagram"]:hover { color: #FC81C5; }
@@ -554,14 +565,9 @@
         transform: translate(-50%, calc(-50% - 15px));
       }
 
-      /* Mobile story card: tighten the body + label copy, and wrap the
-         socials row so LinkedIn can drop to a second line on narrow widths.
-         Card scale (0.8) already applied by the base rule. */
-      .story-label,
-      .story-text {
-        font-size: 13px;
-        line-height: 16px;
-      }
+      /* Mobile story card: wrap the socials row so LinkedIn can drop
+         to a second line on narrow widths. Text sizes stay 15px per
+         the desktop rule. */
       .story-socials {
         flex-wrap: wrap;
       }
