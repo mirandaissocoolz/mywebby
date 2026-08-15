@@ -576,10 +576,20 @@
         flex-wrap: wrap;
       }
       .story-social-label { display: none; }
-      /* Without the label between them, the icon and arrow now sit
-         next to each other with the arrow's 3px left margin — trim the
-         icon's right margin so the pair isn't gappy. */
-      .story-socials a svg:first-of-type { margin-right: 0; }
+      /* Without the label, scale the icon + arrow up 50% so the pair
+         stays tappable and reads at a similar visual weight to the
+         desktop icon + text combo. */
+      .story-socials a svg:first-of-type {
+        width: 24px;
+        height: 24px;
+        margin-right: 0;
+      }
+      .story-socials a svg:last-of-type {
+        width: 20px;
+        height: 20px;
+        margin-left: 5px;
+      }
+      .story-socials a:hover svg:last-of-type { margin-left: 11px; }
     }
   </style>
 </head>
