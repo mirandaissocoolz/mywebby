@@ -566,11 +566,16 @@
       }
 
       /* Mobile story card: wrap the socials row so LinkedIn can drop
-         to a second line on narrow widths. Text sizes stay 15px per
-         the desktop rule. */
+         to a second line on narrow widths, and hide the text labels so
+         each link is just icon + arrow. */
       .story-socials {
         flex-wrap: wrap;
       }
+      .story-social-label { display: none; }
+      /* Without the label between them, the icon and arrow now sit
+         next to each other with the arrow's 3px left margin — trim the
+         icon's right margin so the pair isn't gappy. */
+      .story-socials a svg:first-of-type { margin-right: 0; }
     }
   </style>
 </head>
@@ -633,31 +638,31 @@
           <div class="story-footer">
             <div class="story-line"></div>
             <div class="story-socials">
-            <a href="https://www.instagram.com/mirandasuissocool/" target="_blank" rel="noopener" data-social="instagram">
+            <a href="https://www.instagram.com/mirandasuissocool/" target="_blank" rel="noopener" data-social="instagram" aria-label="Instagram">
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                 <rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="1.8" fill="none"/>
                 <circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.8" fill="none"/>
                 <circle cx="17.5" cy="6.5" r="1.1" fill="currentColor"/>
               </svg>
-              Instagram
+              <span class="story-social-label">Instagram</span>
               <svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                 <path d="M2 8L8 2M8 2H3.5M8 2V6.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
               </svg>
             </a>
-            <a href="https://x.com/mirandaiscoolz" target="_blank" rel="noopener" data-social="twitter">
+            <a href="https://x.com/mirandaiscoolz" target="_blank" rel="noopener" data-social="twitter" aria-label="Twitter">
               <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                 <path d="M17.53 3H20.5l-6.5 7.43L21.75 21H15.6l-4.82-6.3L5.27 21H2.3l6.96-7.96L1.92 3h6.3l4.36 5.77L17.53 3zm-1.04 16.2h1.64L7.6 4.7H5.84L16.49 19.2z"/>
               </svg>
-              Twitter
+              <span class="story-social-label">Twitter</span>
               <svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                 <path d="M2 8L8 2M8 2H3.5M8 2V6.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
               </svg>
             </a>
-            <a href="https://www.linkedin.com/in/miranda-suu/" target="_blank" rel="noopener" data-social="linkedin">
+            <a href="https://www.linkedin.com/in/miranda-suu/" target="_blank" rel="noopener" data-social="linkedin" aria-label="LinkedIn">
               <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                 <path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.94v5.67H9.37V9h3.41v1.56h.05c.47-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.99 0 1.78-.77 1.78-1.72V1.72C24 .77 23.21 0 22.22 0z"/>
               </svg>
-              LinkedIn
+              <span class="story-social-label">LinkedIn</span>
               <svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                 <path d="M2 8L8 2M8 2H3.5M8 2V6.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
               </svg>
