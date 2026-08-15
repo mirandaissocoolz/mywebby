@@ -358,7 +358,7 @@
     }
 
     .story-card {
-      width: 542px;
+      width: 600px;
       max-width: calc(100vw - 80px);
       max-height: calc(100vh - 80px);
       overflow-y: auto;
@@ -426,8 +426,12 @@
       color: rgba(0, 0, 0, 0.2);
       line-height: 20px;
     }
+    /* "Since 2024" tag — lavender pill next to the "My Story" label. The
+       whole element is set to 20% opacity, which fades the #9747ff fill to
+       a soft lilac AND softens the white text against it in one move. */
     .story-year {
-      background: rgba(0, 0, 0, 0.2);
+      background: #9747FF;
+      opacity: 0.2;
       color: #fff;
       font-family: 'Figtree', system-ui, sans-serif;
       font-weight: 400;
@@ -527,13 +531,22 @@
       height: 16px;
       margin-right: 3px;
     }
+    /* Arrow is collapsed by default — width, margin, and opacity all zero
+       so the layout doesn't reserve space for it. Hover animates it in from
+       the left of where the arrow will land, so the icon/label appears to
+       stay put and the arrow slides out from behind it. */
     .story-socials a svg:last-of-type {
-      width: 13px;
+      width: 0;
       height: 13px;
-      margin-left: 3px;
-      transition: margin-left 0.18s ease;
+      margin-left: 0;
+      opacity: 0;
+      transition: width 0.18s ease, margin-left 0.18s ease, opacity 0.18s ease;
     }
-    .story-socials a:hover svg:last-of-type { margin-left: 7px; }
+    .story-socials a:hover svg:last-of-type {
+      width: 13px;
+      margin-left: 7px;
+      opacity: 1;
+    }
 
     /* ── Narrow layout ──
        Flips the tick slider to a horizontal row at the bottom of the
@@ -584,12 +597,13 @@
         height: 24px;
         margin-right: 0;
       }
+      /* Mobile has no hover, so the arrow stays fully collapsed at all
+         times — icon-only social buttons, matching the Figma design. */
       .story-socials a svg:last-of-type {
-        width: 20px;
+        width: 0;
         height: 20px;
-        margin-left: 5px;
+        margin-left: 0;
       }
-      .story-socials a:hover svg:last-of-type { margin-left: 11px; }
     }
   </style>
 </head>
@@ -638,6 +652,7 @@
         <div class="story-heading">
           <div class="story-title-row">
             <p class="story-label">My Story</p>
+            <span class="story-year">Since 2024</span>
           </div>
           <div class="story-text">
             <p>I first got into photography after a family trip to Cuba. I still remember the entire plane ride home experimenting with Apple's built-in photo filters, like <em>Vivid</em> and <em>Vivid warm</em> (yea...) Before long, I was convincing my dad to buy me the Canon G7X Mark ii (which I still use today).</p>
