@@ -376,14 +376,14 @@
          while the overlay is closed, then rises into place when `.open` is
          applied on the overlay. Uses a soft-out cubic curve so the card
          eases into its final resting position rather than snapping. */
-      transform: translateY(40px) scale(0.8);
+      transform: translateY(40px);
       transform-origin: center center;
       opacity: 0;
       transition: transform 0.45s cubic-bezier(0.2, 0.9, 0.3, 1),
                   opacity 0.35s ease;
     }
     .story-overlay.open .story-card {
-      transform: translateY(0) scale(0.8);
+      transform: translateY(0);
       opacity: 1;
     }
     /* Photo wiggle — playful "dead-end" feedback when the story photo is
@@ -486,32 +486,39 @@
     .story-socials {
       display: flex;
       flex-wrap: wrap;
-      gap: 13px;
+      gap: 17px;
       align-items: center;
     }
     .story-socials a {
       display: inline-flex;
       align-items: center;
-      gap: 3px;
       font-size: 15px;
       line-height: 19px;
       font-weight: 400;
       color: rgba(0, 0, 0, 0.5);
       text-decoration: none;
-      transition: color 0.18s ease, gap 0.18s ease, transform 0.18s ease;
+      transition: color 0.18s ease, transform 0.18s ease;
     }
-    .story-socials a:hover { gap: 7px; color: black; transform: translateY(-2px); }
+    .story-socials a:hover { color: black; transform: translateY(-2px); }
     .story-socials a[data-social="instagram"]:hover { color: #FC81C5; }
     .story-socials a[data-social="twitter"]:hover   { color: #FE7814; }
     .story-socials a[data-social="linkedin"]:hover  { color: #9977FE; }
     /* Both the leading brand logo and trailing arrow render at 13px. The
-       logo picks up currentColor, so hover accent flows through it too. */
+       logo picks up currentColor, so hover accent flows through it too.
+       Uses individual margins (not flex gap) so the arrow's spacing can
+       expand on hover while the icon-to-text gap stays fixed. */
     .story-socials a svg {
       width: 13px;
       height: 13px;
       display: block;
       flex-shrink: 0;
     }
+    .story-socials a svg:first-of-type { margin-right: 3px; }
+    .story-socials a svg:last-of-type {
+      margin-left: 3px;
+      transition: margin-left 0.18s ease;
+    }
+    .story-socials a:hover svg:last-of-type { margin-left: 7px; }
 
     /* ── Narrow layout ──
        Flips the tick slider to a horizontal row at the bottom of the
