@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sound Pad</title>
-  <link rel="icon" type="image/png" href="../tab%20icon/White%20Goose.png">
+  <link rel="icon" type="image/png" href="/tab%20icon/White%20Goose.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -119,7 +119,7 @@
     .plate-texture {
       position: absolute;
       inset: 0;
-      background-image: url('assets/texture-plate.png');
+      background-image: url('/soundpad/assets/texture-plate.png');
       background-size: 2811.179px 2811.179px;
       background-position: top left;
       mix-blend-mode: overlay;
@@ -468,20 +468,20 @@
         <div class="plate-texture"></div>
         <div class="screws">
           <div class="screw screw-tl">
-            <img class="screw-bg" src="assets/screw.svg" alt="">
-            <img class="screw-poly" src="assets/screw-slot.svg" alt="">
+            <img class="screw-bg" src="/soundpad/assets/screw.svg" alt="">
+            <img class="screw-poly" src="/soundpad/assets/screw-slot.svg" alt="">
           </div>
           <div class="screw screw-bl">
-            <img class="screw-bg" src="assets/screw.svg" alt="">
-            <img class="screw-poly" src="assets/screw-slot.svg" alt="">
+            <img class="screw-bg" src="/soundpad/assets/screw.svg" alt="">
+            <img class="screw-poly" src="/soundpad/assets/screw-slot.svg" alt="">
           </div>
           <div class="screw screw-tr">
-            <img class="screw-bg" src="assets/screw-alt.svg" alt="">
-            <img class="screw-poly" src="assets/screw-slot.svg" alt="">
+            <img class="screw-bg" src="/soundpad/assets/screw-alt.svg" alt="">
+            <img class="screw-poly" src="/soundpad/assets/screw-slot.svg" alt="">
           </div>
           <div class="screw screw-br">
-            <img class="screw-bg" src="assets/screw-alt.svg" alt="">
-            <img class="screw-poly" src="assets/screw-slot.svg" alt="">
+            <img class="screw-bg" src="/soundpad/assets/screw-alt.svg" alt="">
+            <img class="screw-poly" src="/soundpad/assets/screw-slot.svg" alt="">
           </div>
         </div>
       </div>
@@ -578,16 +578,16 @@
       </div>
 
       <div class="rotary-encoder">
-        <img src="assets/rotary-encoder.svg" alt="">
+        <img src="/soundpad/assets/rotary-encoder.svg" alt="">
       </div>
 
       <div class="figma-logo">
-        <img src="assets/logo.svg" alt="">
+        <img src="/soundpad/assets/logo.svg" alt="">
       </div>
 
       <div class="smiley">
         <div class="smiley-inner">
-          <img src="assets/smiley-face.svg" alt="">
+          <img src="/soundpad/assets/smiley-face.svg" alt="">
         </div>
       </div>
 
@@ -677,18 +677,18 @@
            fetch their MP3 until play() is called from a user gesture. */
     (function() {
       const sounds = {
-        '1':  'sounds/(1) boom.mp3',
-        '2':  'sounds/(2) crickets.mp3',
-        '3':  'sounds/(3) clapping.mp3',
-        '4':  'sounds/(4) suspense.MP3',
-        '5':  'sounds/(5) happy.MP3',
-        '6':  'sounds/(6) bruh.mp3',
-        '7':  'sounds/(7) inspirational.mp3',
-        '8':  'sounds/(8) math.mp3',
-        '9':  'sounds/(9) woah.mp3',
-        '10': 'sounds/(10) sad violin.mp3',
-        '11': 'sounds/(11) explosion.mp3',
-        '12': 'sounds/(12) bombastic side eye.mp3'
+        '1':  '/soundpad/sounds/(1) boom.mp3',
+        '2':  '/soundpad/sounds/(2) crickets.mp3',
+        '3':  '/soundpad/sounds/(3) clapping.mp3',
+        '4':  '/soundpad/sounds/(4) suspense.MP3',
+        '5':  '/soundpad/sounds/(5) happy.MP3',
+        '6':  '/soundpad/sounds/(6) bruh.mp3',
+        '7':  '/soundpad/sounds/(7) inspirational.mp3',
+        '8':  '/soundpad/sounds/(8) math.mp3',
+        '9':  '/soundpad/sounds/(9) woah.mp3',
+        '10': '/soundpad/sounds/(10) sad violin.mp3',
+        '11': '/soundpad/sounds/(11) explosion.mp3',
+        '12': '/soundpad/sounds/(12) bombastic side eye.mp3'
       };
 
       const audioCache = {};
