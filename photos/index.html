@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Photos</title>
+  <title>Photos | miranda su</title>
   <link rel="icon" type="image/png" href="/tab%20icon/White%20Goose.png">
   <meta property="og:title" content="Photo Wall">
   <meta property="og:type" content="website">
@@ -229,6 +229,24 @@
     }
     .gear-card.visible { display: flex; }
     .gear-card:hover { transform: translate(0, 0) rotate(0deg); }
+    /* Slide-in intro — the card enters from further off the viewport's
+       bottom-right and settles into its retracted, tilted peek. Runs
+       once per page load via a JS-added class; when the animation ends,
+       the transform reverts to the value declared on `.gear-card`, which
+       IS the resting retracted state, so there's no visual snap. Two
+       named keyframes let the desktop and narrow breakpoints land on
+       their respective resting translates. */
+    @keyframes gear-slide-in-desktop {
+      from { transform: translate(420px, calc(100% + 80px)) rotate(-5.92deg); }
+      to   { transform: translate(180px, calc(100% - 12px)) rotate(-5.92deg); }
+    }
+    @keyframes gear-slide-in-narrow {
+      from { transform: translate(420px, calc(100% + 80px)) rotate(-5.92deg); }
+      to   { transform: translate(159px, calc(100% - 10px)) rotate(-5.92deg); }
+    }
+    .gear-card.slide-in {
+      animation: gear-slide-in-desktop 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+    }
     .gear-title {
       margin: 0;
       font-size: 18px;
@@ -280,6 +298,9 @@
         gap: 16px;
         border-radius: 4px;
         transform: translate(159px, calc(100% - 10px)) rotate(-5.92deg);
+      }
+      .gear-card.slide-in {
+        animation-name: gear-slide-in-narrow;
       }
       .gear-title { font-size: 17px; }
       .gear-label { font-size: 13px; }
@@ -436,7 +457,7 @@
     }
 
     .story-card {
-      width: 480px;
+      width: 540px;
       max-width: calc(100vw - 80px);
       /* Only cap right at the viewport edge (minus a small 20px gutter)
          so the card grows to its full natural height whenever the screen
@@ -1520,8 +1541,21 @@
             gearAny = true;
           }
         });
+        const wasVisible = gearCard.classList.contains('visible');
         gearCard.classList.toggle('visible', gearAny);
+        // First time this session that the card actually appears — slide it
+        // in from the bottom-right corner into its resting peek. Only fires
+        // once per page load so subsequent photo changes don't re-animate.
+        if (gearAny && !wasVisible && !gearHasEntered) {
+          gearHasEntered = true;
+          gearCard.classList.add('slide-in');
+          gearCard.addEventListener('animationend', () => {
+            gearCard.classList.remove('slide-in');
+          }, { once: true });
+        }
       }
+
+      let gearHasEntered = false;
 
       // Convert the current fractional photo index (`posIdx`) into a tick-
       // space position, so the pyramid's peak slides smoothly along the
