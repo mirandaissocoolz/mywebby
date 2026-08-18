@@ -42,21 +42,26 @@
     }
     .info-icon:hover { color: black; }
     .info-icon svg { width: 100%; height: 100%; display: block; }
-    /* One-shot attention "pop" — added by JS shortly after the gallery
-       reveals so a first-time visitor's eye lands on the info button.
-       Also nudges them toward the first click, which unlocks audio.
-       Cycles the icon through the three social-hover colors as it bounces
-       (pink → orange → purple) so the pop tie-ins to the palette used by
-       the Instagram / Twitter / LinkedIn hovers inside the story card. */
-    @keyframes info-pop {
-      0%   { transform: scale(1);    color: rgba(0, 0, 0, 0.5); }
-      20%  { transform: scale(1.28); color: #FC81C5; }
-      45%  { transform: scale(0.9);  color: #FE7814; }
-      70%  { transform: scale(1.12); color: #9977FE; }
-      100% { transform: scale(1);    color: rgba(0, 0, 0, 0.5); }
+    /* One-shot attention "shake" — added by JS shortly after the gallery
+       reveals so a first-time visitor's eye lands on the info button, and
+       replayed every time the tab regains visibility. Nudges the user
+       toward the first click (which unlocks audio) and cycles the icon
+       through the three social-hover colors (pink → orange → purple) so
+       the flash echoes the Instagram / Twitter / LinkedIn palette used
+       inside the story card. */
+    @keyframes info-shake {
+      0%   { transform: translateX(0);    color: rgba(0, 0, 0, 0.5); }
+      12%  { transform: translateX(-5px); color: #FC81C5; }
+      24%  { transform: translateX(5px);  color: #FC81C5; }
+      36%  { transform: translateX(-4px); color: #FE7814; }
+      48%  { transform: translateX(4px);  color: #FE7814; }
+      60%  { transform: translateX(-3px); color: #9977FE; }
+      72%  { transform: translateX(3px);  color: #9977FE; }
+      86%  { transform: translateX(-1px); color: rgba(0, 0, 0, 0.5); }
+      100% { transform: translateX(0);    color: rgba(0, 0, 0, 0.5); }
     }
     .info-icon.attention {
-      animation: info-pop 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+      animation: info-shake 0.7s ease-out;
       transform-origin: center center;
     }
 
@@ -457,7 +462,7 @@
     }
 
     .story-card {
-      width: 540px;
+      width: 600px;
       max-width: calc(100vw - 80px);
       /* Only cap right at the viewport edge (minus a small 20px gutter)
          so the card grows to its full natural height whenever the screen
@@ -738,18 +743,20 @@
     /* Inline text links (Waterloo program, mirandaissoocool.com, goodreads).
        On hover: color shifts to the link's accent, the link lifts 2px
        (matching the social icons), and the diagonal arrow slides in from
-       behind the text. `inline-block` is required for the lift to render
-       — transform is silently ignored on plain `display: inline`. The
-       whole link moves to a new line as a unit if it can't fit; multi-
-       word links no longer break across lines mid-phrase. */
+       behind the text. Left as `display: inline` so multi-word links can
+       break across lines mid-phrase (avoids awkward gaps when the whole
+       link jumps to its own line). The lift uses `position: relative; top`
+       instead of a transform — transforms are ignored on inline elements,
+       but relative-positioning offsets work fine and don't affect layout. */
     .story-link {
       color: inherit;
       text-decoration: none;
-      display: inline-block;
-      transition: color 0.18s ease, transform 0.18s ease;
+      position: relative;
+      top: 0;
+      transition: color 0.18s ease, top 0.18s ease;
     }
     .story-link:hover {
-      transform: translateY(-2px);
+      top: -2px;
     }
     /* Per-link hover accent — pulled from the social-icon palette so the
        three text links echo Instagram / Twitter / LinkedIn. */
@@ -1493,6 +1500,25 @@
           };
           social.addEventListener('mouseleave', clear);
           social.addEventListener('blur', clear);
+          return;
+        }
+        // Inline text links (Waterloo / mirandaissoocool.com / goodreads)
+        // play the same click chime as the social icons, and briefly reset
+        // their hover accent + lift so the visual confirms the click.
+        // Cleared when the cursor leaves — matches the social behaviour.
+        const link = e.target.closest('.story-link');
+        if (link) {
+          playTransition();
+          link.style.color = 'rgba(0, 0, 0, 0.5)';
+          link.style.top = '0';
+          const clear = () => {
+            link.style.color = '';
+            link.style.top = '';
+            link.removeEventListener('mouseleave', clear);
+            link.removeEventListener('blur', clear);
+          };
+          link.addEventListener('mouseleave', clear);
+          link.addEventListener('blur', clear);
         }
       });
 
@@ -1724,17 +1750,49 @@
         loadingScreen.remove();
       }
 
-      // One-shot "pop" on the info icon after the gallery fades in — a
-      // gentle hint that the icon is clickable (and, once clicked, the
-      // first user gesture unlocks the AudioContext for the type ticks).
-      // Fires after the reveal fade so the animation isn't hidden by the
-      // loading screen's cross-fade.
-      setTimeout(() => {
+      // One-shot "pop" on the info icon — a gentle hint that the icon is
+      // clickable (and, once clicked, the first user gesture unlocks the
+      // AudioContext for the type ticks). Fires after the reveal fade on
+      // first load so the animation isn't hidden by the loading screen's
+      // cross-fade, and again whenever the user tabs back into the page.
+      // The remove+reflow+add pair is what restarts a CSS animation that
+      // was already applied to the element in a previous cycle — without
+      // the reflow the browser coalesces the two class flips into a no-op.
+      function playInfoPop() {
+        infoIcon.classList.remove('attention');
+        void infoIcon.offsetWidth;
         infoIcon.classList.add('attention');
-        infoIcon.addEventListener('animationend', () => {
-          infoIcon.classList.remove('attention');
-        }, { once: true });
-      }, 900);
+      }
+      infoIcon.addEventListener('animationend', () => {
+        infoIcon.classList.remove('attention');
+      });
+      setTimeout(playInfoPop, 900);
+
+      // Same idea for the gear card — restart the slide-in animation on
+      // demand. Only runs if the card is currently visible for the active
+      // photo (a photo with no camera / film / editing hides the card
+      // entirely, and there's nothing to slide in that case).
+      function playGearSlideIn() {
+        if (!gearCard.classList.contains('visible')) return;
+        gearCard.classList.remove('slide-in');
+        void gearCard.offsetWidth;
+        gearCard.classList.add('slide-in');
+      }
+      gearCard.addEventListener('animationend', () => {
+        gearCard.classList.remove('slide-in');
+      });
+
+      // Replay both animations whenever the tab becomes visible again
+      // (user was on another tab / minimized / phone screen off, then came
+      // back). Small delay so the browser has finished restoring paint
+      // before the animation frames start.
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState !== 'visible') return;
+        setTimeout(() => {
+          playInfoPop();
+          playGearSlideIn();
+        }, 150);
+      });
 
       let lastTs = null;
       function frame(ts) {
