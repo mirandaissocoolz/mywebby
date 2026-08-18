@@ -645,7 +645,7 @@
       position: absolute;
       inset: 0;
       border-radius: inherit;
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.8);
+      box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.5);
       pointer-events: none;
     }
     .story-pic img {
@@ -1768,7 +1768,17 @@
       // The remove+reflow+add pair is what restarts a CSS animation that
       // was already applied to the element in a previous cycle — without
       // the reflow the browser coalesces the two class flips into a no-op.
+      // Skip both attention effects while an overlay is up — the story
+      // modal and the lightbox both blur the page behind them, so the
+      // shake / slide-in would fire out of sight (and just replay again
+      // once the overlay closes, if we tracked that). Cleaner to hold
+      // fire whenever a blurred surface is on top.
+      function overlayIsOpen() {
+        return storyOverlay.classList.contains('open') ||
+               lightboxOverlay.classList.contains('open');
+      }
       function playInfoPop() {
+        if (overlayIsOpen()) return;
         infoIcon.classList.remove('attention');
         void infoIcon.offsetWidth;
         infoIcon.classList.add('attention');
@@ -1784,6 +1794,7 @@
       // entirely, and there's nothing to slide in that case).
       function playGearSlideIn() {
         if (!gearCard.classList.contains('visible')) return;
+        if (overlayIsOpen()) return;
         gearCard.classList.remove('slide-in');
         void gearCard.offsetWidth;
         gearCard.classList.add('slide-in');
