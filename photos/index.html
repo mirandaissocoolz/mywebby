@@ -13,7 +13,7 @@
   <meta name="twitter:image" content="COVER.JPG">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Rethink+Sans:wght@400;500;600&family=DM+Mono:ital,wght@0,300;1,300&family=Figtree:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Rethink+Sans:wght@400;500;600&family=DM+Mono:ital,wght@0,300;1,300&family=Figtree:wght@300;400;500;600&family=Work+Sans:wght@400;500&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -42,6 +42,23 @@
     }
     .info-icon:hover { color: black; }
     .info-icon svg { width: 100%; height: 100%; display: block; }
+    /* One-shot attention "pop" — added by JS shortly after the gallery
+       reveals so a first-time visitor's eye lands on the info button.
+       Also nudges them toward the first click, which unlocks audio.
+       Cycles the icon through the three social-hover colors as it bounces
+       (pink → orange → purple) so the pop tie-ins to the palette used by
+       the Instagram / Twitter / LinkedIn hovers inside the story card. */
+    @keyframes info-pop {
+      0%   { transform: scale(1);    color: rgba(0, 0, 0, 0.5); }
+      20%  { transform: scale(1.28); color: #FC81C5; }
+      45%  { transform: scale(0.9);  color: #FE7814; }
+      70%  { transform: scale(1.12); color: #9977FE; }
+      100% { transform: scale(1);    color: rgba(0, 0, 0, 0.5); }
+    }
+    .info-icon.attention {
+      animation: info-pop 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+      transform-origin: center center;
+    }
 
     /* ── Tick slider ──
        A column of thin horizontal bars on the desktop layout (or a row of
@@ -99,11 +116,8 @@
       background: #f4f4f4;
       will-change: opacity;
       transition: opacity 0.18s ease;
-      cursor: pointer;
+      cursor: zoom-in;
       position: relative;
-    }
-    .main-photo-wrap.wiggle {
-      animation: story-wiggle 0.55s ease-out;
     }
     .main-photo-wrap img {
       width: 100%;
@@ -121,15 +135,14 @@
       display: none;
       align-items: center;
       justify-content: center;
-      padding: 3px 5px 4px;
+      padding: 1px 4px 3px;
       background: #fff;
       color: #000;
-      border-radius: 3px;
-      font-family: 'Rethink Sans', system-ui, sans-serif;
+      border-radius: 4px;
+      font-family: 'Figtree', system-ui, sans-serif;
       font-weight: 400;
       font-size: 14px;
       line-height: 1;
-      letter-spacing: 0.02em;
       z-index: 3;
     }
     .new-badge.visible { display: inline-flex; }
@@ -146,9 +159,9 @@
       right: 20px;
       width: 240px;                       /* scaled ~15% from Figma's 282px */
       background: #E0D6FE;
-      border-radius: 14px;
+      border-radius: 4px;
       padding: 17px;
-      font-family: 'Rethink Sans', system-ui, sans-serif;
+      font-family: 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
       display: none;                      /* toggled by .visible */
       flex-direction: column;
       gap: 18px;
@@ -196,6 +209,23 @@
       right: -400px;
       bottom: -400px;
       z-index: -1;
+    }
+    /* Grainy noise overlay — matches the Figma NOISE effect on both the
+       Gear and Info cards. A tiny SVG turbulence, tiled by the browser as
+       a background image, with mix-blend-mode darkening it against the
+       card's own fill. Rounded corners inherit so it clips inside the
+       card's border-radius; pointer-events off so it never eats clicks. */
+    .gear-card::after,
+    .story-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+      background-repeat: repeat;
+      opacity: 0.12;
+      mix-blend-mode: multiply;
     }
     .gear-card.visible { display: flex; }
     .gear-card:hover { transform: translate(0, 0) rotate(0deg); }
@@ -248,7 +278,7 @@
         width: 220px;
         padding: 16px;
         gap: 16px;
-        border-radius: 14px;
+        border-radius: 4px;
         transform: translate(159px, calc(100% - 10px)) rotate(-5.92deg);
       }
       .gear-title { font-size: 17px; }
@@ -261,7 +291,7 @@
       .new-badge {
         top: 14px;
         left: 14px;
-        padding: 5px 8px 6px;
+        padding: 2px 6px 4px;
         font-size: 20px;
       }
     }
@@ -270,6 +300,7 @@
       margin-top: 18px;
       padding-left: 2px;
       line-height: 1.2;
+      font-family: 'Rethink Sans', system-ui, sans-serif;
     }
     .meta .title {
       font-size: 21.25px;
@@ -340,6 +371,45 @@
       pointer-events: none;
     }
 
+    /* ── Photo lightbox ──
+       Tapping the main-stage photo opens a full-viewport overlay with the
+       same blurred #666 backdrop as the story modal, and a zoomed copy of
+       the image centered on top. Click anywhere outside the image (or hit
+       Escape) to close. */
+    .lightbox-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(102, 102, 102, 0.5);
+      backdrop-filter: blur(7px);
+      -webkit-backdrop-filter: blur(7px);
+      z-index: 60;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: zoom-out;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.35s ease, visibility 0s linear 0.35s;
+      padding: 40px;
+    }
+    .lightbox-overlay.open {
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.35s ease, visibility 0s linear 0s;
+    }
+    .lightbox-overlay img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      border-radius: 4px;
+      transform: scale(0.94);
+      transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1);
+      -webkit-user-drag: none;
+    }
+    .lightbox-overlay.open img {
+      transform: scale(1);
+    }
+
     /* ── Story modal ──
        Full-screen overlay + centered story card, shown when the info icon
        is clicked. Combines the story text, photo, and social links into a
@@ -366,7 +436,7 @@
     }
 
     .story-card {
-      width: 600px;
+      width: 480px;
       max-width: calc(100vw - 80px);
       /* Only cap right at the viewport edge (minus a small 20px gutter)
          so the card grows to its full natural height whenever the screen
@@ -378,18 +448,18 @@
       overflow-y: auto;
       overflow-x: hidden;
       background: white;
-      border-radius: 15px;
+      border-radius: 4px;
       /* Force-clip everything the card paints (including the WebKit
          scrollbar) to the same rounded shape as the border-radius, so
          the rail can never poke past the top-right / bottom-right
          corners on any browser or renderer. */
-      clip-path: inset(0 round 15px);
-      padding: 35px 34px 26px 34px;
+      clip-path: inset(0 round 4px);
+      padding: 32px 31px 24px 31px;
       display: flex;
       flex-direction: column;
       align-items: center;
       cursor: default;
-      font-family: 'Rethink Sans', system-ui, sans-serif;
+      font-family: 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
       font-weight: 400;
       box-shadow: -1.8px 0 9px rgba(0, 0, 0, 0.15);
       /* Slide-up entrance: sits below its resting position and faded out
@@ -457,64 +527,91 @@
       display: flex;
       flex-direction: column;
       align-items: stretch;
-      gap: 18px;
+      gap: 16px;
     }
     .story-heading {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
       width: 100%;
     }
-    /* Title row: "My Story" label on the left, year tag on the right. */
-    .story-title-row {
-      display: flex;
+    /* "About Me" tag — soft grey pill at the top of the card, text at 20%
+       opacity to match the Figma comp. */
+    .story-tag {
+      display: inline-flex;
       align-items: center;
-      justify-content: space-between;
-      width: 100%;
-    }
-    .story-label {
-      font-size: 16px;
-      font-weight: 400;
+      justify-content: center;
+      background: rgba(217, 217, 217, 0.2);
       color: rgba(0, 0, 0, 0.2);
-      line-height: 20px;
-    }
-    /* "Since 2024" tag — lavender pill next to the "My Story" label. The
-       whole element is set to 20% opacity, which fades the #9747ff fill to
-       a soft lilac AND softens the white text against it in one move. */
-    .story-year {
-      background: #9747FF;
-      opacity: 0.2;
-      color: #fff;
-      font-family: 'Figtree', system-ui, sans-serif;
+      font-family: 'Work Sans', system-ui, sans-serif;
       font-weight: 400;
-      font-size: 16px;
+      font-size: 11px;
       line-height: 1;
       padding: 3px 5px;
       border-radius: 2px;
+      align-self: flex-start;
     }
+    /* About Me body copy and activities list — 50% opacity black. */
     .story-text {
       display: flex;
       flex-direction: column;
-      gap: 20px;                 /* blank-line breather between paragraphs */
-      font-size: 16px;
+      gap: 12px;
+      font-family: 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
+      font-size: 14px;
       font-weight: 400;
       color: rgba(0, 0, 0, 0.5);
-      line-height: 20px;
+      line-height: 1.35;
       word-break: break-word;
     }
     .story-text p { margin: 0; }
     .story-text em { font-style: italic; }
+    /* "Recent Activities ↓" label — Work Sans micro-label above the list. */
+    .story-activities-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-family: 'Work Sans', system-ui, sans-serif;
+      font-size: 11px;
+      font-weight: 400;
+      color: rgba(0, 0, 0, 0.35);
+      line-height: 1;
+    }
+    .story-activities {
+      margin: 0;
+      padding-left: 20px;
+      font-family: 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
+      font-size: 14px;
+      color: rgba(0, 0, 0, 0.5);
+      line-height: 1.5;
+    }
+    /* Pull the bullet list up so the gap to "Recent Activities" is 4px
+       (the heading uses a 10px flex gap between all its children). */
+    .story-activities-label + .story-activities {
+      margin-top: -6px;
+    }
+    .story-activities li { margin: 0; }
     .story-body {
       display: flex;
       flex-direction: column;
-      gap: 17px;
+      gap: 15px;
       width: 100%;
     }
     .story-pic {
       width: 100%;
       aspect-ratio: 2751 / 1830;
       overflow: hidden;
-      border-radius: 15px;
+      border-radius: 4px;
+      position: relative;
+    }
+    /* Inset white outline over the story image — 1px at 80% opacity, sits
+       above the photo without shifting layout. */
+    .story-pic::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.8);
+      pointer-events: none;
     }
     .story-pic img {
       width: 100%;
@@ -542,7 +639,7 @@
     .story-socials {
       display: flex;
       flex-wrap: wrap;
-      gap: 17px;
+      gap: 15px;
       align-items: center;
     }
     /* Icons-only fallback — added by JS when the three links would wrap
@@ -550,23 +647,24 @@
        scales the icon + arrow up ~50% so the tap targets stay readable. */
     .story-socials.icons-only .story-social-label { display: none; }
     .story-socials.icons-only a svg:first-of-type {
-      width: 24px;
-      height: 24px;
+      width: 20px;
+      height: 20px;
       margin-right: 0;
     }
     .story-socials.icons-only a svg:last-of-type {
-      height: 20px;
+      height: 16px;
     }
     .story-socials.icons-only a:hover svg:last-of-type {
-      width: 20px;
-      margin-left: 11px;
+      width: 16px;
+      margin-left: 9px;
     }
     .story-socials a {
       display: inline-flex;
       align-items: center;
       position: relative;
-      font-size: 16px;
-      line-height: 20px;
+      font-family: 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
+      font-size: 13px;
+      line-height: 1;
       font-weight: 400;
       color: rgba(0, 0, 0, 0.5);
       text-decoration: none;
@@ -595,8 +693,8 @@
       flex-shrink: 0;
     }
     .story-socials a svg:first-of-type {
-      width: 16px;
-      height: 16px;
+      width: 13px;
+      height: 13px;
       margin-right: 3px;
     }
     /* Arrow is collapsed by default — width, margin, and opacity all zero
@@ -613,6 +711,47 @@
     .story-socials a:hover svg:last-of-type {
       width: 13px;
       margin-left: 7px;
+      opacity: 1;
+    }
+
+    /* Inline text links (Waterloo program, mirandaissoocool.com, goodreads).
+       On hover: color shifts to the link's accent, the link lifts 2px
+       (matching the social icons), and the diagonal arrow slides in from
+       behind the text. `inline-block` is required for the lift to render
+       — transform is silently ignored on plain `display: inline`. The
+       whole link moves to a new line as a unit if it can't fit; multi-
+       word links no longer break across lines mid-phrase. */
+    .story-link {
+      color: inherit;
+      text-decoration: none;
+      display: inline-block;
+      transition: color 0.18s ease, transform 0.18s ease;
+    }
+    .story-link:hover {
+      transform: translateY(-2px);
+    }
+    /* Per-link hover accent — pulled from the social-icon palette so the
+       three text links echo Instagram / Twitter / LinkedIn. */
+    .story-link[data-link="waterloo"]:hover  { color: #FC81C5; }
+    .story-link[data-link="site"]:hover      { color: #FE7814; }
+    .story-link[data-link="goodreads"]:hover { color: #9977FE; }
+    /* Trailing arrow — starts collapsed (width, margin, and opacity all 0
+       so the layout doesn't reserve space for it). On hover the same three
+       properties animate in together so the arrow slides out from behind
+       the text. */
+    .story-link .story-link-arrow {
+      display: inline-block;
+      width: 0;
+      height: 0.7em;
+      margin-left: 0;
+      opacity: 0;
+      transition: width 0.18s ease, margin-left 0.18s ease, opacity 0.18s ease;
+      vertical-align: -0.02em;
+      overflow: visible;
+    }
+    .story-link:hover .story-link-arrow {
+      width: 0.7em;
+      margin-left: 3px;
       opacity: 1;
     }
 
@@ -714,14 +853,16 @@
     <div class="story-card" id="storyCard">
       <div class="story-inner">
         <div class="story-heading">
-          <div class="story-title-row">
-            <p class="story-label">My Story</p>
-            <span class="story-year">Since 2024</span>
-          </div>
+          <span class="story-tag">About Me</span>
           <div class="story-text">
-            <p>I first got into photography after a family trip to Cuba. I still remember the entire plane ride home experimenting with Apple's built-in photo filters, like <em>Vivid</em> and <em>Vivid warm</em> (yea...) Before long, I was convincing my dad to buy me the Canon G7X Mark ii (which I still use today).</p>
-            <p>Years later, I joined a media team, where I learned photo editing. Today, I still love taking photos on family vacations (lol) and experimenting with cool photo ideas whenever possible.</p>
+            <p>Hai!!! I&rsquo;m Miranda &#729;&nbsp;&#860;&#671;&#729;, an incoming 2nd year at Waterloo&rsquo;s <a class="story-link" data-link="waterloo" href="https://uwaterloo.ca/future-students/programs/global-business-and-digital-arts" target="_blank" rel="noopener">Global Business and Digital Arts Program<svg class="story-link-arrow" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M2 8L8 2M8 2H3.5M8 2V6.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></a>.</p>
           </div>
+          <span class="story-activities-label">Recent Activities <span aria-hidden="true">&darr;</span></span>
+          <ul class="story-activities">
+            <li>Building <a class="story-link" data-link="site" href="https://mirandaissoocool.com" target="_blank" rel="noopener">mirandaissoocool.com<svg class="story-link-arrow" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M2 8L8 2M8 2H3.5M8 2V6.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></a></li>
+            <li>Baking bread</li>
+            <li>Trying to reach my <a class="story-link" data-link="goodreads" href="https://www.goodreads.com/user/show/117164880-miranda-su" target="_blank" rel="noopener">goodreads<svg class="story-link-arrow" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M2 8L8 2M8 2H3.5M8 2V6.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></a> reading goal</li>
+          </ul>
         </div>
         <div class="story-body">
           <div class="story-pic">
@@ -762,6 +903,10 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <div class="lightbox-overlay" id="lightboxOverlay" role="dialog" aria-modal="true" aria-label="photo lightbox">
+    <img id="lightboxImage" alt="">
   </div>
 
   <div id="loadingScreen">
@@ -1113,12 +1258,20 @@
       };
       // Chime on hover-in — same feedback as the contact-card social icons.
       gearCard.addEventListener('mouseenter', () => { playSelect(); });
-      mainPhotoWrap.addEventListener('click', () => {
-        mainPhotoWrap.classList.remove('wiggle');
-        void mainPhotoWrap.offsetWidth;
-        mainPhotoWrap.classList.add('wiggle');
-        playCaution();
-      });
+      const lightboxOverlay = document.getElementById('lightboxOverlay');
+      const lightboxImage = document.getElementById('lightboxImage');
+      function openLightbox() {
+        if (!mainPhoto.src) return;
+        lightboxImage.src = mainPhoto.src;
+        lightboxOverlay.classList.add('open');
+        playCelebration();
+      }
+      function closeLightbox() {
+        lightboxOverlay.classList.remove('open');
+        playSelect();
+      }
+      mainPhotoWrap.addEventListener('click', openLightbox);
+      lightboxOverlay.addEventListener('click', closeLightbox);
 
       const metaTitle = document.getElementById('metaTitle');
       const metaDate = document.getElementById('metaDate');
@@ -1291,7 +1444,9 @@
         if (e.target === storyOverlay) closeStory();
       });
       document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && storyOverlay.classList.contains('open')) closeStory();
+        if (e.key !== 'Escape') return;
+        if (lightboxOverlay.classList.contains('open')) { closeLightbox(); return; }
+        if (storyOverlay.classList.contains('open')) closeStory();
       });
 
       // Card click handling — wiggle the photo on tap, chime on social click.
@@ -1320,8 +1475,10 @@
         }
       });
 
-      // Chime on social hover — one tick per link entered.
-      document.querySelectorAll('.story-socials [data-social]').forEach((el) => {
+      // Chime on social hover — one tick per link entered. Inline text
+      // links inside the story card use the same chime so the audio
+      // feedback is consistent across every hoverable link in the modal.
+      document.querySelectorAll('.story-socials [data-social], .story-card .story-link').forEach((el) => {
         el.addEventListener('mouseenter', () => { playSelect(); });
       });
 
@@ -1442,6 +1599,7 @@
       const WHEEL_PIXELS_PER_PHOTO = 120;
       window.addEventListener('wheel', (e) => {
         if (storyOverlay.classList.contains('open')) return;
+        if (lightboxOverlay.classList.contains('open')) return;
         e.preventDefault();
         const d = Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
         const base = glideTarget !== null ? glideTarget : posIdx;
@@ -1461,6 +1619,7 @@
       let touchActive = false;
       window.addEventListener('touchstart', (e) => {
         if (storyOverlay.classList.contains('open')) return;
+        if (lightboxOverlay.classList.contains('open')) return;
         if (e.target.closest && e.target.closest('#ticks')) return;
         if (e.touches.length !== 1) return;
         touchLastX = e.touches[0].clientX;
@@ -1490,6 +1649,7 @@
       // ── Input: ← / → / ↑ / ↓ arrow keys advance one photo at a time ──
       document.addEventListener('keydown', (e) => {
         if (storyOverlay.classList.contains('open')) return;
+        if (lightboxOverlay.classList.contains('open')) return;
         let dir = 0;
         if (e.key === 'ArrowRight' || e.key === 'ArrowDown') dir = 1;
         else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') dir = -1;
@@ -1529,6 +1689,18 @@
       } else {
         loadingScreen.remove();
       }
+
+      // One-shot "pop" on the info icon after the gallery fades in — a
+      // gentle hint that the icon is clickable (and, once clicked, the
+      // first user gesture unlocks the AudioContext for the type ticks).
+      // Fires after the reveal fade so the animation isn't hidden by the
+      // loading screen's cross-fade.
+      setTimeout(() => {
+        infoIcon.classList.add('attention');
+        infoIcon.addEventListener('animationend', () => {
+          infoIcon.classList.remove('attention');
+        }, { once: true });
+      }, 900);
 
       let lastTs = null;
       function frame(ts) {
