@@ -51,17 +51,21 @@
        inside the story card. */
     @keyframes info-shake {
       0%   { transform: translateX(0);    color: rgba(0, 0, 0, 0.5); }
-      12%  { transform: translateX(-5px); color: #FC81C5; }
-      24%  { transform: translateX(5px);  color: #FC81C5; }
-      36%  { transform: translateX(-4px); color: #FE7814; }
-      48%  { transform: translateX(4px);  color: #FE7814; }
-      60%  { transform: translateX(-3px); color: #9977FE; }
-      72%  { transform: translateX(3px);  color: #9977FE; }
-      86%  { transform: translateX(-1px); color: rgba(0, 0, 0, 0.5); }
+      8%   { transform: translateX(-9px); color: #FC81C5; }
+      16%  { transform: translateX(9px);  color: #FC81C5; }
+      24%  { transform: translateX(-8px); color: #FC81C5; }
+      32%  { transform: translateX(8px);  color: #FE7814; }
+      40%  { transform: translateX(-7px); color: #FE7814; }
+      48%  { transform: translateX(7px);  color: #FE7814; }
+      56%  { transform: translateX(-5px); color: #9977FE; }
+      64%  { transform: translateX(5px);  color: #9977FE; }
+      72%  { transform: translateX(-3px); color: #9977FE; }
+      80%  { transform: translateX(3px);  color: rgba(0, 0, 0, 0.5); }
+      90%  { transform: translateX(-1px); color: rgba(0, 0, 0, 0.5); }
       100% { transform: translateX(0);    color: rgba(0, 0, 0, 0.5); }
     }
     .info-icon.attention {
-      animation: info-shake 0.7s ease-out;
+      animation: info-shake 1.1s ease-out;
       transform-origin: center center;
     }
 
@@ -242,15 +246,15 @@
        named keyframes let the desktop and narrow breakpoints land on
        their respective resting translates. */
     @keyframes gear-slide-in-desktop {
-      from { transform: translate(420px, calc(100% + 80px)) rotate(-5.92deg); }
+      from { transform: translate(640px, calc(100% + 180px)) rotate(-5.92deg); }
       to   { transform: translate(180px, calc(100% - 12px)) rotate(-5.92deg); }
     }
     @keyframes gear-slide-in-narrow {
-      from { transform: translate(420px, calc(100% + 80px)) rotate(-5.92deg); }
+      from { transform: translate(640px, calc(100% + 180px)) rotate(-5.92deg); }
       to   { transform: translate(159px, calc(100% - 10px)) rotate(-5.92deg); }
     }
     .gear-card.slide-in {
-      animation: gear-slide-in-desktop 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+      animation: gear-slide-in-desktop 1.3s cubic-bezier(0.22, 1, 0.36, 1);
     }
     .gear-title {
       margin: 0;
@@ -599,7 +603,7 @@
       font-family: 'Work Sans', system-ui, sans-serif;
       font-size: 11px;
       font-weight: 400;
-      color: rgba(0, 0, 0, 0.35);
+      color: rgba(0, 0, 0, 0.2);
       line-height: 1;
     }
     .story-activities {
@@ -614,6 +618,11 @@
        (the heading uses a 10px flex gap between all its children). */
     .story-activities-label + .story-activities {
       margin-top: -6px;
+    }
+    /* Extra breathing room between the About Me paragraph and the Recent
+       Activities section: 10px flex gap + 5px = 15px. */
+    .story-text + .story-activities-label {
+      margin-top: 5px;
     }
     .story-activities li { margin: 0; }
     .story-body {
@@ -689,7 +698,7 @@
       align-items: center;
       position: relative;
       font-family: 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
-      font-size: 13px;
+      font-size: 15px;
       line-height: 1;
       font-weight: 400;
       color: rgba(0, 0, 0, 0.5);
@@ -719,9 +728,9 @@
       flex-shrink: 0;
     }
     .story-socials a svg:first-of-type {
-      width: 13px;
-      height: 13px;
-      margin-right: 3px;
+      width: 15px;
+      height: 15px;
+      margin-right: 4px;
     }
     /* Arrow is collapsed by default — width, margin, and opacity all zero
        so the layout doesn't reserve space for it. Hover animates it in from
