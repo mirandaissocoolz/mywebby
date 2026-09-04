@@ -3,12 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Miranda Su</title>
+<title>miranda su</title>
 <link rel="icon" type="image/png" href="tab%20icon/White%20Goose.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
+  *, *::before, *::after { box-sizing: border-box; }
   html, body {
     height: 100%;
     margin: 0;
@@ -17,8 +18,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    box-sizing: border-box;
-    font-family: "DM Mono", ui-monospace, monospace;
+    font-family: 'Figtree', system-ui, sans-serif;
+    font-weight: 300;
     background: #fff;
     color: #111;
   }
@@ -27,7 +28,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 14px;
+    gap: 13px;
     width: 214px;
   }
 
@@ -69,12 +70,27 @@
     background: linear-gradient(to top, #fff, rgba(255,255,255,0));
   }
 
+  .caption {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+  }
   .status {
+    font-family: 'Figtree', system-ui, sans-serif;
+    font-weight: 300;
     font-size: 12px;
     color: rgba(0, 0, 0, 0.5);
     margin: 0;
     text-align: center;
-    font-weight: 300;
+    line-height: normal;
+    letter-spacing: 0.01em;
+    animation: status-sparkle 1.6s ease-in-out infinite;
+  }
+  @keyframes status-sparkle {
+    0%, 100% { opacity: 0.25; }
+    50%      { opacity: 1;    }
   }
   .status .dot {
     opacity: 0;
@@ -92,19 +108,18 @@
 
   .socials {
     display: flex;
-    gap: 14px;
-    align-items: center;
+    gap: 8.127px;
+    align-items: flex-end;
     justify-content: center;
   }
   .socials a {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 25.778px;
-    height: 25.778px;
-    color: #000;
-    opacity: 0.5;
-    transition: color 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
+    width: 26px;
+    height: 26px;
+    color: rgba(0, 0, 0, 0.5);
+    transition: color 0.2s ease, transform 0.2s ease;
   }
   .socials a svg {
     width: 100%;
@@ -113,7 +128,7 @@
   }
   .socials a:hover {
     transform: translateY(-4px);
-    opacity: 1;
+    color: black;
   }
   .socials a.instagram:hover { color: #FC81C5; }
   .socials a.x:hover         { color: #FE7814; }
@@ -121,9 +136,337 @@
   /* After click, suppress hover until pointer leaves */
   .socials a.just-clicked,
   .socials a.just-clicked:hover {
-    color: #000;
-    opacity: 0.5;
+    color: rgba(0, 0, 0, 0.5);
     transform: none;
+  }
+
+  /* ── Info icon (top right) ── */
+  .info-icon {
+    position: fixed;
+    top: 32px;
+    right: 37px;
+    width: 29px;
+    height: 29px;
+    display: block;
+    cursor: pointer;
+    color: rgba(0, 0, 0, 0.5);
+    z-index: 40;
+    transition: color 0.15s;
+  }
+  .info-icon:hover { color: black; }
+  .info-icon svg { width: 100%; height: 100%; display: block; }
+  @keyframes info-shake {
+    0%   { transform: translateX(0);    color: rgba(0, 0, 0, 0.5); }
+    8%   { transform: translateX(-9px); color: #FC81C5; }
+    16%  { transform: translateX(9px);  color: #FC81C5; }
+    24%  { transform: translateX(-8px); color: #FC81C5; }
+    32%  { transform: translateX(8px);  color: #FE7814; }
+    40%  { transform: translateX(-7px); color: #FE7814; }
+    48%  { transform: translateX(7px);  color: #FE7814; }
+    56%  { transform: translateX(-5px); color: #9977FE; }
+    64%  { transform: translateX(5px);  color: #9977FE; }
+    72%  { transform: translateX(-3px); color: #9977FE; }
+    80%  { transform: translateX(3px);  color: rgba(0, 0, 0, 0.5); }
+    90%  { transform: translateX(-1px); color: rgba(0, 0, 0, 0.5); }
+    100% { transform: translateX(0);    color: rgba(0, 0, 0, 0.5); }
+  }
+  .info-icon.attention {
+    animation: info-shake 1.1s ease-out;
+    transform-origin: center center;
+  }
+
+  /* ── Story modal ── */
+  .story-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(102, 102, 102, 0.5);
+    backdrop-filter: blur(7px);
+    -webkit-backdrop-filter: blur(7px);
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.35s ease, visibility 0s linear 0.35s;
+  }
+  .story-overlay.open {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.35s ease, visibility 0s linear 0s;
+  }
+
+  .story-card {
+    width: 496px;
+    max-width: calc(100vw - 80px);
+    max-height: calc(100vh - 20px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: white;
+    border-radius: 4.96px;
+    clip-path: inset(0 round 4.96px);
+    padding: 39.448px 38.133px 28.929px 38.133px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: default;
+    font-family: 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
+    font-weight: 400;
+    box-shadow: -1.8px 0 9px rgba(0, 0, 0, 0.15);
+    transform: translateY(40px) scale(0.9);
+    transform-origin: center center;
+    opacity: 0;
+    transition: transform 0.45s cubic-bezier(0.2, 0.9, 0.3, 1),
+                opacity 0.35s ease;
+    position: relative;
+  }
+  .story-overlay.open .story-card {
+    transform: translateY(0) scale(0.9);
+    opacity: 1;
+  }
+  /* Grainy noise overlay */
+  .story-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    background-repeat: repeat;
+    opacity: 0.12;
+    mix-blend-mode: multiply;
+  }
+  .story-card::-webkit-scrollbar { width: 8px; }
+  .story-card::-webkit-scrollbar-track { background: transparent; }
+  .story-card::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 999px;
+  }
+  .story-card::-webkit-scrollbar-button:vertical:start,
+  .story-card::-webkit-scrollbar-button:vertical:end {
+    display: block;
+    height: 120px;
+    background: transparent;
+  }
+  @supports (scrollbar-width: thin) {
+    @-moz-document url-prefix() {
+      .story-card {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(0, 0, 0, 0.25) transparent;
+      }
+    }
+  }
+  .story-pic.wiggle {
+    animation: story-wiggle 0.55s ease-out;
+  }
+  @keyframes story-wiggle {
+    0%   { transform: rotate(0deg) scale(0.96); }
+    20%  { transform: rotate(-2.5deg) scale(1.01); }
+    40%  { transform: rotate(2deg) scale(1.01); }
+    60%  { transform: rotate(-1.2deg) scale(1); }
+    80%  { transform: rotate(0.6deg) scale(1); }
+    100% { transform: rotate(0deg) scale(1); }
+  }
+
+  .story-inner {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 19.724px;
+  }
+  .story-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+  }
+  .story-tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(217, 217, 217, 0.2);
+    color: rgba(0, 0, 0, 0.2);
+    font-family: 'Figtree', system-ui, sans-serif;
+    font-weight: 400;
+    font-size: 12.4px;
+    line-height: 1;
+    padding: 2.54px 4.233px;
+    border-radius: 2.255px;
+    align-self: flex-start;
+  }
+  .story-text {
+    font-family: 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
+    font-size: 16.12px;
+    font-weight: 400;
+    color: rgba(0, 0, 0, 0.5);
+    line-height: 1.4;
+    word-break: break-word;
+    margin: 0;
+  }
+  .story-text .kaomoji { font-size: 14.88px; }
+  .other-sites-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: 'Figtree', system-ui, sans-serif;
+    font-size: 12.4px;
+    font-weight: 400;
+    color: rgba(0, 0, 0, 0.2);
+    line-height: 1;
+  }
+  .other-sites-list {
+    margin: 0;
+    padding-left: 24px;
+    font-family: 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
+    font-size: 16.12px;
+    color: rgba(0, 0, 0, 0.5);
+    line-height: 1.5;
+  }
+  .other-sites-label + .other-sites-list {
+    margin-top: -11px;
+  }
+  .story-text + .other-sites-label {
+    margin-top: 0;
+  }
+  .other-sites-list li { margin: 0; }
+  .story-body {
+    display: flex;
+    flex-direction: column;
+    gap: 18.972px;
+    width: 100%;
+  }
+  .story-pic {
+    width: 100%;
+    aspect-ratio: 2751 / 1830;
+    overflow: hidden;
+    border-radius: 4.96px;
+    position: relative;
+  }
+  .story-pic::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.5);
+    pointer-events: none;
+  }
+  .story-pic img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    -webkit-user-drag: none;
+  }
+  .story-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 13.392px;
+    width: 100%;
+  }
+  .story-line {
+    width: 100%;
+    height: 1px;
+    background: rgba(217, 217, 217, 0.8);
+  }
+  .story-socials {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 21.08px;
+    align-items: center;
+  }
+  .story-socials.icons-only .story-social-label { display: none; }
+  .story-socials.icons-only a svg:first-of-type {
+    width: 20px;
+    height: 20px;
+    margin-right: 0;
+  }
+  .story-socials.icons-only a svg:last-of-type {
+    height: 16px;
+  }
+  .story-socials.icons-only a:hover svg:last-of-type {
+    width: 16px;
+    margin-left: 9px;
+  }
+  .story-socials a {
+    display: inline-flex;
+    align-items: center;
+    position: relative;
+    font-family: 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
+    font-size: 14.88px;
+    line-height: 1;
+    font-weight: 400;
+    color: rgba(0, 0, 0, 0.5);
+    text-decoration: none;
+    transition: color 0.18s ease, transform 0.18s ease;
+  }
+  .story-socials a::before {
+    content: '';
+    position: absolute;
+    inset: -6px -4px;
+  }
+  .story-socials a:hover { color: black; transform: translateY(-2px); }
+  .story-socials a[data-social="instagram"]:hover { color: #FC81C5; }
+  .story-socials a[data-social="twitter"]:hover   { color: #FE7814; }
+  .story-socials a[data-social="linkedin"]:hover  { color: #9977FE; }
+  .story-socials a svg {
+    display: block;
+    flex-shrink: 0;
+  }
+  .story-socials a svg:first-of-type {
+    width: 16px;
+    height: 16px;
+    margin-right: 2.48px;
+  }
+  .story-socials a svg:last-of-type {
+    width: 0;
+    height: 13px;
+    margin-left: 0;
+    opacity: 0;
+    transition: width 0.18s ease, margin-left 0.18s ease, opacity 0.18s ease;
+  }
+  .story-socials a:hover svg:last-of-type {
+    width: 13px;
+    margin-left: 7px;
+    opacity: 1;
+  }
+
+  /* Inline text links */
+  .story-link {
+    color: inherit;
+    text-decoration: none;
+    position: relative;
+    top: 0;
+    transition: color 0.18s ease, top 0.18s ease;
+  }
+  .story-link:hover {
+    top: -2px;
+  }
+  .story-link[data-link="waterloo"]:hover  { color: #FC81C5; }
+  .story-link[data-link="photos"]:hover    { color: #FE7814; }
+  .story-link[data-link="soundpad"]:hover  { color: #9977FE; }
+  .story-link .story-link-arrow {
+    display: inline-block;
+    width: 0;
+    height: 0.7em;
+    margin-left: 0;
+    opacity: 0;
+    transition: width 0.18s ease, margin-left 0.18s ease, opacity 0.18s ease;
+    vertical-align: -0.02em;
+    overflow: visible;
+  }
+  .story-link:hover .story-link-arrow {
+    width: 0.7em;
+    margin-left: 3px;
+    opacity: 1;
+  }
+
+  @media (max-width: 560px) {
+    .story-card {
+      width: calc(100vw - 40px);
+      padding: 30px 26px 22px 26px;
+    }
   }
 </style>
 </head>
@@ -135,45 +478,231 @@
       <div class="fade-bottom"></div>
     </div>
 
-    <p class="status">still building<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></p>
+    <div class="caption">
+      <p class="status">Miranda is still building<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></p>
 
-    <div class="socials">
-      <a class="instagram" href="https://www.instagram.com/mirandasuissocool/" target="_blank" rel="noopener" aria-label="Instagram">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="1" y="1" width="22" height="22" rx="5.5"/>
-          <circle cx="12" cy="12" r="5"/>
-          <circle cx="18" cy="6" r="1.1" fill="currentColor" stroke="none"/>
-        </svg>
-      </a>
-      <a class="x" href="https://x.com/mirandaiscoolz" target="_blank" rel="noopener" aria-label="X">
-        <svg viewBox="0 0 24 24" fill="currentColor">
-          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-        </svg>
-      </a>
-      <a class="linkedin" href="https://www.linkedin.com/in/miranda-suu/" target="_blank" rel="noopener" aria-label="LinkedIn">
-        <svg viewBox="0 0 24 24" fill="currentColor">
-          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.063 2.063 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-        </svg>
-      </a>
+      <div class="socials">
+        <a class="instagram" href="https://www.instagram.com/mirandasuissocool/" target="_blank" rel="noopener" aria-label="Instagram">
+          <svg viewBox="0 0 26.0022 26.0022" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M13.0017 8.1298C12.0375 8.1298 11.0948 8.41574 10.2931 8.95145C9.49133 9.48717 8.86643 10.2486 8.49743 11.1395C8.12842 12.0303 8.03187 13.0106 8.21999 13.9564C8.40811 14.9021 8.87244 15.7708 9.55428 16.4526C10.2361 17.1345 11.1048 17.5988 12.0506 17.7869C12.9963 17.9751 13.9766 17.8785 14.8675 17.5095C15.7583 17.1405 16.5198 16.5156 17.0555 15.7138C17.5912 14.9121 17.8771 13.9695 17.8771 13.0052C17.8758 11.7126 17.3617 10.4733 16.4477 9.55926C15.5336 8.64523 14.2943 8.13114 13.0017 8.1298ZM13.0017 16.2555C12.3589 16.2555 11.7305 16.0649 11.196 15.7077C10.6615 15.3506 10.2449 14.8429 9.99886 14.249C9.75285 13.6551 9.68848 13.0016 9.8139 12.3711C9.93931 11.7406 10.2489 11.1615 10.7034 10.7069C11.158 10.2524 11.7371 9.9428 12.3676 9.81739C12.9981 9.69198 13.6516 9.75634 14.2455 10.0023C14.8395 10.2484 15.3471 10.6649 15.7042 11.1995C16.0614 11.734 16.252 12.3624 16.252 13.0052C16.252 13.8672 15.9096 14.694 15.3 15.3035C14.6905 15.913 13.8637 16.2555 13.0017 16.2555ZM17.8771 2.44182H8.12631C6.61826 2.44343 5.17244 3.04322 4.10608 4.10957C3.03973 5.17593 2.43994 6.62175 2.43833 8.1298V17.8806C2.43994 19.3887 3.03973 20.8345 4.10608 21.9008C5.17244 22.9672 6.61826 23.567 8.12631 23.5686H17.8771C19.3852 23.567 20.831 22.9672 21.8974 21.9008C22.9637 20.8345 23.5635 19.3887 23.5651 17.8806V8.1298C23.5635 6.62175 22.9637 5.17593 21.8974 4.10957C20.831 3.04322 19.3852 2.44343 17.8771 2.44182ZM21.94 17.8806C21.94 18.9581 21.5119 19.9915 20.75 20.7535C19.9881 21.5154 18.9547 21.9435 17.8771 21.9435H8.12631C7.04878 21.9435 6.01538 21.5154 5.25345 20.7535C4.49151 19.9915 4.06347 18.9581 4.06347 17.8806V8.1298C4.06347 7.05227 4.49151 6.01887 5.25345 5.25694C6.01538 4.49501 7.04878 4.06696 8.12631 4.06696H17.8771C18.9547 4.06696 19.9881 4.49501 20.75 5.25694C21.5119 6.01887 21.94 7.05227 21.94 8.1298V17.8806ZM19.5023 7.72351C19.5023 7.96458 19.4308 8.20023 19.2968 8.40067C19.1629 8.60111 18.9726 8.75734 18.7498 8.84959C18.5271 8.94184 18.2821 8.96598 18.0456 8.91895C17.8092 8.87192 17.592 8.75583 17.4216 8.58537C17.2511 8.41491 17.135 8.19774 17.088 7.9613C17.0409 7.72487 17.0651 7.4798 17.1573 7.25708C17.2496 7.03436 17.4058 6.844 17.6063 6.71008C17.8067 6.57615 18.0423 6.50466 18.2834 6.50466C18.6067 6.50466 18.9167 6.63308 19.1453 6.86166C19.3738 7.09023 19.5023 7.40025 19.5023 7.72351Z"/>
+          </svg>
+        </a>
+        <a class="x" href="https://x.com/mirandaiscoolz" target="_blank" rel="noopener" aria-label="X">
+          <svg viewBox="0 0 25.9992 25.9992" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M21.8105 21.5016L15.4529 11.5102L21.7262 4.60918C21.8681 4.44925 21.9412 4.23984 21.9297 4.02636C21.9182 3.81287 21.8231 3.61252 21.6649 3.46873C21.5066 3.32494 21.2981 3.24931 21.0845 3.25824C20.8709 3.26716 20.6694 3.35992 20.5237 3.5164L14.548 10.0893L10.4358 3.6271C10.3625 3.51169 10.2612 3.41664 10.1414 3.35078C10.0216 3.28491 9.88706 3.25036 9.75031 3.25032H4.87546C4.72978 3.25025 4.58677 3.28935 4.46139 3.36352C4.33601 3.43769 4.23288 3.54421 4.16279 3.67191C4.09271 3.79962 4.05825 3.94383 4.06302 4.08942C4.0678 4.23502 4.11163 4.37666 4.18993 4.4995L10.5476 14.4899L4.27423 21.396C4.20097 21.4746 4.14406 21.5671 4.10679 21.668C4.06953 21.7688 4.05265 21.876 4.05714 21.9835C4.06163 22.0909 4.08739 22.1964 4.13294 22.2937C4.17849 22.3911 4.24291 22.4785 4.32248 22.5508C4.40205 22.6231 4.49517 22.6789 4.59646 22.715C4.69776 22.751 4.80519 22.7666 4.91255 22.7609C5.01991 22.7551 5.12506 22.7281 5.2219 22.6813C5.31874 22.6346 5.40534 22.5692 5.47669 22.4887L11.4525 15.9158L15.5646 22.378C15.6385 22.4925 15.7401 22.5866 15.8598 22.6515C15.9796 22.7165 16.1139 22.7502 16.2501 22.7497H21.125C21.2705 22.7497 21.4133 22.7106 21.5386 22.6364C21.6638 22.5623 21.7668 22.4559 21.8369 22.3284C21.9069 22.2008 21.9414 22.0568 21.9368 21.9114C21.9322 21.7659 21.8885 21.6244 21.8105 21.5016ZM16.696 21.1248L6.35518 4.87527H9.30041L19.6453 21.1248H16.696Z"/>
+          </svg>
+        </a>
+        <a class="linkedin" href="https://www.linkedin.com/in/miranda-suu/" target="_blank" rel="noopener" aria-label="LinkedIn">
+          <svg viewBox="0 0 25.9992 25.9992" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M22.4127 3.58493H4.5382C4.10723 3.58493 3.69392 3.75613 3.38918 4.06087C3.08444 4.36561 2.91324 4.77892 2.91324 5.20989V23.0844C2.91324 23.5153 3.08444 23.9286 3.38918 24.2334C3.69392 24.5381 4.10723 24.7093 4.5382 24.7093H22.4127C22.8436 24.7093 23.2569 24.5381 23.5617 24.2334C23.8664 23.9286 24.0376 23.5153 24.0376 23.0844V5.20989C24.0376 4.77892 23.8664 4.36561 23.5617 4.06087C23.2569 3.75613 22.8436 3.58493 22.4127 3.58493ZM22.4127 23.0844H4.5382V5.20989H22.4127V23.0844ZM10.2255 12.5222V19.022C10.2255 19.2375 10.1399 19.4441 9.98756 19.5965C9.83519 19.7489 9.62853 19.8345 9.41305 19.8345C9.19757 19.8345 8.99091 19.7489 8.83854 19.5965C8.68618 19.4441 8.60058 19.2375 8.60058 19.022V12.5222C8.60058 12.3067 8.68618 12.1 8.83854 11.9477C8.99091 11.7953 9.19757 11.7097 9.41305 11.7097C9.62853 11.7097 9.83519 11.7953 9.98756 11.9477C10.1399 12.1 10.2255 12.3067 10.2255 12.5222ZM19.1628 15.3658V19.022C19.1628 19.2375 19.0772 19.4441 18.9248 19.5965C18.7724 19.7489 18.5658 19.8345 18.3503 19.8345C18.1348 19.8345 17.9281 19.7489 17.7758 19.5965C17.6234 19.4441 17.5378 19.2375 17.5378 19.022V15.3658C17.5378 14.8271 17.3238 14.3105 16.9429 13.9296C16.562 13.5486 16.0453 13.3346 15.5066 13.3346C14.9679 13.3346 14.4513 13.5486 14.0704 13.9296C13.6894 14.3105 13.4754 14.8271 13.4754 15.3658V19.022C13.4754 19.2375 13.3898 19.4441 13.2375 19.5965C13.0851 19.7489 12.8784 19.8345 12.663 19.8345C12.4475 19.8345 12.2408 19.7489 12.0884 19.5965C11.9361 19.4441 11.8505 19.2375 11.8505 19.022V12.5222C11.8515 12.3232 11.9255 12.1314 12.0585 11.9834C12.1915 11.8353 12.3742 11.7412 12.5719 11.7189C12.7697 11.6966 12.9688 11.7477 13.1314 11.8624C13.294 11.9772 13.4088 12.1476 13.4541 12.3414C14.0037 11.9685 14.6445 11.7524 15.3077 11.7163C15.9709 11.6802 16.6314 11.8254 17.2183 12.1363C17.8051 12.4472 18.2962 12.9122 18.6388 13.4811C18.9814 14.0501 19.1625 14.7017 19.1628 15.3658ZM10.6318 9.6785C10.6318 9.91954 10.5603 10.1552 10.4264 10.3556C10.2925 10.556 10.1021 10.7122 9.87943 10.8044C9.65674 10.8967 9.4117 10.9208 9.17529 10.8738C8.93888 10.8268 8.72173 10.7107 8.55129 10.5403C8.38085 10.3698 8.26478 10.1527 8.21775 9.91626C8.17073 9.67986 8.19486 9.43481 8.28711 9.21212C8.37935 8.98943 8.53555 8.79909 8.73597 8.66518C8.93639 8.53127 9.17201 8.45979 9.41305 8.45979C9.73627 8.45979 10.0463 8.58819 10.2748 8.81674C10.5034 9.0453 10.6318 9.35528 10.6318 9.6785Z"/>
+          </svg>
+        </a>
+      </div>
     </div>
   </main>
 
-  <audio id="click-sfx" src="photowall/sound effects/next.mp3" preload="auto"></audio>
+  <div class="info-icon" title="info" role="button" aria-label="info">
+    <svg viewBox="0 0 29 29" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M14.5 19.3333V14.5M14.5 9.66667H14.5121M26.5833 14.5C26.5833 21.1734 21.1734 26.5833 14.5 26.5833C7.82656 26.5833 2.41667 21.1734 2.41667 14.5C2.41667 7.82656 7.82656 2.41667 14.5 2.41667C21.1734 2.41667 26.5833 7.82656 26.5833 14.5Z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <div class="story-overlay" id="storyOverlay" role="dialog" aria-modal="true" aria-label="story">
+    <div class="story-card" id="storyCard">
+      <div class="story-inner">
+        <div class="story-heading">
+          <span class="story-tag">About Me</span>
+          <p class="story-text">Hai!!! I&rsquo;m Miranda <span class="kaomoji">˙&nbsp;&#860;&#671;˙</span>, an incoming 2nd year at Waterloo&rsquo;s <a class="story-link" data-link="waterloo" href="https://uwaterloo.ca/future-students/programs/global-business-and-digital-arts" target="_blank" rel="noopener">Global Business and Digital Arts Program<svg class="story-link-arrow" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M2 8L8 2M8 2H3.5M8 2V6.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></a>. My goal is to pursue product design as a career, but I also love photography and graphic design.</p>
+          <span class="other-sites-label">Other Sites I&rsquo;ve Made <span aria-hidden="true">&darr;</span></span>
+          <ul class="other-sites-list">
+            <li><a class="story-link" data-link="photos" href="/photos">/photos<svg class="story-link-arrow" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M2 8L8 2M8 2H3.5M8 2V6.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></a></li>
+            <li><a class="story-link" data-link="soundpad" href="/soundpad">/soundpad<svg class="story-link-arrow" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M2 8L8 2M8 2H3.5M8 2V6.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></a></li>
+          </ul>
+        </div>
+        <div class="story-body">
+          <div class="story-pic">
+            <img src="/photos/story/story_pic.jpg" alt="">
+          </div>
+          <div class="story-footer">
+            <div class="story-line"></div>
+            <div class="story-socials">
+              <a href="https://www.instagram.com/mirandasuissocool/" target="_blank" rel="noopener" data-social="instagram" aria-label="Instagram">
+                <svg viewBox="0 0 15.9978 15.9978" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M7.99931 5.00186C7.40605 5.00186 6.8261 5.17779 6.33282 5.50739C5.83954 5.83699 5.45508 6.30546 5.22805 6.85356C5.00102 7.40166 4.94161 8.00478 5.05735 8.58665C5.17309 9.16851 5.45878 9.70298 5.87828 10.1225C6.29778 10.542 6.83225 10.8277 7.41412 10.9434C7.99598 11.0591 8.5991 10.9997 9.1472 10.7727C9.69531 10.5457 10.1638 10.1612 10.4934 9.66794C10.823 9.17466 10.9989 8.59472 10.9989 8.00145C10.9981 7.20617 10.6818 6.44369 10.1194 5.88134C9.55707 5.31898 8.7946 5.00269 7.99931 5.00186ZM7.99931 10.0012C7.6038 10.0012 7.21717 9.8839 6.88832 9.66417C6.55947 9.44443 6.30316 9.13212 6.1518 8.76672C6.00045 8.40131 5.96085 7.99924 6.03801 7.61133C6.11516 7.22342 6.30562 6.8671 6.58529 6.58743C6.86495 6.30777 7.22127 6.11731 7.60918 6.04015C7.99709 5.96299 8.39917 6.00259 8.76457 6.15395C9.12997 6.3053 9.44229 6.56161 9.66202 6.89047C9.88175 7.21932 9.99904 7.60595 9.99904 8.00145C9.99904 8.53181 9.78835 9.04045 9.41333 9.41547C9.03831 9.7905 8.52967 10.0012 7.99931 10.0012ZM10.9989 1.50234H4.99972C4.07189 1.50333 3.18235 1.87235 2.52628 2.52842C1.87021 3.1845 1.50119 4.07404 1.5002 5.00186V11.001C1.50119 11.9289 1.87021 12.8184 2.52628 13.4745C3.18235 14.1306 4.07189 14.4996 4.99972 14.5006H10.9989C11.9267 14.4996 12.8163 14.1306 13.4723 13.4745C14.1284 12.8184 14.4974 11.9289 14.4984 11.001V5.00186C14.4974 4.07404 14.1284 3.1845 13.4723 2.52842C12.8163 1.87235 11.9267 1.50333 10.9989 1.50234ZM13.4986 11.001C13.4986 11.664 13.2352 12.2998 12.7664 12.7686C12.2976 13.2373 11.6618 13.5007 10.9989 13.5007H4.99972C4.33677 13.5007 3.70097 13.2373 3.23219 12.7686C2.76341 12.2998 2.50006 11.664 2.50006 11.001V5.00186C2.50006 4.33891 2.76341 3.70311 3.23219 3.23434C3.70097 2.76556 4.33677 2.5022 4.99972 2.5022H10.9989C11.6618 2.5022 12.2976 2.76556 12.7664 3.23434C13.2352 3.70311 13.4986 4.33891 13.4986 5.00186V11.001ZM11.9988 4.7519C11.9988 4.90021 11.9548 5.0452 11.8724 5.16852C11.79 5.29184 11.6729 5.38795 11.5358 5.44471C11.3988 5.50147 11.248 5.51632 11.1026 5.48739C10.9571 5.45845 10.8235 5.38703 10.7186 5.28216C10.6137 5.17728 10.5423 5.04366 10.5134 4.8982C10.4844 4.75273 10.4993 4.60195 10.556 4.46492C10.6128 4.3279 10.7089 4.21078 10.8322 4.12838C10.9556 4.04598 11.1005 4.002 11.2489 4.002C11.4477 4.002 11.6385 4.08101 11.7791 4.22164C11.9198 4.36227 11.9988 4.55301 11.9988 4.7519Z"/>
+                </svg>
+                <span class="story-social-label">Instagram</span>
+                <svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M2 8L8 2M8 2H3.5M8 2V6.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                </svg>
+              </a>
+              <a href="https://x.com/mirandaiscoolz" target="_blank" rel="noopener" data-social="twitter" aria-label="Twitter">
+                <svg viewBox="0 0 15.996 15.996" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M13.4189 13.2288L9.50736 7.08162L13.367 2.8358C13.4543 2.73741 13.4993 2.60857 13.4922 2.47722C13.4852 2.34587 13.4266 2.2226 13.3293 2.13414C13.2319 2.04567 13.1036 1.99914 12.9722 2.00463C12.8408 2.01013 12.7168 2.0672 12.6272 2.16347L8.95062 6.20746L6.42063 2.23158C6.37551 2.16057 6.31321 2.10209 6.23948 2.06157C6.16575 2.02105 6.08299 1.99979 5.99886 1.99976H2.99961C2.90998 1.99972 2.82199 2.02377 2.74485 2.06941C2.66771 2.11504 2.60426 2.18058 2.56114 2.25915C2.51802 2.33772 2.49682 2.42644 2.49976 2.51602C2.5027 2.6056 2.52967 2.69274 2.57784 2.76832L6.48936 8.91491L2.6297 13.1638C2.58463 13.2123 2.54962 13.2691 2.52669 13.3312C2.50376 13.3932 2.49338 13.4592 2.49614 13.5253C2.4989 13.5914 2.51475 13.6563 2.54277 13.7162C2.5708 13.7761 2.61043 13.8299 2.65939 13.8744C2.70834 13.9189 2.76564 13.9532 2.82796 13.9754C2.89028 13.9976 2.95638 14.0072 3.02243 14.0036C3.08849 14 3.15318 13.9834 3.21276 13.9547C3.27234 13.9259 3.32562 13.8857 3.36952 13.8362L7.0461 9.79219L9.57609 13.7681C9.62157 13.8385 9.68404 13.8964 9.75774 13.9363C9.83145 13.9763 9.91402 13.9971 9.99786 13.9968H12.9971C13.0866 13.9967 13.1745 13.9727 13.2516 13.9271C13.3286 13.8815 13.392 13.816 13.4351 13.7375C13.4782 13.6591 13.4994 13.5704 13.4966 13.481C13.4937 13.3915 13.4669 13.3044 13.4189 13.2288ZM10.2722 12.997L3.91001 2.99951H5.72205L12.0867 12.997H10.2722Z"/>
+                </svg>
+                <span class="story-social-label">Twitter</span>
+                <svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M2 8L8 2M8 2H3.5M8 2V6.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                </svg>
+              </a>
+              <a href="https://www.linkedin.com/in/miranda-suu/" target="_blank" rel="noopener" data-social="linkedin" aria-label="LinkedIn">
+                <svg viewBox="0 0 15.996 15.996" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M13.7893 2.20562H2.79209C2.52694 2.20562 2.27265 2.31095 2.08516 2.49844C1.89767 2.68593 1.79234 2.94022 1.79234 3.20537V14.2026C1.79234 14.4678 1.89767 14.7221 2.08516 14.9096C2.27265 15.097 2.52694 15.2024 2.79209 15.2024H13.7893C14.0545 15.2024 14.3088 15.097 14.4963 14.9096C14.6838 14.7221 14.7891 14.4678 14.7891 14.2026V3.20537C14.7891 2.94022 14.6838 2.68593 14.4963 2.49844C14.3088 2.31095 14.0545 2.20562 13.7893 2.20562ZM13.7893 14.2026H2.79209V3.20537H13.7893V14.2026ZM6.29122 7.70425V11.7032C6.29122 11.8358 6.23855 11.963 6.14481 12.0567C6.05106 12.1505 5.92392 12.2031 5.79134 12.2031C5.65877 12.2031 5.53162 12.1505 5.43788 12.0567C5.34413 11.963 5.29147 11.8358 5.29147 11.7032V7.70425C5.29147 7.57167 5.34413 7.44453 5.43788 7.35078C5.53162 7.25704 5.65877 7.20437 5.79134 7.20437C5.92392 7.20437 6.05106 7.25704 6.14481 7.35078C6.23855 7.44453 6.29122 7.57167 6.29122 7.70425ZM11.7898 9.45381V11.7032C11.7898 11.8358 11.7372 11.963 11.6434 12.0567C11.5497 12.1505 11.4225 12.2031 11.29 12.2031C11.1574 12.2031 11.0302 12.1505 10.9365 12.0567C10.8428 11.963 10.7901 11.8358 10.7901 11.7032V9.45381C10.7901 9.12237 10.6584 8.80451 10.4241 8.57015C10.1897 8.33579 9.87184 8.20412 9.54041 8.20412C9.20897 8.20412 8.89111 8.33579 8.65674 8.57015C8.42238 8.80451 8.29072 9.12237 8.29072 9.45381V11.7032C8.29072 11.8358 8.23805 11.963 8.14431 12.0567C8.05056 12.1505 7.92342 12.2031 7.79084 12.2031C7.65827 12.2031 7.53112 12.1505 7.43738 12.0567C7.34363 11.963 7.29097 11.8358 7.29097 11.7032V7.70425C7.29159 7.58181 7.33713 7.46385 7.41895 7.37276C7.50076 7.28166 7.61317 7.22377 7.73484 7.21005C7.85651 7.19633 7.97899 7.22775 8.07903 7.29835C8.17908 7.36894 8.24973 7.4738 8.2776 7.59303C8.61575 7.36363 9.01001 7.23068 9.41803 7.20845C9.82605 7.18622 10.2324 7.27555 10.5935 7.46685C10.9546 7.65814 11.2567 7.94418 11.4675 8.29425C11.6783 8.64432 11.7897 9.04519 11.7898 9.45381ZM6.54116 5.95469C6.54116 6.10298 6.49718 6.24795 6.41479 6.37126C6.3324 6.49456 6.21529 6.59067 6.07828 6.64742C5.94127 6.70417 5.79051 6.71902 5.64506 6.69009C5.49961 6.66116 5.36601 6.58975 5.26115 6.48488C5.15628 6.38002 5.08487 6.24642 5.05594 6.10097C5.02701 5.95552 5.04186 5.80475 5.09861 5.66774C5.15536 5.53073 5.25146 5.41363 5.37477 5.33124C5.49808 5.24885 5.64304 5.20487 5.79134 5.20487C5.99021 5.20487 6.18092 5.28387 6.32154 5.42449C6.46216 5.5651 6.54116 5.75582 6.54116 5.95469Z"/>
+                </svg>
+                <span class="story-social-label">LinkedIn</span>
+                <svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M2 8L8 2M8 2H3.5M8 2V6.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <audio id="click-sfx" src="photos/sound%20effects/next.mp3" preload="auto"></audio>
+  <audio id="celebration-sfx" src="photos/sound%20effects/celebration.wav" preload="auto"></audio>
+  <audio id="select-sfx" src="photos/sound%20effects/select.wav" preload="auto"></audio>
+  <audio id="caution-sfx" src="photos/sound%20effects/caution.wav" preload="auto"></audio>
+  <audio id="transition-sfx" src="photos/sound%20effects/transition_up.wav" preload="auto"></audio>
 
   <script>
-    const sfx = document.getElementById('click-sfx');
+    // ── Home page sound effects ──
+    // Same sound design as /photos: celebration on info-icon press, select on
+    // close / hover-in of social icons, caution on the story photo tap (a
+    // playful dead-end), transition on inline text link clicks.
+    function makeSound(id, volume = 0.7) {
+      const el = document.getElementById(id);
+      if (!el) return () => {};
+      el.volume = volume;
+      return () => {
+        try { el.currentTime = 0; el.play().catch(() => {}); } catch (_) {}
+      };
+    }
+    const playClick       = makeSound('click-sfx');
+    const playCelebration = makeSound('celebration-sfx', 0.2);
+    const playSelect      = makeSound('select-sfx');
+    const playCaution     = makeSound('caution-sfx');
+    const playTransition  = makeSound('transition-sfx');
+
+    // Socials on the main stack — click chime + suppress-hover-until-leave.
     document.querySelectorAll('.socials a').forEach(link => {
       link.addEventListener('click', () => {
-        try {
-          sfx.currentTime = 0;
-          sfx.play();
-        } catch (e) {}
+        playClick();
         link.classList.add('just-clicked');
         link.blur();
       });
       link.addEventListener('mouseleave', () => {
         link.classList.remove('just-clicked');
       });
+    });
+
+    // ── Info icon → story card ──
+    const infoIcon = document.querySelector('.info-icon');
+    const storyOverlay = document.getElementById('storyOverlay');
+    const storyCard = document.getElementById('storyCard');
+    const storySocials = storyCard.querySelector('.story-socials');
+
+    function updateSocialLayout() {
+      if (!storySocials) return;
+      storySocials.classList.remove('icons-only');
+      const links = storySocials.querySelectorAll('a');
+      if (links.length < 2) return;
+      const firstTop = links[0].offsetTop;
+      for (let i = 1; i < links.length; i++) {
+        if (links[i].offsetTop !== firstTop) {
+          storySocials.classList.add('icons-only');
+          return;
+        }
+      }
+    }
+
+    function openStory() {
+      playCelebration();
+      storyOverlay.classList.add('open');
+      requestAnimationFrame(updateSocialLayout);
+    }
+    function closeStory() {
+      storyOverlay.classList.remove('open');
+      playSelect();
+    }
+
+    infoIcon.addEventListener('click', openStory);
+    storyOverlay.addEventListener('click', (e) => {
+      if (e.target === storyOverlay) closeStory();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && storyOverlay.classList.contains('open')) closeStory();
+    });
+
+    // Card click handling — wiggle the photo on tap, chime on social click.
+    storyCard.addEventListener('click', (e) => {
+      const pic = e.target.closest('.story-pic');
+      if (pic) {
+        pic.classList.remove('wiggle');
+        void pic.offsetWidth;
+        pic.classList.add('wiggle');
+        playCaution();
+        return;
+      }
+      const social = e.target.closest('[data-social]');
+      if (social) {
+        playTransition();
+        social.style.color = 'rgba(0, 0, 0, 0.5)';
+        social.style.transform = 'none';
+        const clear = () => {
+          social.style.color = '';
+          social.style.transform = '';
+          social.removeEventListener('mouseleave', clear);
+          social.removeEventListener('blur', clear);
+        };
+        social.addEventListener('mouseleave', clear);
+        social.addEventListener('blur', clear);
+        return;
+      }
+      const link = e.target.closest('.story-link');
+      if (link) {
+        playTransition();
+        link.style.color = 'rgba(0, 0, 0, 0.5)';
+        link.style.top = '0';
+        const clear = () => {
+          link.style.color = '';
+          link.style.top = '';
+          link.removeEventListener('mouseleave', clear);
+          link.removeEventListener('blur', clear);
+        };
+        link.addEventListener('mouseleave', clear);
+        link.addEventListener('blur', clear);
+      }
+    });
+
+    // Chime on link hover — social icons + inline text links.
+    document.querySelectorAll('.story-socials [data-social], .story-card .story-link').forEach((el) => {
+      el.addEventListener('mouseenter', () => { playSelect(); });
+    });
+
+    window.addEventListener('resize', () => {
+      if (storyOverlay.classList.contains('open')) updateSocialLayout();
+    });
+
+    // One-shot attention shake for the info icon — draws the eye a moment
+    // after page load, and replays whenever the tab regains visibility.
+    function overlayIsOpen() {
+      return storyOverlay.classList.contains('open');
+    }
+    function playInfoPop() {
+      if (overlayIsOpen()) return;
+      infoIcon.classList.remove('attention');
+      void infoIcon.offsetWidth;
+      infoIcon.classList.add('attention');
+    }
+    infoIcon.addEventListener('animationend', () => {
+      infoIcon.classList.remove('attention');
+    });
+    setTimeout(playInfoPop, 900);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState !== 'visible') return;
+      setTimeout(playInfoPop, 150);
     });
   </script>
 </body>
