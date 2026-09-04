@@ -585,8 +585,11 @@
     const playCaution     = makeSound('caution-sfx');
     const playTransition  = makeSound('transition-sfx');
 
-    // Socials on the main stack — click chime + suppress-hover-until-leave.
+    // Socials on the main stack — hover chime + click chime + suppress-hover-until-leave.
     document.querySelectorAll('.socials a').forEach(link => {
+      link.addEventListener('mouseenter', () => {
+        if (!link.classList.contains('just-clicked')) playSelect();
+      });
       link.addEventListener('click', () => {
         playClick();
         link.classList.add('just-clicked');
