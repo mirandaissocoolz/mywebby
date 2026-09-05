@@ -13,7 +13,7 @@
   <meta name="twitter:image" content="COVER.JPG">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Rethink+Sans:wght@400;500;600&family=DM+Mono:ital,wght@0,300;1,300&family=Figtree:wght@300;400;500;600&family=Work+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Rethink+Sans:wght@400;500;600&family=DM+Mono:ital,wght@0,300;1,300&family=Figtree:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -98,12 +98,14 @@
     .tick {
       background: black;
       border-radius: 999px;      /* fully rounded ends */
-      opacity: 0.2;              /* always visible; JS bumps the peak to 1 */
+      opacity: 0.2;              /* base color for non-peak ticks */
       height: 4px;
       width: 6px;
-      /* No opacity transition — the peak moves per-frame, so an eased
-         fade would leave a visible dark trail of "just-was-the-peak"
-         ticks that haven't finished easing back to 0.2. */
+      /* No opacity or color transition — the peak moves per-frame, so an
+         eased fade would leave a visible trail of "just-was-the-peak"
+         ticks that haven't finished easing back to base. JS bumps the
+         peak tick to opacity 1 and cycles its background through the
+         site palette (`PEAK_PALETTE`) based on scroll position. */
     }
 
     /* ── Main stage ── */
@@ -573,7 +575,7 @@
       justify-content: center;
       background: rgba(217, 217, 217, 0.2);
       color: rgba(0, 0, 0, 0.2);
-      font-family: 'Work Sans', system-ui, sans-serif;
+      font-family: 'Figtree', system-ui, sans-serif;
       font-weight: 400;
       font-size: 11px;
       line-height: 1;
@@ -595,12 +597,12 @@
     }
     .story-text p { margin: 0; }
     .story-text em { font-style: italic; }
-    /* "Recent Activities ↓" label — Work Sans micro-label above the list. */
+    /* "Recent Activities ↓" label — Figtree micro-label above the list. */
     .story-activities-label {
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      font-family: 'Work Sans', system-ui, sans-serif;
+      font-family: 'Figtree', system-ui, sans-serif;
       font-size: 11px;
       font-weight: 400;
       color: rgba(0, 0, 0, 0.2);
@@ -977,6 +979,34 @@
     // of how many photos there are, so no ticks fade in or out as the peak
     // moves. Odd number keeps the pyramid symmetric.
     const MAX_TICKS = 21;
+
+    // Peak-tick color palette — the single longest, fully-opaque tick
+    // cycles through these colors as the user scrolls, so the pyramid's
+    // apex takes on a different hue at every photo. Ordered warm→cool
+    // (orange → peach → yellow → light pink → pink → purple → lavender)
+    // for a smooth gradient through the site's color palette.
+    const PEAK_PALETTE = [
+      [0xFE, 0x78, 0x14],  // orange   FE7814
+      [0xFE, 0xC2, 0x96],  // peach    FEC296
+      [0xFF, 0xD6, 0x83],  // yellow   FFD683
+      [0xFF, 0xCC, 0xE8],  // pink-lt  FFCCE8
+      [0xFC, 0x81, 0xC5],  // pink     FC81C5
+      [0x99, 0x77, 0xFE],  // purple   9977FE
+      [0xE0, 0xD6, 0xFE],  // lavender E0D6FE
+    ];
+    function peakColorAt(t) {
+      // t: 0..1 — interpolates linearly between adjacent palette entries.
+      const clamped = Math.max(0, Math.min(1, t));
+      const scaled = clamped * (PEAK_PALETTE.length - 1);
+      const i = Math.floor(scaled);
+      const j = Math.min(i + 1, PEAK_PALETTE.length - 1);
+      const f = scaled - i;
+      const a = PEAK_PALETTE[i], b = PEAK_PALETTE[j];
+      const r = Math.round(a[0] + (b[0] - a[0]) * f);
+      const g = Math.round(a[1] + (b[1] - a[1]) * f);
+      const bl = Math.round(a[2] + (b[2] - a[2]) * f);
+      return `rgb(${r},${g},${bl})`;
+    }
 
     const MONTHS = [
       'January', 'February', 'March', 'April', 'May', 'June',
@@ -1613,13 +1643,24 @@
 
       // Render pass: every tick is always visible (no length-based fade),
       // so no new ticks appear as the peak moves. The active tick (the one
-      // at the pyramid's peak) is fully opaque; all others sit at 20%.
+      // at the pyramid's peak) is fully opaque and takes on a palette color
+      // that shifts smoothly along the scroll position; all others sit at
+      // 20% black.
       function renderTicks() {
         const vp = virtualTickPos();
         const active = Math.max(0, Math.min(numTicks - 1, Math.round(vp)));
+        const t = maxIdx > 0 ? Math.max(0, Math.min(1, posIdx / maxIdx)) : 0;
+        const peakColor = peakColorAt(t);
         for (let i = 0; i < tickEls.length; i++) {
           applyTickSize(tickEls[i], tickLen(i - vp));
-          tickEls[i].style.opacity = i === active ? '1' : '0.2';
+          if (i === active) {
+            tickEls[i].style.opacity = '1';
+            tickEls[i].style.background = peakColor;
+          } else {
+            tickEls[i].style.opacity = '0.2';
+            // Clear inline background so the CSS default (black) applies.
+            tickEls[i].style.background = '';
+          }
         }
       }
 
