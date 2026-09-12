@@ -1832,11 +1832,11 @@
       setSelected(0);
       renderTicks();
 
-      // Give the final welcome message the same 800ms on-screen interval as
-      // the initial loading message before revealing the gallery.
+      // Hold the final welcome message on-screen for 1.5 seconds before
+      // revealing the gallery.
       if (loaderShown) {
         loadingScreen.classList.add('welcome-visible');
-        await new Promise(resolve => setTimeout(resolve, 800));
+        await new Promise(resolve => setTimeout(resolve, 1500));
       }
 
       // Reveal the gallery (faded out until now) and fade the loading
