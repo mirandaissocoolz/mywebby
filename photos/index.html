@@ -353,10 +353,56 @@
     #loadingText {
       font-family: 'Figtree', system-ui, sans-serif;
       font-size: 16px;
-      margin-top: -10px;
       color: rgba(0, 0, 0, 0.4);
       letter-spacing: 0.01em;
       animation: loading-sparkle 1.6s ease-in-out infinite;
+    }
+    .loading-label {
+      display: grid;
+      width: max-content;
+      min-height: 19px;
+      margin-top: -10px;
+      justify-items: center;
+    }
+    .loading-label > * {
+      grid-area: 1 / 1;
+    }
+    #loadingProgress,
+    #loadingWelcome {
+      font-family: 'Figtree', system-ui, sans-serif;
+      font-size: 16px;
+      color: rgba(0, 0, 0, 0.4);
+      letter-spacing: 0.01em;
+    }
+    #loadingProgress {
+      opacity: 0;
+    }
+    #loadingScreen.progress-visible #loadingText {
+      animation: loading-fade-out 0.35s ease forwards;
+    }
+    #loadingScreen.progress-visible #loadingProgress {
+      animation:
+        loading-progress-reveal 0.35s ease forwards,
+        loading-sparkle 1.6s ease-in-out 0.35s infinite;
+    }
+    #loadingScreen.welcome-visible #loadingProgress {
+      animation: loading-fade-out 0.35s ease forwards;
+    }
+    #loadingWelcome { opacity: 0; }
+    #loadingScreen.welcome-visible #loadingWelcome {
+      animation: loading-welcome-fade 0.35s ease forwards;
+    }
+    @keyframes loading-fade-out {
+      from { opacity: 1; }
+      to   { opacity: 0; }
+    }
+    @keyframes loading-progress-reveal {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    @keyframes loading-welcome-fade {
+      from { opacity: 0.5; }
+      to   { opacity: 1; }
     }
     @keyframes loading-sparkle {
       0%, 100% { opacity: 0.25; }
@@ -924,7 +970,11 @@
 
   <div id="loadingScreen">
     <canvas id="px-loader" width="100" height="100" aria-hidden="true"></canvas>
-    <div id="loadingText">loading...</div>
+    <div class="loading-label">
+      <div id="loadingText">loading...</div>
+      <div id="loadingProgress">photos are 0% ready.</div>
+      <div id="loadingWelcome">welcome</div>
+    </div>
   </div>
 
   <script>
@@ -1183,6 +1233,13 @@
 
     async function main() {
       const loadingScreen = document.getElementById('loadingScreen');
+      const loadingProgress = document.getElementById('loadingProgress');
+      function updateLoadingProgress(ready, total) {
+        const percent = total > 0
+          ? Math.min(100, Math.round((ready / total) * 200))
+          : 0;
+        loadingProgress.textContent = `photos are ${percent}% ready.`;
+      }
 
       // Show the star loader only if photos aren't ready quickly. If
       // everything is cached, this timer never fires and we skip the
@@ -1192,6 +1249,7 @@
         loaderShown = true;
         startPixelLoader();
         loadingScreen.classList.add('visible');
+        setTimeout(() => loadingScreen.classList.add('progress-visible'), 800);
       }, 120);
 
       // Fire-and-forget: still increment the visitor counter for tracking.
@@ -1203,6 +1261,7 @@
         loadingScreen.remove();
         return;
       }
+      updateLoadingProgress(0, photos.length);
 
       // Preload EVERY photo up-front, behind the loading screen. Two
       // reasons to go beyond a plain `new Image().src = ...`:
@@ -1226,20 +1285,21 @@
         preloadedImages.set(src, img);
       }
       // Resolves once `targetCount` sources have finished loading — the
-       // remaining downloads keep running in the background so the strip
-       // fills in behind the user without holding the loading screen. Used
-       // to release the gallery at 80% loaded instead of 100%.
-      function preloadUntil(srcs, targetCount, concurrency = 6) {
+      // remaining downloads keep running in the background so the strip
+      // fills in behind the user without holding the loading screen.
+      function preloadUntil(srcs, targetCount, onProgress, concurrency = 6) {
         return new Promise((resolveOuter) => {
-          if (srcs.length === 0 || targetCount <= 0) return resolveOuter();
+          if (srcs.length === 0) return resolveOuter();
           let cursor = 0;
           let loaded = 0;
-          let released = false;
+          let released = targetCount <= 0;
+          if (released) resolveOuter();
           const worker = async () => {
             while (cursor < srcs.length) {
               const i = cursor++;
               await preloadOne(srcs[i]);
               loaded++;
+              onProgress(loaded);
               if (!released && loaded >= targetCount) {
                 released = true;
                 resolveOuter();
@@ -1251,14 +1311,24 @@
       }
       // First photo has priority so the stage can populate as soon as
       // possible; the rest download in parallel behind it. We only await
-      // enough of them to reach 80% of the total set — the tail keeps
+      // enough of them to reach 50% of the total set — the tail keeps
       // downloading in the background so the strip fills in without
       // blocking the loading screen.
       const firstSrc = photoUrl(photos[0].file_name);
       const restSrcs = photos.slice(1).map(p => photoUrl(p.file_name));
       await preloadOne(firstSrc);
-      const targetLoaded = Math.max(1, Math.ceil(photos.length * 0.8));
-      await preloadUntil(restSrcs, Math.max(0, targetLoaded - 1), 6);
+      let loadedCount = 1;
+      updateLoadingProgress(loadedCount, photos.length);
+      const targetLoaded = Math.max(1, Math.ceil(photos.length * 0.5));
+      await preloadUntil(
+        restSrcs,
+        Math.max(0, targetLoaded - 1),
+        (loaded) => {
+          loadedCount = loaded + 1;
+          updateLoadingProgress(loadedCount, photos.length);
+        },
+        6
+      );
       clearTimeout(showTimer);
 
       const ticksEl = document.getElementById('ticks');
@@ -1761,6 +1831,13 @@
       posIdx = 0;
       setSelected(0);
       renderTicks();
+
+      // Give the final welcome message the same 800ms on-screen interval as
+      // the initial loading message before revealing the gallery.
+      if (loaderShown) {
+        loadingScreen.classList.add('welcome-visible');
+        await new Promise(resolve => setTimeout(resolve, 800));
+      }
 
       // Reveal the gallery (faded out until now) and fade the loading
       // screen out on top of it. The CSS transition handles the fade; we
