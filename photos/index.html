@@ -367,6 +367,32 @@
       font-size: 21.25px;
       color: black;
     }
+    .photo-title-link {
+      color: inherit;
+      text-decoration: none;
+      position: relative;
+      top: 0;
+      transition: color 0.18s ease, top 0.18s ease;
+    }
+    .photo-title-link:hover {
+      color: #9977FE;
+      top: -2px;
+    }
+    .photo-title-link .photo-title-arrow {
+      display: inline-block;
+      width: 0;
+      height: 0.7em;
+      margin-left: 0;
+      opacity: 0;
+      transition: width 0.18s ease, margin-left 0.18s ease, opacity 0.18s ease;
+      vertical-align: -0.02em;
+      overflow: visible;
+    }
+    .photo-title-link:hover .photo-title-arrow {
+      width: 0.7em;
+      margin-left: 1px;
+      opacity: 1;
+    }
     .meta .date {
       margin-top: 10px;          /* breathing room between title and date */
       font-size: 21.25px;
@@ -970,7 +996,15 @@
       <div class="new-badge" id="newBadge" aria-hidden="true">new</div>
     </div>
     <div class="meta">
-      <div class="title" id="metaTitle">—</div>
+      <div class="title" id="metaTitle">
+        <span id="metaTitleText">—</span>
+        <a id="metaTitleLink" class="photo-title-link" href="" target="_blank" rel="noopener" hidden>
+          <span id="metaTitleLinkText"></span>
+          <svg class="photo-title-arrow" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M2 8L8 2M8 2H3.5M8 2V6.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </a>
+      </div>
       <div class="date" id="metaDate">—</div>
     </div>
   </div>
@@ -1111,12 +1145,16 @@
       // Gear columns in Supabase are capitalized and use spaces ("Camera",
       // "Film Stock", "Editing") — PostgREST needs them quoted, and the
       // aliases give us clean snake_case keys on the JS side.
-      const select = 'id,file_name,title,taken_at,width,height,new,' +
-        'camera:%22Camera%22,film_stock:%22Film%20Stock%22,editing:%22Editing%22';
+      const params = new URLSearchParams({
+        select: 'id,file_name,title,links:"Links",taken_at,width,height,new,' +
+          'camera:"Camera",film_stock:"Film Stock",editing:"Editing"',
+        order: 'taken_at.desc',
+      });
       const r = await fetch(
-        `${SUPABASE_URL}/rest/v1/photos?select=${select}&order=taken_at.desc`,
+        `${SUPABASE_URL}/rest/v1/photos?${params.toString()}`,
         { headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` } }
       );
+      if (!r.ok) throw new Error(`photos request failed: ${r.status}`);
       const rows = await r.json();
       // Defensive: copy-pasted rows sometimes carry trailing whitespace or
       // newlines that break the storage URL / display.
@@ -1124,6 +1162,7 @@
         for (const p of rows) {
           if (typeof p.file_name === 'string') p.file_name = p.file_name.trim();
           if (typeof p.title === 'string') p.title = p.title.trim();
+          if (typeof p.links === 'string') p.links = p.links.trim();
           if (typeof p.camera === 'string') p.camera = p.camera.trim();
           if (typeof p.film_stock === 'string') p.film_stock = p.film_stock.trim();
           if (typeof p.editing === 'string') p.editing = p.editing.trim();
@@ -1322,7 +1361,7 @@
       // Fire-and-forget: still increment the visitor counter for tracking.
       nextVisitorNumber().catch(() => {});
 
-      const photos = await fetchPhotos();
+      const photos = await fetchPhotos().catch(() => []);
       if (!photos || photos.length === 0) {
         clearTimeout(showTimer);
         loadingScreen.remove();
@@ -1344,8 +1383,13 @@
         const img = new Image();
         img.decoding = 'async';
         await new Promise((resolve) => {
-          img.onload = resolve;
-          img.onerror = resolve;
+          const timeout = setTimeout(resolve, 8000);
+          const finish = () => {
+            clearTimeout(timeout);
+            resolve();
+          };
+          img.onload = finish;
+          img.onerror = finish;
           img.src = src;
         });
         try { await img.decode(); } catch (_) {}
@@ -1377,16 +1421,15 @@
         });
       }
       // First photo has priority so the stage can populate as soon as
-      // possible; the rest download in parallel behind it. We only await
-      // enough of them to reach 50% of the total set — the tail keeps
-      // downloading in the background so the strip fills in without
-      // blocking the loading screen.
+      // possible; the rest download in parallel behind it. The viewer
+      // releases after the first photo while the remaining images continue
+      // downloading in the background.
       const firstSrc = photoUrl(photos[0].file_name);
       const restSrcs = photos.slice(1).map(p => photoUrl(p.file_name));
       await preloadOne(firstSrc);
       let loadedCount = 1;
       updateLoadingProgress(loadedCount, photos.length);
-      const targetLoaded = Math.max(1, Math.ceil(photos.length * 0.5));
+      const targetLoaded = 0;
       await preloadUntil(
         restSrcs,
         Math.max(0, targetLoaded - 1),
@@ -1452,6 +1495,9 @@
       lightboxOverlay.addEventListener('click', closeLightbox);
 
       const metaTitle = document.getElementById('metaTitle');
+      const metaTitleText = document.getElementById('metaTitleText');
+      const metaTitleLink = document.getElementById('metaTitleLink');
+      const metaTitleLinkText = document.getElementById('metaTitleLinkText');
       const metaDate = document.getElementById('metaDate');
 
       // Short sound effects. Each Audio is preloaded once and then cloned
@@ -1719,7 +1765,19 @@
           }, 120);
         }
 
-        metaTitle.textContent = displayTitle(p);
+        const title = displayTitle(p);
+        const photoLink = (p.links || '').toString().trim();
+        if (photoLink) {
+          metaTitleText.textContent = '';
+          metaTitleLinkText.textContent = title;
+          metaTitleLink.href = photoLink;
+          metaTitleLink.hidden = false;
+        } else {
+          metaTitleText.textContent = title;
+          metaTitleLinkText.textContent = '';
+          metaTitleLink.removeAttribute('href');
+          metaTitleLink.hidden = true;
+        }
         metaDate.textContent = formatDate(p.taken_at);
 
         newBadge.classList.toggle('visible', p.new === true);
