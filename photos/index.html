@@ -461,17 +461,21 @@
     #loadingScreen.progress-visible #loadingText {
       animation: loading-fade-out 0.35s ease forwards;
     }
+    /* Next-label reveals wait until 0.55s — fade-out completes at 0.35s and
+       a 0.2s blank gap follows so the outgoing and incoming labels never
+       share the grid cell visibly. Sparkle waits an extra beat so it only
+       starts pulsing once the reveal has fully settled. */
     #loadingScreen.progress-visible #loadingProgress {
       animation:
-        loading-progress-reveal 0.35s ease 0.35s forwards,
-        loading-sparkle 1.6s ease-in-out 0.7s infinite;
+        loading-progress-reveal 0.35s ease 0.55s forwards,
+        loading-sparkle 1.6s ease-in-out 0.9s infinite;
     }
     #loadingScreen.welcome-visible #loadingProgress {
       animation: loading-fade-out 0.35s ease forwards;
     }
     #loadingWelcome { opacity: 0; }
     #loadingScreen.welcome-visible #loadingWelcome {
-      animation: loading-welcome-fade 0.35s ease 0.35s forwards;
+      animation: loading-welcome-fade 0.35s ease 0.55s forwards;
     }
     @keyframes loading-fade-out {
       from { opacity: 1; }
@@ -1545,7 +1549,7 @@
       const playCaution     = makeSound('/photos/sound%20effects/caution.wav');
       const playTransition  = makeSound('/photos/sound%20effects/transition_up.wav');
 
-      metaTitleLink.addEventListener('mouseenter', () => { playSelection(); });
+      metaTitleLink.addEventListener('mouseenter', () => { playSelect(); });
       metaTitleLink.addEventListener('click', () => { playCelebration(); });
 
       // The type-tick fires from the RAF loop, not a user gesture, and the
