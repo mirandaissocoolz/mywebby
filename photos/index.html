@@ -461,21 +461,21 @@
     #loadingScreen.progress-visible #loadingText {
       animation: loading-fade-out 0.35s ease forwards;
     }
-    /* Next-label reveals wait until 0.55s — fade-out completes at 0.35s and
-       a 0.2s blank gap follows so the outgoing and incoming labels never
+    /* Next-label reveals wait until 0.8s — fade-out completes at 0.35s and
+       a 0.45s blank gap follows so the outgoing and incoming labels never
        share the grid cell visibly. Sparkle waits an extra beat so it only
        starts pulsing once the reveal has fully settled. */
     #loadingScreen.progress-visible #loadingProgress {
       animation:
-        loading-progress-reveal 0.35s ease 0.55s forwards,
-        loading-sparkle 1.6s ease-in-out 0.9s infinite;
+        loading-progress-reveal 0.35s ease 0.8s forwards,
+        loading-sparkle 1.6s ease-in-out 1.15s infinite;
     }
     #loadingScreen.welcome-visible #loadingProgress {
       animation: loading-fade-out 0.35s ease forwards;
     }
     #loadingWelcome { opacity: 0; }
     #loadingScreen.welcome-visible #loadingWelcome {
-      animation: loading-welcome-fade 0.35s ease 0.55s forwards;
+      animation: loading-welcome-fade 0.35s ease 0.8s forwards;
     }
     @keyframes loading-fade-out {
       from { opacity: 1; }
@@ -1506,9 +1506,9 @@
 
       // Short sound effects. Each Audio is preloaded once and then cloned
       // on every play so overlapping triggers don't cut each other off.
-      //   celebration.wav — info-icon press
-      //   select.wav      — card-arrow navigating to a new view
-      //   caution.wav     — card-arrow at an edge (no new view, just wiggles)
+      //   transition_up.wav — info-icon press, title-link click
+      //   select.wav        — card-arrow navigating to a new view
+      //   caution.wav       — card-arrow at an edge (no new view, just wiggles)
       // Every sound uses ONE reusable Audio element (reset with
       // `currentTime = 0` before each play), rather than `cloneNode()`.
       //   1. iOS Safari treats each cloned element as un-unlocked and
@@ -1550,7 +1550,7 @@
       const playTransition  = makeSound('/photos/sound%20effects/transition_up.wav');
 
       metaTitleLink.addEventListener('mouseenter', () => { playSelect(); });
-      metaTitleLink.addEventListener('click', () => { playCelebration(); });
+      metaTitleLink.addEventListener('click', () => { playTransition(); });
 
       // The type-tick fires from the RAF loop, not a user gesture, and the
       // repeated <audio> approach kept getting caught out by browser
@@ -1661,7 +1661,7 @@
       }
 
       function openStory() {
-        playCelebration();
+        playTransition();
         storyOverlay.classList.add('open');
         // Measure on next frame so the card is in the DOM and laid out.
         requestAnimationFrame(updateSocialLayout);
