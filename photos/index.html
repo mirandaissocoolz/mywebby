@@ -81,7 +81,6 @@
          peak tick to opacity 1 and cycles its background through the
          site palette (`PEAK_PALETTE`) based on scroll position. */
     }
-
     /* ── Main stage ── */
     /* Centered horizontally in the visible gap between the tick slider
        (right edge ~90px) and the info icon (left edge ~79px from the
@@ -819,7 +818,11 @@
        Flips the tick slider to a horizontal row at the bottom of the
        screen, and centers the stage above it. */
     @media (max-width: 1137px) {
-      .info-icon { top: 40px; }
+      .info-icon {
+        top: 40px;
+        left: 50px;
+        right: auto;
+      }
 
       .ticks {
         left: 50%;
@@ -841,11 +844,18 @@
         width: 4px;
         height: 6px;
       }
-
       .stage {
         left: 50%;
         /* Keep the photo and its title/date group vertically centered. */
         transform: translate(-50%, -50%);
+      }
+
+      .lightbox-overlay {
+        padding: 16px;
+      }
+      .lightbox-overlay img {
+        max-width: 94%;
+        max-height: 94%;
       }
 
       /* Narrow layout keeps the socials row wrappable so JS can still
