@@ -155,7 +155,7 @@
       height: 200%;
       width: 15%;
       left: -15%;
-      background: rgba(255, 255, 255, 0.8);
+      background: rgba(255, 255, 255, 1);
       filter: blur(56px);
       transform: rotate(22.59deg);
     }
@@ -463,15 +463,15 @@
     }
     #loadingScreen.progress-visible #loadingProgress {
       animation:
-        loading-progress-reveal 0.35s ease forwards,
-        loading-sparkle 1.6s ease-in-out 0.35s infinite;
+        loading-progress-reveal 0.35s ease 0.35s forwards,
+        loading-sparkle 1.6s ease-in-out 0.7s infinite;
     }
     #loadingScreen.welcome-visible #loadingProgress {
       animation: loading-fade-out 0.35s ease forwards;
     }
     #loadingWelcome { opacity: 0; }
     #loadingScreen.welcome-visible #loadingWelcome {
-      animation: loading-welcome-fade 0.35s ease forwards;
+      animation: loading-welcome-fade 0.35s ease 0.35s forwards;
     }
     @keyframes loading-fade-out {
       from { opacity: 1; }
@@ -1539,10 +1539,14 @@
           } catch (_) {}
         };
       }
-      const playCelebration = makeSound('/photos/sound%20effects/celebration.wav', 0.2);
+      const playCelebration = makeSound('sound%20effects/celebration.wav', 0.2);
+      const playSelection   = makeSound('sound%20effects/selection.wav');
       const playSelect      = makeSound('/photos/sound%20effects/select.wav');
       const playCaution     = makeSound('/photos/sound%20effects/caution.wav');
       const playTransition  = makeSound('/photos/sound%20effects/transition_up.wav');
+
+      metaTitleLink.addEventListener('mouseenter', () => { playSelection(); });
+      metaTitleLink.addEventListener('click', () => { playCelebration(); });
 
       // The type-tick fires from the RAF loop, not a user gesture, and the
       // repeated <audio> approach kept getting caught out by browser
