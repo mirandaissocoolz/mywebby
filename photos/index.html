@@ -1543,8 +1543,7 @@
           } catch (_) {}
         };
       }
-      const playCelebration = makeSound('sound%20effects/celebration.wav', 0.2);
-      const playSelection   = makeSound('sound%20effects/selection.wav');
+      const playCelebration = makeSound('/photos/sound%20effects/celebration.wav', 0.2);
       const playSelect      = makeSound('/photos/sound%20effects/select.wav');
       const playCaution     = makeSound('/photos/sound%20effects/caution.wav');
       const playTransition  = makeSound('/photos/sound%20effects/transition_up.wav');
@@ -1660,9 +1659,17 @@
         }
       }
 
+      // Mobile browsers fire a synthesized "ghost click" ~300ms after a tap,
+      // at the same coordinates. When the info-icon tap opens the overlay
+      // (which spans the full viewport), that follow-up click lands on the
+      // overlay's backdrop and immediately triggers closeStory — playing the
+      // select sound right on top of the open. Stamp the open time and gate
+      // backdrop closes on it.
+      let storyOpenedAt = 0;
       function openStory() {
-        playTransition();
+        playCelebration();
         storyOverlay.classList.add('open');
+        storyOpenedAt = performance.now();
         // Measure on next frame so the card is in the DOM and laid out.
         requestAnimationFrame(updateSocialLayout);
       }
@@ -1673,7 +1680,9 @@
 
       infoIcon.addEventListener('click', openStory);
       storyOverlay.addEventListener('click', (e) => {
-        if (e.target === storyOverlay) closeStory();
+        if (e.target !== storyOverlay) return;
+        if (performance.now() - storyOpenedAt < 400) return;
+        closeStory();
       });
       document.addEventListener('keydown', (e) => {
         if (e.key !== 'Escape') return;
