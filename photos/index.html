@@ -879,7 +879,7 @@
     .story-link[data-link="waterloo"]:hover  { color: #FC81C5; }
     .story-link[data-link="site"]:hover      { color: #FE7814; }
     .story-link[data-link="goodreads"]:hover { color: #9977FE; }
-    .story-link[data-link="bread"]:hover     { color: #FC81C5; }
+    .story-link[data-link="design-side-quests"]:hover { color: #FC81C5; }
     /* Trailing arrow — starts collapsed (width, margin, and opacity all 0
        so the layout doesn't reserve space for it). On hover the same three
        properties animate in together so the arrow slides out from behind
@@ -1024,7 +1024,7 @@
           <span class="story-activities-label">Recent Activities <span aria-hidden="true">&darr;</span></span>
           <ul class="story-activities">
             <li>Building <a class="story-link" data-link="site" href="https://mirandaissoocool.com" target="_blank" rel="noopener">mirandaissoocool.com<svg class="story-link-arrow" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M2 8L8 2M8 2H3.5M8 2V6.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></a></li>
-            <li>Baking <a class="story-link" data-link="bread" href="https://x.com/mirandaiscoolz/status/2081788464647835834" target="_blank" rel="noopener">bread<svg class="story-link-arrow" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M2 8L8 2M8 2H3.5M8 2V6.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></a></li>
+            <li>Doing fun <a class="story-link" data-link="design-side-quests" href="https://x.com/mirandaiscoolz/status/2111850892882481244" target="_blank" rel="noopener">design sidequests<svg class="story-link-arrow" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M2 8L8 2M8 2H3.5M8 2V6.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></a></li>
             <li>Trying to reach my <a class="story-link" data-link="goodreads" href="https://www.goodreads.com/user/show/117164880-miranda-su" target="_blank" rel="noopener">goodreads<svg class="story-link-arrow" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M2 8L8 2M8 2H3.5M8 2V6.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></a> reading goal</li>
           </ul>
         </div>
@@ -1715,8 +1715,8 @@
           social.addEventListener('blur', clear);
           return;
         }
-        // Inline text links (Waterloo / mirandaissoocool.com / goodreads)
-        // play the same click chime as the social icons, and briefly reset
+        // Inline text links in the story card play the same click chime as
+        // the social icons, and briefly reset
         // their hover accent + lift so the visual confirms the click.
         // Cleared when the cursor leaves — matches the social behaviour.
         const link = e.target.closest('.story-link');
