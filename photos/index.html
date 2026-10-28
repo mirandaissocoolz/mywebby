@@ -223,7 +223,8 @@
          peek (40px) subtracted from the card's height, showing just the
          "Gear" label (17px pad + 18px title + ~5px slack). */
       transform: translate(180px, calc(100% - 12px)) rotate(-5.92deg);
-      transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+      transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+                  opacity 0.4s ease;
       cursor: default;
       /* Above the tick slider (z-index: 8) so an overlap on narrow
          layouts keeps the card fully interactive. */
@@ -390,7 +391,10 @@
     }
     .photo-title-link:hover .photo-title-arrow {
       width: 0.7em;
-      margin-left: 1px;
+      /* Negative margin pulls the arrow closer to the title. The SVG
+         viewBox has ~20% of empty padding to the left of the arrow
+         glyph, which otherwise reads as a visible gap after the text. */
+      margin-left: -2px;
       opacity: 1;
     }
     .meta .date {
@@ -852,7 +856,7 @@
     }
     .story-socials a:hover svg:last-of-type {
       width: 13px;
-      margin-left: 7px;
+      margin-left: 3px;
       opacity: 1;
     }
 
@@ -963,6 +967,349 @@
     @media (max-width: 1137px) and (max-height: 550px) {
       .ticks { display: none; }
     }
+
+    /* When the viewer glides to the final card index, the normal photo
+       stage and the gear peek both fade away so the card has the frame
+       to itself. Reuses the existing .stage opacity transition. */
+    body.on-final-card .stage {
+      opacity: 0;
+      pointer-events: none;
+    }
+    body.on-final-card .gear-card {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* ── Final thank-you card ──
+       Shown as the virtual slide one past the last photo. Two faces
+       mounted on a 3D flipper: the FRONT (centered smile inside an
+       inset border) is what the viewer first sees when the card rises
+       in; the BACK ("Thank you for visiting!" + social links) is what
+       lands facing the viewer after the flip completes. A lavender
+       glow sits behind the whole flipper — it enters with a large
+       spread and shrinks toward a soft resting glow, then the card
+       lifts up and flips over to show the back, settling back down
+       centred. Positioned over the same centred stage the photos
+       occupy so entrances swap in place; `.stage` fades to 0 while
+       `.final-card-stage.visible` fades to 1. */
+    .final-card-stage {
+      position: fixed;
+      left: calc(50% + 6px);
+      top: 50%;
+      transform: translate(-50%, -50%);
+      /* Perspective applied here (not on the inner flipper) so the glow
+         behind the card doesn't also warp as the card tilts mid-flip —
+         keeps the glow a flat lavender haze no matter the rotation. */
+      perspective: 1600px;
+      width: 400px;
+      height: 230.83px;
+      z-index: 2;
+      pointer-events: none;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.4s ease, visibility 0s linear 0.4s;
+    }
+    .final-card-stage.visible {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transition: opacity 0.4s ease, visibility 0s linear 0s;
+    }
+
+    /* The mover: owns the vertical hop and carries BOTH the glow and
+       the flipper, so the glow travels with the card instead of
+       staying pinned to centre while the card jumps past it.
+       `preserve-3d` passes the stage's perspective through to the
+       flipper's faces.
+
+       Keyframes bake in a "hover at the peak" window (30% → 65% of
+       the animation stays at translateY(-115px)) so the flip can
+       complete BEFORE the card starts coming back down — the glow is
+       then free to grow during the descent, which is what the viewer
+       sees as the card settling in with its halo. */
+    .final-card-mover {
+      position: absolute;
+      inset: 0;
+      transform-style: preserve-3d;
+      transform: translateY(0);
+    }
+    .final-card-stage.animating .final-card-mover {
+      animation: final-card-lift 1.6s cubic-bezier(0.5, 0, 0.3, 1) 0.15s forwards;
+    }
+    @keyframes final-card-lift {
+      0%   { transform: translateY(0); }
+      30%  { transform: translateY(-115px); }
+      65%  { transform: translateY(-115px); }
+      100% { transform: translateY(0); }
+    }
+
+    /* Lavender glow — lives inside the mover so it tracks the card's
+       vertical position. A radial-gradient disc, blurred and scaled;
+       no box-shadow spread, so the halo fades smoothly to transparent
+       with no visible inner rectangle. Starts tiny the moment the
+       card flips past 90°, grows with the card as it descends, and
+       hits full size exactly when the back lands centred. */
+    .final-card-glow {
+      position: absolute;
+      /* Overshoot the card's bounds so the gradient disc extends well
+         past where any edge of the card ends — nothing clips the halo
+         into a rectangle shape. */
+      left: 50%;
+      top: 50%;
+      width: 180%;
+      height: 320%;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.3) translateZ(-1px);
+      transform-origin: center;
+      /* Three concentric lavender/purple stops fading to transparent.
+         A heavy blur on top smooths any banding so the halo reads as
+         pure glow with no visible outline. */
+      background:
+        radial-gradient(
+          ellipse at center,
+          rgba(153, 119, 254, 0.95) 0%,
+          rgba(224, 214, 254, 0.8) 14%,
+          rgba(224, 214, 254, 0.4) 32%,
+          rgba(224, 214, 254, 0.14) 52%,
+          transparent 72%
+        );
+      filter: blur(14px);
+      -webkit-filter: blur(14px);
+      will-change: transform, opacity;
+    }
+    /* Glow timing: dormant for the lift-up and the entire flip, then
+       grows during the descent. Delay 1.15s = end of flip (0.63 +
+       0.52) — the exact moment the card finishes its 180° rotation,
+       so by the time anything is visible, the back face is already
+       locked in. Grows for 0.6s and lands at full size at 1.75s,
+       the same instant the card settles at centre. Pulse chains in
+       seamlessly right after. */
+    .final-card-stage.animating .final-card-glow {
+      animation:
+        final-card-glow-grow 0.6s cubic-bezier(0.22, 1, 0.36, 1) 1.15s forwards,
+        final-card-glow-pulse 3.4s ease-in-out 1.75s infinite;
+    }
+    @keyframes final-card-glow-grow {
+      0% {
+        /* Starts fully invisible — no premature glow during the flip. */
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.3) translateZ(-1px);
+      }
+      100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1) translateZ(-1px);
+      }
+    }
+    @keyframes final-card-glow-pulse {
+      0%, 100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1) translateZ(-1px);
+      }
+      50% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.08) translateZ(-1px);
+      }
+    }
+
+    /* The flipper: only the Y-axis rotation now (the hop lives on the
+       mover). The flip is timed to happen entirely during the lift's
+       peak-hover window — starts just as the card reaches the top of
+       its hop, ends just before it begins descending. That way the
+       card is FULLY flipped by the time it begins coming back down. */
+    .final-card-flipper {
+      position: absolute;
+      inset: 0;
+      transform-style: preserve-3d;
+      transform: rotateY(0deg);
+      z-index: 1;
+    }
+    .final-card-stage.animating .final-card-flipper {
+      animation: final-card-flip 0.52s cubic-bezier(0.5, 0, 0.3, 1) 0.63s forwards;
+    }
+    @keyframes final-card-flip {
+      0%   { transform: rotateY(0deg); }
+      100% { transform: rotateY(180deg); }
+    }
+
+    .final-card-face {
+      position: absolute;
+      inset: 0;
+      background: #ffffff;
+      border-radius: 4.96px;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      /* Soft drop shadow visible from the first frame — this is what
+         replaces the old entrance glow. Two stops: a tight inner
+         shadow for lift definition and a wider soft halo for depth. */
+      box-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.06),
+        0 10px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    /* FRONT — plain white card with a soft inset border and a single
+       smiley centred. Mirrors the Figma frame "Final Card (Front)". */
+    .final-card-front-inset {
+      position: absolute;
+      top: 20px;
+      left: 23px;
+      right: 24px;
+      bottom: 19.83px;
+      border: 1px solid rgba(217, 217, 217, 0.5);
+      border-radius: 4.96px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .final-card-front-smile {
+      width: 29.98px;
+      height: 29.98px;
+    }
+
+    /* BACK — the "Thank you for visiting!" + socials panel. Reversed
+       on the flipper so the back faces the viewer after a 180° Y spin. */
+    .final-card-back {
+      transform: rotateY(180deg);
+      padding: 25px;
+      display: flex;
+      flex-direction: column;
+      font-family: 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
+    }
+    .final-card-back-header {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .final-card-back-smile {
+      width: 29.98px;
+      height: 29.98px;
+    }
+    .final-card-title {
+      margin: 0;
+      font-family: 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
+      font-weight: 400;
+      font-size: 16.12px;
+      line-height: 21.039px;
+      color: rgba(0, 0, 0, 0.5);
+    }
+    .final-card-footer {
+      margin-top: 24.98px;
+      display: flex;
+      flex-direction: column;
+      gap: 13.39px;
+    }
+    .final-card-divider {
+      height: 1px;
+      width: 100%;
+      background: rgba(0, 0, 0, 0.2);
+    }
+    .final-card-tag {
+      display: inline-flex;
+      align-self: flex-start;
+      align-items: center;
+      justify-content: center;
+      padding: 2.54px 4.23px;
+      border-radius: 2.26px;
+      background: rgba(217, 217, 217, 0.2);
+      font-family: 'Figtree', system-ui, sans-serif;
+      font-weight: 400;
+      font-size: 12.4px;
+      line-height: 1;
+      color: rgba(0, 0, 0, 0.2);
+      white-space: nowrap;
+    }
+    .final-card-socials {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 21.08px;
+      align-items: center;
+    }
+    .final-card-socials a {
+      display: inline-flex;
+      align-items: center;
+      font-family: 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
+      font-weight: 400;
+      font-size: 14.88px;
+      line-height: 21.039px;
+      color: rgba(0, 0, 0, 0.5);
+      text-decoration: none;
+      position: relative;
+      transition: color 0.18s ease, transform 0.18s ease;
+    }
+    /* Hover halo — identical trick to .story-socials: an inset pseudo
+       keeps :hover from flickering during the -2px lift transform. */
+    .final-card-socials a::before {
+      content: '';
+      position: absolute;
+      inset: -6px -4px;
+    }
+    .final-card-socials a:hover { color: #000; transform: translateY(-2px); }
+    .final-card-socials a[data-social="instagram"]:hover { color: #FC81C5; }
+    .final-card-socials a[data-social="twitter"]:hover   { color: #FE7814; }
+    .final-card-socials a[data-social="linkedin"]:hover  { color: #9977FE; }
+    .final-card-socials a svg {
+      display: block;
+      flex-shrink: 0;
+    }
+    /* Brand icon — fixed 15.99px with a small gap to the label. Spacing
+       moved to individual margins (instead of flex gap) so the trailing
+       arrow can collapse to zero width without a residual gap sitting
+       on either side of it. */
+    .final-card-socials a svg:first-of-type {
+      width: 15.99px;
+      height: 15.99px;
+      margin-right: 2.48px;
+    }
+    /* Trailing arrow — collapsed by default (width/margin/opacity all
+       zero so it doesn't reserve layout space), slides out from behind
+       the label on hover. Mirrors the About-me story social arrow
+       exactly: 13px tall, 3px margin, 0.18s ease. */
+    .final-card-socials a svg:last-of-type {
+      width: 0;
+      height: 13px;
+      margin-left: 0;
+      opacity: 0;
+      transition: width 0.18s ease, margin-left 0.18s ease, opacity 0.18s ease;
+    }
+    .final-card-socials a:hover svg:last-of-type {
+      width: 13px;
+      margin-left: 3px;
+      opacity: 1;
+    }
+
+    /* Narrow layout — shrink the card so it still fits comfortably on
+       a phone with room above for the info icon and below for the tick
+       strip + photo caption. 320px keeps it readable; the inner spacing
+       scales from the Figma proportions. */
+    @media (max-width: 1137px) {
+      .final-card-stage {
+        width: 320px;
+        height: 186.66px;
+      }
+      .final-card-front-inset {
+        top: 16px;
+        left: 18px;
+        right: 19px;
+        bottom: 15.83px;
+      }
+      .final-card-back {
+        padding: 20px;
+      }
+      .final-card-back-header {
+        gap: 12px;
+      }
+      .final-card-title { font-size: 15px; line-height: 19px; }
+      .final-card-footer {
+        margin-top: 20px;
+        gap: 11px;
+      }
+      .final-card-tag { font-size: 11.5px; }
+      .final-card-socials { gap: 14px; }
+      .final-card-socials a { font-size: 13.5px; }
+      .final-card-socials a svg:first-of-type { margin-right: 2px; }
+    }
   </style>
 </head>
 <body>
@@ -993,7 +1340,7 @@
 
   <div class="ticks" id="ticks"></div>
 
-  <div class="stage">
+  <div class="stage" id="photoStage">
     <div class="main-photo-wrap" id="mainPhotoWrap">
       <img id="mainPhoto" alt="" decoding="async">
       <div class="shimmer" aria-hidden="true"><div class="shimmer-sweep"></div></div>
@@ -1010,6 +1357,69 @@
         </a>
       </div>
       <div class="date" id="metaDate">—</div>
+    </div>
+  </div>
+
+  <!-- Thank-you card — virtual slide shown one past the last photo.
+       Hidden until the viewer glides to that index; the glow + flip
+       entrance is triggered by JS adding `.animating` to the stage.
+       `.final-card-mover` isolates the vertical hop so BOTH the glow
+       and the flipper rise/fall together, while only the flipper does
+       the Y-axis rotation. If the glow sat on the stage directly it
+       would stay pinned to center while the card jumped past it. -->
+  <div class="final-card-stage" id="finalCardStage" aria-hidden="true">
+    <div class="final-card-mover">
+    <div class="final-card-glow" aria-hidden="true"></div>
+    <div class="final-card-flipper" id="finalCardFlipper">
+      <div class="final-card-face final-card-front">
+        <div class="final-card-front-inset">
+          <svg class="final-card-front-smile" viewBox="0 0 29.9844 29.9844" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M9.99466 17.4899C9.99466 17.4899 11.8687 19.9886 14.9921 19.9886C18.1154 19.9886 19.9894 17.4899 19.9894 17.4899M18.7401 11.2432H18.7526M11.244 11.2432H11.2565M27.4855 14.9912C27.4855 21.8911 21.892 27.4847 14.9921 27.4847C8.09209 27.4847 2.49856 21.8911 2.49856 14.9912C2.49856 8.09127 8.09209 2.49775 14.9921 2.49775C21.892 2.49775 27.4855 8.09127 27.4855 14.9912ZM19.3648 11.2432C19.3648 11.5882 19.085 11.8679 18.7401 11.8679C18.3952 11.8679 18.1154 11.5882 18.1154 11.2432C18.1154 10.8982 18.3952 10.6185 18.7401 10.6185C19.085 10.6185 19.3648 10.8982 19.3648 11.2432ZM11.8687 11.2432C11.8687 11.5882 11.589 11.8679 11.244 11.8679C10.899 11.8679 10.6193 11.5882 10.6193 11.2432C10.6193 10.8982 10.899 10.6185 11.244 10.6185C11.589 10.6185 11.8687 10.8982 11.8687 11.2432Z" stroke="rgba(0,0,0,0.5)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+      <div class="final-card-face final-card-back">
+        <div class="final-card-back-header">
+          <svg class="final-card-back-smile" viewBox="0 0 29.9844 29.9844" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M9.99466 17.4899C9.99466 17.4899 11.8687 19.9886 14.9921 19.9886C18.1154 19.9886 19.9894 17.4899 19.9894 17.4899M18.7401 11.2432H18.7526M11.244 11.2432H11.2565M27.4855 14.9912C27.4855 21.8911 21.892 27.4847 14.9921 27.4847C8.09209 27.4847 2.49856 21.8911 2.49856 14.9912C2.49856 8.09127 8.09209 2.49775 14.9921 2.49775C21.892 2.49775 27.4855 8.09127 27.4855 14.9912ZM19.3648 11.2432C19.3648 11.5882 19.085 11.8679 18.7401 11.8679C18.3952 11.8679 18.1154 11.5882 18.1154 11.2432C18.1154 10.8982 18.3952 10.6185 18.7401 10.6185C19.085 10.6185 19.3648 10.8982 19.3648 11.2432ZM11.8687 11.2432C11.8687 11.5882 11.589 11.8679 11.244 11.8679C10.899 11.8679 10.6193 11.5882 10.6193 11.2432C10.6193 10.8982 10.899 10.6185 11.244 10.6185C11.589 10.6185 11.8687 10.8982 11.8687 11.2432Z" stroke="rgba(0,0,0,0.5)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <p class="final-card-title">Thank you for visiting!</p>
+        </div>
+        <div class="final-card-footer">
+          <div class="final-card-divider" aria-hidden="true"></div>
+          <span class="final-card-tag">Reach out :)</span>
+          <div class="final-card-socials">
+            <a href="https://www.instagram.com/mirandasuissocool/" target="_blank" rel="noopener" data-social="instagram" aria-label="Instagram">
+              <svg viewBox="0 0 15.9978 15.9978" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M7.99931 5.00186C7.40605 5.00186 6.8261 5.17779 6.33282 5.50739C5.83954 5.83699 5.45508 6.30546 5.22805 6.85356C5.00102 7.40166 4.94161 8.00478 5.05735 8.58665C5.17309 9.16851 5.45878 9.70298 5.87828 10.1225C6.29778 10.542 6.83225 10.8277 7.41412 10.9434C7.99598 11.0591 8.5991 10.9997 9.1472 10.7727C9.69531 10.5457 10.1638 10.1612 10.4934 9.66794C10.823 9.17466 10.9989 8.59472 10.9989 8.00145C10.9981 7.20617 10.6818 6.44369 10.1194 5.88134C9.55707 5.31898 8.7946 5.00269 7.99931 5.00186ZM7.99931 10.0012C7.6038 10.0012 7.21717 9.8839 6.88832 9.66417C6.55947 9.44443 6.30316 9.13212 6.1518 8.76672C6.00045 8.40131 5.96085 7.99924 6.03801 7.61133C6.11516 7.22342 6.30562 6.8671 6.58529 6.58743C6.86495 6.30777 7.22127 6.11731 7.60918 6.04015C7.99709 5.96299 8.39917 6.00259 8.76457 6.15395C9.12997 6.3053 9.44229 6.56161 9.66202 6.89047C9.88175 7.21932 9.99903 7.60595 9.99903 8.00145C9.99903 8.53181 9.78835 9.04045 9.41333 9.41547C9.03831 9.7905 8.52967 10.0012 7.99931 10.0012ZM10.9989 1.50234H4.99972C4.07189 1.50333 3.18235 1.87235 2.52628 2.52842C1.87021 3.1845 1.50119 4.07404 1.5002 5.00186V11.001C1.50119 11.9289 1.87021 12.8184 2.52628 13.4745C3.18235 14.1306 4.07189 14.4996 4.99972 14.5006H10.9989C11.9267 14.4996 12.8163 14.1306 13.4723 13.4745C14.1284 12.8184 14.4974 11.9289 14.4984 11.001V5.00186C14.4974 4.07404 14.1284 3.1845 13.4723 2.52842C12.8163 1.87235 11.9267 1.50333 10.9989 1.50234ZM13.4986 11.001C13.4986 11.664 13.2352 12.2998 12.7664 12.7686C12.2976 13.2373 11.6618 13.5007 10.9989 13.5007H4.99972C4.33677 13.5007 3.70097 13.2373 3.23219 12.7686C2.76341 12.2998 2.50006 11.664 2.50006 11.001V5.00186C2.50006 4.33891 2.76341 3.70311 3.23219 3.23434C3.70097 2.76556 4.33677 2.5022 4.99972 2.5022H10.9989C11.6618 2.5022 12.2976 2.76556 12.7664 3.23434C13.2352 3.70311 13.4986 4.33891 13.4986 5.00186V11.001ZM11.9988 4.7519C11.9988 4.90021 11.9548 5.0452 11.8724 5.16852C11.79 5.29184 11.6729 5.38795 11.5358 5.44471C11.3988 5.50147 11.248 5.51632 11.1026 5.48739C10.9571 5.45845 10.8235 5.38703 10.7186 5.28216C10.6137 5.17728 10.5423 5.04366 10.5134 4.8982C10.4844 4.75273 10.4993 4.60195 10.5561 4.46492C10.6128 4.3279 10.7089 4.21078 10.8322 4.12838C10.9556 4.04598 11.1005 4.002 11.2489 4.002C11.4477 4.002 11.6385 4.08101 11.7791 4.22164C11.9198 4.36227 11.9988 4.55301 11.9988 4.7519Z"/>
+              </svg>
+              Instagram
+              <svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M2 8L8 2M8 2H3.5M8 2V6.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              </svg>
+            </a>
+            <a href="https://x.com/mirandaiscoolz" target="_blank" rel="noopener" data-social="twitter" aria-label="Twitter">
+              <svg viewBox="0 0 15.996 15.996" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M13.4189 13.2288L9.50736 7.08162L13.367 2.8358C13.4543 2.73741 13.4993 2.60857 13.4922 2.47722C13.4852 2.34587 13.4266 2.2226 13.3293 2.13414C13.2319 2.04567 13.1036 1.99914 12.9722 2.00463C12.8408 2.01013 12.7168 2.0672 12.6272 2.16347L8.95062 6.20746L6.42063 2.23158C6.37551 2.16057 6.31321 2.10209 6.23948 2.06157C6.16575 2.02105 6.08299 1.99979 5.99886 1.99976H2.99961C2.90998 1.99972 2.82199 2.02377 2.74485 2.06941C2.66771 2.11504 2.60426 2.18058 2.56114 2.25915C2.51802 2.33772 2.49682 2.42644 2.49976 2.51602C2.5027 2.6056 2.52967 2.69274 2.57784 2.76832L6.48936 8.91491L2.6297 13.1638C2.58463 13.2123 2.54962 13.2691 2.52669 13.3312C2.50376 13.3932 2.49338 13.4592 2.49614 13.5253C2.4989 13.5914 2.51475 13.6563 2.54277 13.7162C2.5708 13.7761 2.61043 13.8299 2.65939 13.8744C2.70834 13.9189 2.76564 13.9532 2.82796 13.9754C2.89028 13.9976 2.95638 14.0072 3.02243 14.0036C3.08849 14 3.15318 13.9834 3.21276 13.9547C3.27234 13.9259 3.32562 13.8857 3.36952 13.8362L7.0461 9.79219L9.57609 13.7681C9.62157 13.8385 9.68404 13.8964 9.75774 13.9363C9.83145 13.9763 9.91402 13.9971 9.99786 13.9968H12.9971C13.0866 13.9967 13.1745 13.9727 13.2516 13.9271C13.3286 13.8815 13.392 13.816 13.4351 13.7375C13.4782 13.6591 13.4994 13.5704 13.4966 13.481C13.4937 13.3915 13.4669 13.3044 13.4189 13.2288ZM10.2722 12.997L3.91001 2.99951H5.72205L12.0867 12.997H10.2722Z"/>
+              </svg>
+              Twitter
+              <svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M2 8L8 2M8 2H3.5M8 2V6.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              </svg>
+            </a>
+            <a href="https://www.linkedin.com/in/miranda-suu/" target="_blank" rel="noopener" data-social="linkedin" aria-label="LinkedIn">
+              <svg viewBox="0 0 15.996 15.996" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M13.7893 2.20562H2.79209C2.52694 2.20562 2.27265 2.31095 2.08516 2.49844C1.89767 2.68593 1.79234 2.94022 1.79234 3.20537V14.2026C1.79234 14.4678 1.89767 14.7221 2.08516 14.9096C2.27265 15.097 2.52694 15.2024 2.79209 15.2024H13.7893C14.0545 15.2024 14.3088 15.097 14.4963 14.9096C14.6838 14.7221 14.7891 14.4678 14.7891 14.2026V3.20537C14.7891 2.94022 14.6838 2.68593 14.4963 2.49844C14.3088 2.31095 14.0545 2.20562 13.7893 2.20562ZM13.7893 14.2026H2.79209V3.20537H13.7893V14.2026ZM6.29122 7.70425V11.7032C6.29122 11.8358 6.23855 11.963 6.14481 12.0567C6.05106 12.1505 5.92392 12.2031 5.79134 12.2031C5.65877 12.2031 5.53162 12.1505 5.43788 12.0567C5.34413 11.963 5.29147 11.8358 5.29147 11.7032V7.70425C5.29147 7.57167 5.34413 7.44453 5.43788 7.35078C5.53162 7.25704 5.65877 7.20437 5.79134 7.20437C5.92392 7.20437 6.05106 7.25704 6.14481 7.35078C6.23855 7.44453 6.29122 7.57167 6.29122 7.70425ZM11.7898 9.45381V11.7032C11.7898 11.8358 11.7372 11.963 11.6434 12.0567C11.5497 12.1505 11.4225 12.2031 11.29 12.2031C11.1574 12.2031 11.0302 12.1505 10.9365 12.0567C10.8428 11.963 10.7901 11.8358 10.7901 11.7032V9.45381C10.7901 9.12237 10.6584 8.80451 10.4241 8.57015C10.1897 8.33579 9.87184 8.20412 9.54041 8.20412C9.20897 8.20412 8.89111 8.33579 8.65674 8.57015C8.42238 8.80451 8.29072 9.12237 8.29072 9.45381V11.7032C8.29072 11.8358 8.23805 11.963 8.14431 12.0567C8.05056 12.1505 7.92342 12.2031 7.79084 12.2031C7.65827 12.2031 7.53112 12.1505 7.43738 12.0567C7.34363 11.963 7.29097 11.8358 7.29097 11.7032V7.70425C7.29159 7.58181 7.33713 7.46385 7.41895 7.37276C7.50076 7.28166 7.61317 7.22377 7.73484 7.21005C7.85651 7.19633 7.97899 7.22775 8.07903 7.29835C8.17908 7.36894 8.24973 7.4738 8.2776 7.59303C8.61575 7.36363 9.01001 7.23068 9.41803 7.20845C9.82605 7.18622 10.2324 7.27555 10.5935 7.46685C10.9546 7.65814 11.2567 7.94418 11.4675 8.29425C11.6783 8.64432 11.7897 9.04519 11.7898 9.45381ZM6.54116 5.95469C6.54116 6.10298 6.49718 6.24795 6.41479 6.37126C6.3324 6.49456 6.21529 6.59067 6.07828 6.64742C5.94127 6.70417 5.79051 6.71902 5.64506 6.69009C5.49961 6.66116 5.36601 6.58975 5.26115 6.48488C5.15628 6.38002 5.08487 6.24642 5.05594 6.10097C5.02701 5.95552 5.04186 5.80475 5.09861 5.66774C5.15536 5.53073 5.25146 5.41363 5.37477 5.33124C5.49808 5.24885 5.64304 5.20487 5.79134 5.20487C5.99021 5.20487 6.18092 5.28387 6.32154 5.42449C6.46216 5.5651 6.54116 5.75582 6.54116 5.95469Z"/>
+              </svg>
+              LinkedIn
+              <svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M2 8L8 2M8 2H3.5M8 2V6.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              </svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
     </div>
   </div>
 
@@ -1459,7 +1869,39 @@
         return el;
       });
 
-      const maxIdx = photos.length - 1;
+      // One past the last photo is the thank-you card slot — the viewer
+       // can glide/scroll/arrow all the way through the strip and arrive
+       // at it as the final "slide". The tick slider's math is based on
+       // maxIdx too, so the peak reaches the far edge when the card is
+       // in view.
+      const FINAL_CARD_IDX = photos.length;
+      const maxIdx = FINAL_CARD_IDX;
+
+      const finalCardStage = document.getElementById('finalCardStage');
+      let finalCardAnimTimer = null;
+      function showFinalCard() {
+        // Reset the entrance classes before re-adding so the flip
+        // keyframes play again when the viewer scrolls away and comes
+        // back. Force a reflow between the removal and the add so the
+        // browser restarts the animation rather than coalescing it.
+        finalCardStage.classList.remove('animating', 'flipped');
+        void finalCardStage.offsetWidth;
+        finalCardStage.classList.add('visible', 'animating');
+        document.body.classList.add('on-final-card');
+        clearTimeout(finalCardAnimTimer);
+        // Timing matches the CSS: 0.15s lift delay + 1.6s lift = 1.75s
+        // before the card has settled at centre and the glow has
+        // finished growing. Adding `flipped` is a state marker — the
+        // glow + pulse are already chained via CSS delays.
+        finalCardAnimTimer = setTimeout(() => {
+          finalCardStage.classList.add('flipped');
+        }, 1750);
+      }
+      function hideFinalCard() {
+        finalCardStage.classList.remove('visible', 'animating', 'flipped');
+        document.body.classList.remove('on-final-card');
+        clearTimeout(finalCardAnimTimer);
+      }
 
       let selectedIdx = -1;
       // Glide state — a fractional index (0..maxIdx). The frame loop eases
@@ -1738,8 +2180,33 @@
       // Chime on social hover — one tick per link entered. Inline text
       // links inside the story card use the same chime so the audio
       // feedback is consistent across every hoverable link in the modal.
-      document.querySelectorAll('.story-socials [data-social], .story-card .story-link').forEach((el) => {
+      // The final thank-you card's socials get the same treatment so
+      // the feedback is consistent between the two cards.
+      document.querySelectorAll(
+        '.story-socials [data-social], .story-card .story-link, .final-card-socials [data-social]'
+      ).forEach((el) => {
         el.addEventListener('mouseenter', () => { playSelect(); });
+      });
+
+      // Final card social click — mirrors the story card's social click
+      // behaviour: play the transition chime, briefly reset the hover
+      // accent colour and lift so the click reads as a confirmed press,
+      // and clear it when the pointer leaves. Delegated at the stage so
+      // it keeps working after the card's entrance animation re-triggers.
+      finalCardStage.addEventListener('click', (e) => {
+        const social = e.target.closest('[data-social]');
+        if (!social) return;
+        playTransition();
+        social.style.color = 'rgba(0, 0, 0, 0.5)';
+        social.style.transform = 'none';
+        const clear = () => {
+          social.style.color = '';
+          social.style.transform = '';
+          social.removeEventListener('mouseleave', clear);
+          social.removeEventListener('blur', clear);
+        };
+        social.addEventListener('mouseleave', clear);
+        social.addEventListener('blur', clear);
       });
 
       let shimmerTimer = null;
@@ -1755,6 +2222,25 @@
           playType(sliderDragging ? 1 : Math.abs(i - selectedIdx));
         }
         selectedIdx = i;
+
+        // Final slide — the thank-you card. Blank the photo-meta so the
+        // old title/date doesn't bleed through the stage's opacity-0,
+        // tuck the gear peek, and trigger the glow + flip entrance.
+        if (i === FINAL_CARD_IDX) {
+          showFinalCard();
+          newBadge.classList.remove('visible');
+          gearCard.classList.remove('visible');
+          metaTitleText.textContent = '';
+          metaTitleLinkText.textContent = '';
+          metaTitleLink.hidden = true;
+          metaDate.textContent = '';
+          mainPhoto.style.opacity = '0';
+          mainPhotoWrap.classList.remove('loading');
+          return;
+        }
+        // Coming back to a photo from the card — undo the final-card
+        // state so the stage + gear fade back in.
+        hideFinalCard();
         const p = photos[i];
 
         const fit = fitPhoto(p.width || 4, p.height || 3);
