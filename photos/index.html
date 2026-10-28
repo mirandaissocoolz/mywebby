@@ -1062,7 +1062,10 @@
       pointer-events: none;
       z-index: 0;
       opacity: 0;
-      transform: translate(-50%, -50%) scale(0.3) translateZ(-1px);
+      /* Z-depth pushed well behind the card so the parallax tilt
+         can't rotate any part of the card's edges past the glow's
+         plane (which would make the glow bleed through the card). */
+      transform: translate(-50%, -50%) scale(0.3) translateZ(-120px);
       transform-origin: center;
       /* Three concentric lavender/purple stops fading to transparent.
          A heavy blur on top smooths any banding so the halo reads as
@@ -1096,22 +1099,38 @@
       0% {
         /* Starts fully invisible — no premature glow during the flip. */
         opacity: 0;
-        transform: translate(-50%, -50%) scale(0.3) translateZ(-1px);
+        transform: translate(-50%, -50%) scale(0.3) translateZ(-120px);
       }
       100% {
         opacity: 1;
-        transform: translate(-50%, -50%) scale(1) translateZ(-1px);
+        transform: translate(-50%, -50%) scale(1) translateZ(-120px);
       }
     }
     @keyframes final-card-glow-pulse {
       0%, 100% {
         opacity: 1;
-        transform: translate(-50%, -50%) scale(1) translateZ(-1px);
+        transform: translate(-50%, -50%) scale(1) translateZ(-120px);
       }
       50% {
         opacity: 1;
-        transform: translate(-50%, -50%) scale(1.08) translateZ(-1px);
+        transform: translate(-50%, -50%) scale(1.08) translateZ(-120px);
       }
+    }
+
+    /* Parallax tilt layer: sits between the mover and the flipper so
+       the glow stays as a flat halo while the card itself tilts in 3D
+       in response to the viewer's cursor. JS updates `--tilt-x` and
+       `--tilt-y` custom properties from mousemove; the smooth
+       transition and ease curve keep the follow motion feeling liquid
+       rather than snappy. Reset to 0 when the card isn't visible so
+       stale rotation doesn't carry into the next entrance. */
+    .final-card-tilt {
+      position: absolute;
+      inset: 0;
+      transform-style: preserve-3d;
+      transform: rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+      transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+      will-change: transform;
     }
 
     /* The flipper: only the Y-axis rotation now (the hop lives on the
@@ -1133,6 +1152,19 @@
       0%   { transform: rotateY(0deg); }
       100% { transform: rotateY(180deg); }
     }
+    /* Once the entrance finishes (JS adds `.flipped`), hand off from
+       the keyframe to a transition-based rotation driven by the
+       `--user-flip` custom property. Each click bumps it by 180° so
+       the card keeps spinning in the same direction regardless of
+       which face is currently showing. */
+    .final-card-stage.flipped .final-card-flipper {
+      animation: none;
+      transform: rotateY(var(--user-flip, 180deg));
+      transition: transform 0.6s cubic-bezier(0.5, 0, 0.3, 1);
+    }
+    .final-card-stage.flipped {
+      cursor: pointer;        /* signal the card is interactive */
+    }
 
     .final-card-face {
       position: absolute;
@@ -1148,6 +1180,16 @@
         0 1px 3px rgba(0, 0, 0, 0.06),
         0 10px 30px rgba(0, 0, 0, 0.08);
     }
+
+    /* The front face is only ever on-screen during the entrance
+       flip — once the card settles, it's the backface and shouldn't
+       be clickable. backface-visibility: hidden on `.final-card-face`
+       only skips painting its OWN rect, not children's hit targets,
+       so the inset border was quietly absorbing clicks aimed at the
+       Instagram / Twitter / LinkedIn links on the back. Turning off
+       pointer events on the whole front face routes those clicks
+       through to the back where they belong. */
+    .final-card-front { pointer-events: none; }
 
     /* FRONT — plain white card with a soft inset border and a single
        smiley centred. Mirrors the Figma frame "Final Card (Front)". */
@@ -1169,13 +1211,30 @@
     }
 
     /* BACK — the "Thank you for visiting!" + socials panel. Reversed
-       on the flipper so the back faces the viewer after a 180° Y spin. */
+       on the flipper so the back faces the viewer after a 180° Y spin.
+       `backface-visibility: hidden` on `.final-card-face` keeps the
+       back from appearing mirrored during the first half of the flip,
+       but Chromium then also stops hit-testing it even after the
+       flipper's 180° rotation puts the back's frontface toward the
+       viewer. Once `.flipped` is set (post-entrance) we flip it back
+       to `visible` so clicks on the Instagram / Twitter / LinkedIn
+       links can actually land on the back face instead of being
+       absorbed by the (parent) flipper's bounding box. */
     .final-card-back {
       transform: rotateY(180deg);
       padding: 25px;
       display: flex;
       flex-direction: column;
       font-family: 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
+    }
+    /* Scoped to the moment the back is the user-visible face. If this
+       stayed on under `.flipped` after a click-to-flip-to-front, the
+       back face would render as a mirror image on top of the front
+       (both at Z=0 with the back painted later in DOM order). JS adds
+       `.showing-back` on even flip counts and `.showing-front` on odd. */
+    .final-card-stage.showing-back .final-card-back {
+      backface-visibility: visible;
+      -webkit-backface-visibility: visible;
     }
     .final-card-back-header {
       display: flex;
@@ -1370,11 +1429,30 @@
   <div class="final-card-stage" id="finalCardStage" aria-hidden="true">
     <div class="final-card-mover">
     <div class="final-card-glow" aria-hidden="true"></div>
+    <div class="final-card-tilt" id="finalCardTilt">
     <div class="final-card-flipper" id="finalCardFlipper">
       <div class="final-card-face final-card-front">
         <div class="final-card-front-inset">
+          <!-- Front smile: lighter #D9D9D9 stroke at 50% opacity, with
+               an SVG inner-shadow filter (offset 2,2 / blur 2 / black
+               55%) that gives the glyph a soft embossed sink — matches
+               the Figma Final Card (Front) frame exactly. -->
           <svg class="final-card-front-smile" viewBox="0 0 29.9844 29.9844" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M9.99466 17.4899C9.99466 17.4899 11.8687 19.9886 14.9921 19.9886C18.1154 19.9886 19.9894 17.4899 19.9894 17.4899M18.7401 11.2432H18.7526M11.244 11.2432H11.2565M27.4855 14.9912C27.4855 21.8911 21.892 27.4847 14.9921 27.4847C8.09209 27.4847 2.49856 21.8911 2.49856 14.9912C2.49856 8.09127 8.09209 2.49775 14.9921 2.49775C21.892 2.49775 27.4855 8.09127 27.4855 14.9912ZM19.3648 11.2432C19.3648 11.5882 19.085 11.8679 18.7401 11.8679C18.3952 11.8679 18.1154 11.5882 18.1154 11.2432C18.1154 10.8982 18.3952 10.6185 18.7401 10.6185C19.085 10.6185 19.3648 10.8982 19.3648 11.2432ZM11.8687 11.2432C11.8687 11.5882 11.589 11.8679 11.244 11.8679C10.899 11.8679 10.6193 11.5882 10.6193 11.2432C10.6193 10.8982 10.899 10.6185 11.244 10.6185C11.589 10.6185 11.8687 10.8982 11.8687 11.2432Z" stroke="rgba(0,0,0,0.5)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <g opacity="0.5" filter="url(#final-card-front-smile-inset)">
+              <path d="M9.99466 17.4899C9.99466 17.4899 11.8687 19.9886 14.9921 19.9886C18.1154 19.9886 19.9894 17.4899 19.9894 17.4899M18.7401 11.2432H18.7526M11.244 11.2432H11.2565M27.4855 14.9912C27.4855 21.8911 21.892 27.4847 14.9921 27.4847C8.09209 27.4847 2.49856 21.8911 2.49856 14.9912C2.49856 8.09127 8.09209 2.49775 14.9921 2.49775C21.892 2.49775 27.4855 8.09127 27.4855 14.9912ZM19.3648 11.2432C19.3648 11.5882 19.085 11.8679 18.7401 11.8679C18.3952 11.8679 18.1154 11.5882 18.1154 11.2432C18.1154 10.8982 18.3952 10.6185 18.7401 10.6185C19.085 10.6185 19.3648 10.8982 19.3648 11.2432ZM11.8687 11.2432C11.8687 11.5882 11.589 11.8679 11.244 11.8679C10.899 11.8679 10.6193 11.5882 10.6193 11.2432C10.6193 10.8982 10.899 10.6185 11.244 10.6185C11.589 10.6185 11.8687 10.8982 11.8687 11.2432Z" stroke="#D9D9D9" stroke-opacity="0.5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </g>
+            <defs>
+              <filter id="final-card-front-smile-inset" x="1.39856" y="1.39775" width="29.187" height="29.187" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+                <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+                <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                <feOffset dx="2" dy="2"/>
+                <feGaussianBlur stdDeviation="2"/>
+                <feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/>
+                <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.55 0"/>
+                <feBlend mode="normal" in2="shape" result="innerShadow"/>
+              </filter>
+            </defs>
           </svg>
         </div>
       </div>
@@ -1419,6 +1497,7 @@
           </div>
         </div>
       </div>
+    </div>
     </div>
     </div>
   </div>
@@ -1878,29 +1957,109 @@
       const maxIdx = FINAL_CARD_IDX;
 
       const finalCardStage = document.getElementById('finalCardStage');
+      const finalCardTilt = document.getElementById('finalCardTilt');
+
+      // Parallax tilt — nudges the card in 3D based on cursor position
+      // so the final slide feels like a physical object instead of a
+      // flat panel. Only wired on hover-capable devices (desktops with
+      // pointers); touch devices skip it entirely so a stale pre-touch
+      // tilt doesn't lock in. ±16° is dramatic enough that the parallax
+      // reads clearly — the card properly swings toward the cursor
+      // rather than wobbling subtly.
+      //
+      // The tilt SETTLES back to 0° the moment the cursor enters the
+      // card. Reason: with any X-axis tilt applied, Chromium stops
+      // hit-testing the back face (its combined 180° rotation + the
+      // X tilt reads as a backface normal in the compositor), so
+      // social-link clicks and even hovers get swallowed by the
+      // flipper's bounding box. Resetting on hover gives the viewer
+      // a flat, stable target — and the dramatic 3D feel still comes
+      // through while the cursor is approaching from outside.
+      const MAX_TILT_DEG = 16;
+      const hoverCapable = window.matchMedia('(hover: hover)').matches;
+      function cursorOverCard(x, y) {
+        const r = finalCardStage.getBoundingClientRect();
+        // Pad the "safe zone" a few px so a cursor sitting right on
+        // the card's edge counts as being over it.
+        const PAD = 8;
+        return x >= r.left - PAD && x <= r.right + PAD
+            && y >= r.top  - PAD && y <= r.bottom + PAD;
+      }
+      function updateCardTilt(clientX, clientY) {
+        if (!finalCardStage.classList.contains('visible')) return;
+        if (cursorOverCard(clientX, clientY)) {
+          resetCardTilt();        // settle flat for reliable hit-testing
+          return;
+        }
+        const nx = (clientX / window.innerWidth) * 2 - 1;   // -1 left … +1 right
+        const ny = (clientY / window.innerHeight) * 2 - 1;  // -1 top  … +1 bottom
+        // rotateY tracks horizontal cursor movement; rotateX is
+        // negated so the top edge tilts toward the viewer when the
+        // cursor is above the card (feels like the card is "looking"
+        // at the cursor).
+        const rotY = (nx * MAX_TILT_DEG).toFixed(2);
+        const rotX = (-ny * MAX_TILT_DEG).toFixed(2);
+        finalCardStage.style.setProperty('--tilt-x', rotX + 'deg');
+        finalCardStage.style.setProperty('--tilt-y', rotY + 'deg');
+      }
+      function resetCardTilt() {
+        finalCardStage.style.setProperty('--tilt-x', '0deg');
+        finalCardStage.style.setProperty('--tilt-y', '0deg');
+      }
+      if (hoverCapable) {
+        window.addEventListener('mousemove', (e) => {
+          updateCardTilt(e.clientX, e.clientY);
+        });
+      }
+
       let finalCardAnimTimer = null;
+      // Click-to-flip state. 0 = back facing viewer (default after
+      // entrance), 1 = front, 2 = back, … Rotation = 180° × (count+1)
+      // so the card keeps spinning the same direction with every tap.
+      let userFlipCount = 0;
+      function applyUserFlip() {
+        const showingBack = userFlipCount % 2 === 0;
+        finalCardStage.classList.toggle('showing-back', showingBack);
+        finalCardStage.classList.toggle('showing-front', !showingBack);
+        const rotation = 180 + userFlipCount * 180;
+        finalCardStage.style.setProperty('--user-flip', rotation + 'deg');
+      }
       function showFinalCard() {
         // Reset the entrance classes before re-adding so the flip
         // keyframes play again when the viewer scrolls away and comes
         // back. Force a reflow between the removal and the add so the
         // browser restarts the animation rather than coalescing it.
-        finalCardStage.classList.remove('animating', 'flipped');
+        finalCardStage.classList.remove(
+          'animating', 'flipped', 'showing-back', 'showing-front'
+        );
+        userFlipCount = 0;
+        finalCardStage.style.removeProperty('--user-flip');
         void finalCardStage.offsetWidth;
         finalCardStage.classList.add('visible', 'animating');
         document.body.classList.add('on-final-card');
         clearTimeout(finalCardAnimTimer);
         // Timing matches the CSS: 0.15s lift delay + 1.6s lift = 1.75s
         // before the card has settled at centre and the glow has
-        // finished growing. Adding `flipped` is a state marker — the
-        // glow + pulse are already chained via CSS delays.
+        // finished growing. Adding `flipped` + `showing-back` is the
+        // state marker — the glow + pulse are already chained via CSS
+        // delays, and `showing-back` activates the back-face
+        // backface-visibility override so clicks start landing on the
+        // Instagram / Twitter / LinkedIn links.
         finalCardAnimTimer = setTimeout(() => {
-          finalCardStage.classList.add('flipped');
+          finalCardStage.classList.add('flipped', 'showing-back');
         }, 1750);
       }
       function hideFinalCard() {
-        finalCardStage.classList.remove('visible', 'animating', 'flipped');
+        finalCardStage.classList.remove(
+          'visible', 'animating', 'flipped', 'showing-back', 'showing-front'
+        );
         document.body.classList.remove('on-final-card');
         clearTimeout(finalCardAnimTimer);
+        userFlipCount = 0;
+        finalCardStage.style.removeProperty('--user-flip');
+        // Reset the parallax so a cursor off-centre at exit time
+        // doesn't leave a stale rotation locked in for the next entrance.
+        resetCardTilt();
       }
 
       let selectedIdx = -1;
@@ -2188,25 +2347,39 @@
         el.addEventListener('mouseenter', () => { playSelect(); });
       });
 
-      // Final card social click — mirrors the story card's social click
-      // behaviour: play the transition chime, briefly reset the hover
-      // accent colour and lift so the click reads as a confirmed press,
-      // and clear it when the pointer leaves. Delegated at the stage so
-      // it keeps working after the card's entrance animation re-triggers.
+      // Final card interaction — delegated at the stage so it keeps
+      // working after the card's entrance animation re-triggers.
+      //   - A click on a social link mirrors the story card's social
+      //     press: transition chime + brief colour/transform reset,
+      //     cleared on mouseleave/blur, native navigation still fires.
+      //   - A click anywhere else on the card toggles the flip: each
+      //     tap bumps `userFlipCount` by one, which rotates the
+      //     flipper another 180° in the same direction and swaps the
+      //     `showing-back`/`showing-front` classes so the back face's
+      //     backface-visibility override is only on when the back is
+      //     the user-visible face.
       finalCardStage.addEventListener('click', (e) => {
         const social = e.target.closest('[data-social]');
-        if (!social) return;
+        if (social) {
+          playTransition();
+          social.style.color = 'rgba(0, 0, 0, 0.5)';
+          social.style.transform = 'none';
+          const clear = () => {
+            social.style.color = '';
+            social.style.transform = '';
+            social.removeEventListener('mouseleave', clear);
+            social.removeEventListener('blur', clear);
+          };
+          social.addEventListener('mouseleave', clear);
+          social.addEventListener('blur', clear);
+          return;
+        }
+        // Flip only after the entrance has fully settled — a tap
+        // during the lift/flip would otherwise race the keyframe.
+        if (!finalCardStage.classList.contains('flipped')) return;
+        userFlipCount++;
+        applyUserFlip();
         playTransition();
-        social.style.color = 'rgba(0, 0, 0, 0.5)';
-        social.style.transform = 'none';
-        const clear = () => {
-          social.style.color = '';
-          social.style.transform = '';
-          social.removeEventListener('mouseleave', clear);
-          social.removeEventListener('blur', clear);
-        };
-        social.addEventListener('mouseleave', clear);
-        social.addEventListener('blur', clear);
       });
 
       let shimmerTimer = null;
