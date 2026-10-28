@@ -1166,6 +1166,11 @@
       cursor: pointer;        /* signal the card is interactive */
     }
 
+    /* User-initiated flip: a plain in-place rotation — no lift, no
+       hop. `.user-flipping` is kept purely as a state marker for JS
+       (debounce + mid-flip face-state swap); the flipper's rotation
+       uses the default 0.6s transition inherited from `.flipped`. */
+
     .final-card-face {
       position: absolute;
       inset: 0;
@@ -1446,10 +1451,10 @@
                 <feFlood flood-opacity="0" result="BackgroundImageFix"/>
                 <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
                 <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-                <feOffset dx="2" dy="2"/>
-                <feGaussianBlur stdDeviation="2"/>
+                <feOffset dx="1" dy="1"/>
+                <feGaussianBlur stdDeviation="1.2"/>
                 <feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/>
-                <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.55 0"/>
+                <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
                 <feBlend mode="normal" in2="shape" result="innerShadow"/>
               </filter>
             </defs>
@@ -2017,12 +2022,49 @@
       // entrance), 1 = front, 2 = back, … Rotation = 180° × (count+1)
       // so the card keeps spinning the same direction with every tap.
       let userFlipCount = 0;
-      function applyUserFlip() {
+      let userFlipAnimTimer = null;
+      let userFlipRotateTimer = null;
+      let userFlipFaceTimer = null;
+      // Just the rotation change — kick the flipper's transition from
+      // its current rotateY to the next 180° step. Face-visibility
+      // state is handled separately so we can switch it at the
+      // moment both faces are edge-on.
+      function startUserFlipRotation() {
+        const rotation = 180 + userFlipCount * 180;
+        finalCardStage.style.setProperty('--user-flip', rotation + 'deg');
+      }
+      // Just the backface-visibility override — toggles which face is
+      // allowed to render through its own 180° rotation. Done at the
+      // midpoint of the flip (when both faces are edge-on and
+      // invisible) so switching this doesn't flash a mirrored copy of
+      // the incoming face on top of the outgoing face.
+      function applyUserFlipFaceState() {
         const showingBack = userFlipCount % 2 === 0;
         finalCardStage.classList.toggle('showing-back', showingBack);
         finalCardStage.classList.toggle('showing-front', !showingBack);
-        const rotation = 180 + userFlipCount * 180;
-        finalCardStage.style.setProperty('--user-flip', rotation + 'deg');
+      }
+      // Runs a plain in-place flip every time the viewer taps the
+      // card — no lift, just the rotation. Debounces re-entrant taps
+      // so a frantic click-click-click doesn't stack animations.
+      function doUserFlip() {
+        if (!finalCardStage.classList.contains('flipped')) return;
+        if (finalCardStage.classList.contains('user-flipping')) return;
+        userFlipCount++;
+        finalCardStage.classList.add('user-flipping');
+        clearTimeout(userFlipAnimTimer);
+        clearTimeout(userFlipRotateTimer);
+        clearTimeout(userFlipFaceTimer);
+        // Rotation starts immediately — the default 0.6s transition
+        // from `.flipped .final-card-flipper` lands at 600ms.
+        startUserFlipRotation();
+        // Switch the face-visibility override at the midpoint of
+        // the flip (300ms = half of the 0.6s rotation). Both faces
+        // are edge-on at this moment, so the swap is invisible — no
+        // mirrored flash of the incoming face.
+        userFlipFaceTimer = setTimeout(applyUserFlipFaceState, 300);
+        userFlipAnimTimer = setTimeout(() => {
+          finalCardStage.classList.remove('user-flipping');
+        }, 650);
       }
       function showFinalCard() {
         // Reset the entrance classes before re-adding so the flip
@@ -2051,10 +2093,14 @@
       }
       function hideFinalCard() {
         finalCardStage.classList.remove(
-          'visible', 'animating', 'flipped', 'showing-back', 'showing-front'
+          'visible', 'animating', 'flipped',
+          'showing-back', 'showing-front', 'user-flipping'
         );
         document.body.classList.remove('on-final-card');
         clearTimeout(finalCardAnimTimer);
+        clearTimeout(userFlipAnimTimer);
+        clearTimeout(userFlipRotateTimer);
+        clearTimeout(userFlipFaceTimer);
         userFlipCount = 0;
         finalCardStage.style.removeProperty('--user-flip');
         // Reset the parallax so a cursor off-centre at exit time
@@ -2376,9 +2422,10 @@
         }
         // Flip only after the entrance has fully settled — a tap
         // during the lift/flip would otherwise race the keyframe.
+        // doUserFlip replays the entrance's lift-at-peak-then-flip
+        // sequence so a tap feels like the same physical gesture.
         if (!finalCardStage.classList.contains('flipped')) return;
-        userFlipCount++;
-        applyUserFlip();
+        doUserFlip();
         playTransition();
       });
 
