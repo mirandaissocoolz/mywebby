@@ -5,7 +5,7 @@
  *   - it stops drawing while off screen;
  *   - `reducedMotion` setting: how fast it still drifts (0–1 of normal) for visitors with
  *     "reduce motion" on. 0 freezes it, as the original does.
- * Kept in step with ../pixel-bloom/pixel-bloom.js (the playground export).
+ * Kept in step with pixel-bloom/pixel-bloom.js (the playground export).
  *   import { createPixelBloom } from './pixel-bloom.js';
  *   const bloom = createPixelBloom(canvas, SETTINGS);
  *   bloom.update({ speed: 0.2 });   bloom.destroy();
