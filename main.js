@@ -1,51 +1,22 @@
-import { createPixelBloom } from "./pixel-bloom.js";
+import { createPixelDither } from "./pixel-dither.js";
 
-// Settings from "Save & export" in the Pixel Bloom playground.
+// Settings from the Pixel Dither lab (pixel-dither.html). The canvas is masked to the
+// unicorn shape in styles.css. (The previous shader, Pixel Bloom, is still in pixel-bloom.js.)
 const SETTINGS = {
-  colors: ["#FE7814", "#FEC296", "#FC81C5", "#FFCCE8"],
-  pattern: 0, scale: 1.2, warp: 1.6, seed: 3.7, steps: 4, contrast: 1.1,
-  px: 2, maxLvl: 4, split: 0.45, cluster: 0.8,
-  tex: [0, 1], layout: 3, zscale: 1.03, zblend: 1, tscale: 6,
-  fray: 0.15, grain: 0.51, contour: 0, slices: 8, lineCol: 3, scan: 0,
-  animate: true, speed: 0.15,
-  reducedMotion: 0.4, // with "reduce motion" on, keep a slow drift instead of freezing
+  colors: ["#0CA3FB", "#6DC7FC", "#FFFFFF"], // 3 or 4 colors, dark → light
+  small: 8, levels: 5, split: 0.2, group: 0.85, groupSize: 260,
+  edges: 0.4, dither: 1, pattern: "noise", scale: 1.2, contrast: 1.8,
+  flicker: 0.25, speed: 6, seed: 1,
+  reducedMotion: 0.3, // with "reduce motion" on, keep a slow flicker (30% speed) instead of freezing
 };
 
-const el = document.querySelector(".unicorn");
-const canvas = el.querySelector("canvas");
-const bloom = createPixelBloom(canvas, SETTINGS);
+const canvas = document.querySelector(".unicorn canvas");
+const fx = createPixelDither(canvas, SETTINGS);
 
-// The bloom highlight drifts toward the pointer while it's over the hero, then settles
-// back to the middle; the shimmer quickens a little on hover.
-const hero = document.querySelector(".hero");
-let target = null, pos = null, speed = SETTINGS.speed, hovering = false;
-const centre = () => { const r = canvas.getBoundingClientRect(); return [r.width / 2, r.height / 2]; };
-
-hero.addEventListener("pointermove", (e) => {
-  const r = canvas.getBoundingClientRect();
-  target = [e.clientX - r.left, e.clientY - r.top];
-  hovering = true;
-});
-hero.addEventListener("pointerleave", () => { target = null; hovering = false; });
-
-let last = performance.now(), followRaf = 0;
-(function follow(now) {
-  const dt = Math.min(0.05, (now - last) / 1000); last = now;
-  const goal = target || centre();
-  pos = pos || centre();
-  const k = Math.min(1, dt * 3);
-  pos = [pos[0] + (goal[0] - pos[0]) * k, pos[1] + (goal[1] - pos[1]) * k];
-  speed += ((hovering ? SETTINGS.speed * 1.8 : SETTINGS.speed) - speed) * Math.min(1, dt * 2);
-  bloom.update({ mouse: pos, speed });
-  followRaf = requestAnimationFrame(follow);
-})(last);
-
-// Stop the shader and the follow loop when the page is torn down (not when it's only
-// tucked into the back/forward cache, so coming back still animates).
+// Stop the animation when the page is torn down (not when it's only tucked into the
+// back/forward cache, so coming back still animates).
 addEventListener("pagehide", (e) => {
-  if (e.persisted) return;
-  cancelAnimationFrame(followRaf);
-  bloom.destroy();
+  if (!e.persisted) fx.destroy();
 });
 
-window.unicornBloom = bloom; // tweak live from the console: unicornBloom.update({ px: 3 })
+window.unicornDither = fx; // tweak live from the console: unicornDither.update({ flicker: 0 })

@@ -1,6 +1,7 @@
-/* Home from Figma "mirandaissocool.com (2.0)" → Home (node 281:450), on its 1440px frame.
+/* Home from Figma "mirandaissocool.com (2.0)" → Home (Even Smaller Header) (node 429:1085), on its 1440px frame.
    index.html zooms the page out by --s so the whole unicorn fits in the window (never zooms
-   in); extra width goes into the side padding (--off). */
+   in). The page fills any width: content keeps 100px side margins and the unicorn and its
+   small icons stay pinned to the right edge (--off is half the extra width). */
 
 :root {
   --bg: #ffffff;
@@ -11,21 +12,24 @@
   --pink: #fc81c5;
   --s: 1;
   --off: 0px;                 /* (window − 1440) / 2, from −55px up; set by index.html */
-  --pad: calc(100px + var(--off));
+  --pad: calc(100px + min(0px, var(--off)));   /* 100px, giving back up to 55px on narrow windows */
   --font-display: "Brawler", Georgia, serif;
-  --font-body: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Instrument Sans", "Helvetica Neue", Arial, sans-serif;
 
-  /* Type scale: standard desktop sizes (Figma has 48 / 32 / 24 / 20). */
-  --fs-display: 44px;   /* headline */
-  --fs-text: 20px;      /* intro line, welcome text, Work / Play, footer, nav, Contact */
-  --fs-ui: 16px;        /* small labels (Choose your powers) */
-}
+  /* Type scale, from Figma */
+  --fs-display: 48px;   /* headline */
+  --fs-title: 24px;     /* Work / Play */
+  --fs-text: 20px;      /* intro line, welcome text */
+  --fs-footer: 18px;    /* nav and footer text (Figma "nav-and-footer") */
+  }
 
 *, *::before, *::after { box-sizing: border-box; }
 html, body { margin: 0; }
 /* Always reserve the scrollbar so the page width index.html measures doesn't change after load. */
 html { overflow-y: scroll; }
 body { background: var(--bg); color: var(--ink); font-family: var(--font-body); overflow-x: hidden; }
+/* Thin, greyscale text smoothing like Figma's; the browser default on macOS draws text heavier. */
+body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
 img { display: block; max-width: none; }
 a { color: inherit; text-decoration: none; }
 p, h1, h2 { margin: 0; font-weight: 400; }
@@ -35,19 +39,19 @@ p, h1, h2 { margin: 0; font-weight: 400; }
   position: relative;
   width: var(--page-w, 1440px);
   zoom: var(--s);
-  padding: 100px 0;
+  padding: 64px 0 70px;
   display: flex;
   flex-direction: column;
-  gap: 55px;
+  gap: 50px;
 }
 
 /* ---- header ---------------------------------------------------------- */
 .top { display: flex; justify-content: space-between; align-items: flex-start; padding: 0 var(--pad); }
 .hello { width: 551px; display: flex; flex-direction: column; gap: 16px; }
-.hello h1 { font: 400 var(--fs-display)/1.2 var(--font-display); }
+.hello h1 { font: 400 var(--fs-display)/normal var(--font-display); }
 .hello p { font-size: var(--fs-text); line-height: normal; }
 
-.nav { display: flex; align-items: center; gap: 36px; font-size: var(--fs-text); }
+.nav { display: flex; align-items: center; gap: 41px; font-size: var(--fs-footer); line-height: 22px; }
 .nav a { color: var(--ink-50); transition: color 0.2s ease; }
 .nav a:hover, .nav a[aria-current="page"] { color: var(--ink); }
 
@@ -87,75 +91,65 @@ p, h1, h2 { margin: 0; font-weight: 400; }
 .btn--green  { --btn-from: #b6ff00; --btn-to: #ffffff; --btn-glow: #b6ff00; --btn-ink: #35613b; }
 .btn--orange { --btn-from: #fea662; --btn-to: #ffd683; --btn-glow: #ffd683; --btn-ink: #fff; }
 .btn--purple { --btn-from: #9977fe; --btn-to: #e0d6fe; --btn-glow: #e0d6fe; --btn-ink: #fff; }
+/* Figma (node 439:1420) hugs the 18px label: 6px/15px padding + 2px border → 102 × 38 */
+.nav .btn { min-width: 102px; padding: 6px 15px; font-size: inherit; line-height: inherit; }
 .nav .btn, .nav .btn:hover { color: var(--btn-ink); }
 
 /* ---- hero: welcome text, gradient, unicorn ------------------------------ */
-.hero { position: relative; height: 718.24px; margin-top: 2px; } /* 57px gap from header */
-.welcome { position: absolute; left: var(--pad); bottom: 0; width: 323px; font-size: var(--fs-text); line-height: normal; display: flex; flex-direction: column; gap: 26px; }
-.gradient { position: absolute; left: calc(-463px + var(--off)); top: 202px; width: 1249.1px; height: 545px; pointer-events: none; }
+/* The unicorn (flat orange, from Figma) pokes 123px up into the header row. */
+.hero { position: relative; height: 435px; margin-top: 7px; } /* 57px below the header row */
+.welcome { position: absolute; left: var(--pad); bottom: 0; z-index: 1; width: 323px; display: flex; flex-direction: column; gap: 25px; }
+.welcome-text { font-size: var(--fs-text); line-height: normal; display: flex; flex-direction: column; gap: 26px; }
+
+/* ---- small things: shooting star + moon, in a row above the welcome text ---- */
+.small-things { display: flex; align-items: center; gap: 27px; height: 20px; }
+.small-things > * { opacity: 0.5; }
+.shooting-star, .moon { position: relative; display: block; width: 20px; height: 20px; padding: 0; border: 0; background: none; cursor: pointer; }
+.shooting-star img, .moon img { position: absolute; }
+/* the four strokes of the Figma ShootingStar icon, each box padded by its half-stroke */
+.shooting-star img:nth-child(1) { left: 6.75px; top: 1.13px; width: 12.12px; height: 11.5px; }
+.shooting-star img:nth-child(2) { left: 1.13px; top: 8.43px; width: 6.07px; height: 6.07px; }
+.shooting-star img:nth-child(3) { left: 2.38px; top: 13.21px; width: 5.66px; height: 5.66px; }
+.shooting-star img:nth-child(4) { left: 8.00px; top: 13.13px; width: 5.74px; height: 5.74px; }
+.moon img { left: 2.38px; top: 1.45px; width: 16.18px; height: 16.18px; }
+.shooting-star, .moon { transition: transform 0.2s ease, opacity 0.2s ease; }
+.shooting-star:hover, .moon:hover { transform: translateY(-2px); opacity: 0.8; }
+.gradient { position: absolute; left: calc(-334px + min(0px, var(--off))); top: -80px; width: 1249.1px; height: 545px; pointer-events: none; }
 .gradient img { position: absolute; left: -40px; top: -40px; width: 1329.1px; height: 625px; }
 
-.unicorn { position: absolute; right: max(0px, var(--off)); top: 0; width: 998.156px; height: 718.24px; }
-.unicorn canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
-  -webkit-mask: url("assets/unicorn-mask.svg") 0 0 / 100% 100% no-repeat;
-  mask: url("assets/unicorn-mask.svg") 0 0 / 100% 100% no-repeat;
-}
+.unicorn { position: absolute; right: 0; top: -123px; width: 775.466px; height: 558px; pointer-events: none; }
+/* the SVG is 780.127 × 562.661: the shape plus the 2.33px margin Figma exported around it */
+.unicorn img { position: absolute; left: -2.33px; top: -2.33px; width: 780.127px; height: 562.661px; }
 
 /* ---- projects ------------------------------------------------------------ */
-.projects { padding: 0 var(--pad); display: flex; flex-direction: column; gap: 70px; }
+.projects { padding: 0 var(--pad); display: flex; flex-direction: column; gap: 50px; }
 .work { display: flex; flex-direction: column; gap: 40px; }
-.section-title { display: flex; align-items: center; gap: 10px; font-size: var(--fs-text); line-height: normal; }
+.section-title { display: flex; align-items: center; gap: 20px; font-size: var(--fs-title); line-height: normal; }
 .section-title { color: var(--ink-50); }
-/* Figma's 20 × 14 caret at 0.5×, to sit with 16px text */
-.caret { width: 10px; height: 7px; display: flex; align-items: center; justify-content: center; }
-.caret img { width: 10px; height: 7px; }
-.caret--closed { width: 7px; height: 10px; }
+.caret { width: 13.272px; height: 8.848px; display: flex; align-items: center; justify-content: center; }
+.caret img { width: 13.272px; height: 8.848px; }
+.caret--closed { width: 8.848px; height: 13.272px; }
 .caret--closed img { transform: rotate(-90deg); }
-.play { gap: 13px; }
 
-.gallery { display: grid; grid-template-columns: 1fr 1fr; column-gap: 60px; row-gap: 80px; }
-.card { height: 485.57px; background: var(--card); border-radius: 10px; }
+.gallery { display: grid; grid-template-columns: 1fr 1fr; column-gap: 43px; row-gap: 50px; }
+.card { height: 405px; background: var(--card); border-radius: 10px; }
 
 /* ---- footer -------------------------------------------------------------- */
 .footer { padding: 0 var(--pad); display: flex; flex-direction: column; gap: 32px; }
 .footer-line { width: 100%; height: 1px; }
-.footer-row { display: flex; justify-content: space-between; align-items: center; font-size: var(--fs-text); line-height: normal; }
-/* Figma spreads three 26px rows over the 105px unicorn, which leaves ~14px between rows. */
-.find { padding: 0 25px; display: flex; flex-direction: column; align-items: flex-start; gap: 14px; }
-.find-me { display: flex; align-items: center; gap: 6px; }
-.find-me span { opacity: 0.5; }
-.find-me img { width: 20px; height: 20px; }
+.footer-row { display: flex; justify-content: space-between; align-items: stretch; font-size: var(--fs-footer); line-height: normal; }
+/* Figma spreads each column's three rows over the 105px height of the unicorn. */
+.find { padding: 0 25px; display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; }
+.find-me { opacity: 0.5; }
 .socials { display: flex; align-items: center; gap: 14px; opacity: 0.5; }
 .socials img[src$="linkedin.svg"], .socials img[src$="instagram.svg"] { width: 26px; height: 26px; }
 .socials img[src$="x.svg"] { width: 22.008px; height: 24.015px; }
-.footer-links { width: 77px; display: flex; flex-direction: column; gap: 14px; color: var(--ink-50); }
+.footer-links { width: 77px; display: flex; flex-direction: column; justify-content: space-between; color: var(--ink-50); }
 .footer-links a { transition: color 0.2s ease; }
 .footer-links a:hover { color: var(--ink); }
 .footer-mark { padding: 0 25px; display: flex; align-items: center; }
 .footer-mark img { width: 145.256px; height: 105.398px; }
 
-/* ---- floating bits (Home frame coordinates) -------------------------------- */
-.inspos, .darkmode, .powers { position: absolute; z-index: 2; translate: var(--off) 0; }
-.inspos { left: 852px; top: 243px; }
-.inspos img { width: 43.851px; height: 37.104px; }
-.darkmode { left: 1037.51px; top: 240.23px; width: 35.221px; height: 34.782px; padding: 0; border: 0; background: none; cursor: pointer; }
-.darkmode img { position: absolute; left: -1.5px; top: -1.5px; width: 38.221px; height: 37.782px; }
-.inspos, .darkmode { transition: transform 0.2s ease; }
-.inspos:hover, .darkmode:hover { transform: translateY(-2px); }
-
-.powers { left: 962px; top: 367px; width: 271px; height: 90px; pointer-events: none; }
-.powers > * { position: absolute; display: flex; align-items: center; justify-content: center; }
-.powers img, .powers-text { rotate: 5.5deg; }
-.ring { opacity: 0.5; }
-.ring-a { left: 12.82px; top: 4.65px; width: 249.336px; height: 80.223px; }
-.ring-a img { width: 245px; height: 57px; }
-.ring-b { left: 6.23px; top: 0; width: 264.038px; height: 89.528px; }
-.ring-b img { width: 259px; height: 65px; }
-.powers-text { left: 25.22px; top: 21.92px; width: 218.49px; height: 46.68px; font-weight: 500; font-size: var(--fs-ui); color: var(--ink-50); opacity: 0.5; white-space: nowrap; }
-
 @media (prefers-reduced-motion: reduce) {
-  .nav a, .btn, .inspos, .darkmode { transition: none; }
+  .nav a, .btn, .shooting-star, .moon { transition: none; }
 }
