@@ -1,0 +1,161 @@
+/* Home from Figma "mirandaissocool.com (2.0)" → Home (node 281:450), on its 1440px frame.
+   index.html zooms the page out by --s so the whole unicorn fits in the window (never zooms
+   in); extra width goes into the side padding (--off). */
+
+:root {
+  --bg: #ffffff;
+  --ink: #000000;
+  --ink-50: rgba(0, 0, 0, 0.5);
+  --card: #d9d9d9;
+  --pink-lt: #ffcce8;
+  --pink: #fc81c5;
+  --s: 1;
+  --off: 0px;                 /* (window − 1440) / 2, from −55px up; set by index.html */
+  --pad: calc(100px + var(--off));
+  --font-display: "Brawler", Georgia, serif;
+  --font-body: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
+
+  /* Type scale: standard desktop sizes (Figma has 48 / 32 / 24 / 20). */
+  --fs-display: 44px;   /* headline */
+  --fs-text: 20px;      /* intro line, welcome text, Work / Play, footer, nav, Contact */
+  --fs-ui: 16px;        /* small labels (Choose your powers) */
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+/* Always reserve the scrollbar so the page width index.html measures doesn't change after load. */
+html { overflow-y: scroll; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); overflow-x: hidden; }
+img { display: block; max-width: none; }
+a { color: inherit; text-decoration: none; }
+p, h1, h2 { margin: 0; font-weight: 400; }
+.dim { color: var(--ink-50); }
+
+.page {
+  position: relative;
+  width: var(--page-w, 1440px);
+  zoom: var(--s);
+  padding: 100px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 55px;
+}
+
+/* ---- header ---------------------------------------------------------- */
+.top { display: flex; justify-content: space-between; align-items: flex-start; padding: 0 var(--pad); }
+.hello { width: 551px; display: flex; flex-direction: column; gap: 16px; }
+.hello h1 { font: 400 var(--fs-display)/1.2 var(--font-display); }
+.hello p { font-size: var(--fs-text); line-height: normal; }
+
+.nav { display: flex; align-items: center; gap: 36px; font-size: var(--fs-text); }
+.nav a { color: var(--ink-50); transition: color 0.2s ease; }
+.nav a:hover, .nav a[aria-current="page"] { color: var(--ink); }
+
+/* ---- Button (Figma component "Button", node 349:8) ----------------------------
+   A gradient pill with a 2px 50%-white stroke, a soft inner highlight on top of the
+   label, and a coloured glow. Figma strokes sit inside the shape, so the gradient runs
+   under the stroke and the stroke reads as a pale tint of the gradient. */
+.btn {
+  --btn-from: #d1d1d1;   /* bottom of the gradient */
+  --btn-to: #ffffff;     /* top */
+  --btn-glow: #d9d9d9;
+  --btn-ink: #505050;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 14px;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 27px;
+  background: linear-gradient(to top, var(--btn-from), var(--btn-to)) border-box;
+  filter: drop-shadow(0 1px 12.75px var(--btn-glow));
+  color: var(--btn-ink);
+  font: 400 20px/normal var(--font-body);
+  white-space: nowrap;
+  transition: transform 0.2s ease;
+}
+.btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 27px;
+  pointer-events: none;
+}
+.btn::after { box-shadow: inset 9px 4px 7px rgba(255, 255, 255, 0.25); }
+.btn:hover { transform: translateY(-1px); }
+.btn--pink   { --btn-from: #fc81c5; --btn-to: #ffcce8; --btn-glow: #ffcce8; --btn-ink: #fff; }
+.btn--green  { --btn-from: #b6ff00; --btn-to: #ffffff; --btn-glow: #b6ff00; --btn-ink: #35613b; }
+.btn--orange { --btn-from: #fea662; --btn-to: #ffd683; --btn-glow: #ffd683; --btn-ink: #fff; }
+.btn--purple { --btn-from: #9977fe; --btn-to: #e0d6fe; --btn-glow: #e0d6fe; --btn-ink: #fff; }
+.nav .btn, .nav .btn:hover { color: var(--btn-ink); }
+
+/* ---- hero: welcome text, gradient, unicorn ------------------------------ */
+.hero { position: relative; height: 718.24px; margin-top: 2px; } /* 57px gap from header */
+.welcome { position: absolute; left: var(--pad); bottom: 0; width: 323px; font-size: var(--fs-text); line-height: normal; display: flex; flex-direction: column; gap: 26px; }
+.gradient { position: absolute; left: calc(-463px + var(--off)); top: 202px; width: 1249.1px; height: 545px; pointer-events: none; }
+.gradient img { position: absolute; left: -40px; top: -40px; width: 1329.1px; height: 625px; }
+
+.unicorn { position: absolute; right: max(0px, var(--off)); top: 0; width: 998.156px; height: 718.24px; }
+.unicorn canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  -webkit-mask: url("assets/unicorn-mask.svg") 0 0 / 100% 100% no-repeat;
+  mask: url("assets/unicorn-mask.svg") 0 0 / 100% 100% no-repeat;
+}
+
+/* ---- projects ------------------------------------------------------------ */
+.projects { padding: 0 var(--pad); display: flex; flex-direction: column; gap: 70px; }
+.work { display: flex; flex-direction: column; gap: 40px; }
+.section-title { display: flex; align-items: center; gap: 10px; font-size: var(--fs-text); line-height: normal; }
+.section-title { color: var(--ink-50); }
+/* Figma's 20 × 14 caret at 0.5×, to sit with 16px text */
+.caret { width: 10px; height: 7px; display: flex; align-items: center; justify-content: center; }
+.caret img { width: 10px; height: 7px; }
+.caret--closed { width: 7px; height: 10px; }
+.caret--closed img { transform: rotate(-90deg); }
+.play { gap: 13px; }
+
+.gallery { display: grid; grid-template-columns: 1fr 1fr; column-gap: 60px; row-gap: 80px; }
+.card { height: 485.57px; background: var(--card); border-radius: 10px; }
+
+/* ---- footer -------------------------------------------------------------- */
+.footer { padding: 0 var(--pad); display: flex; flex-direction: column; gap: 32px; }
+.footer-line { width: 100%; height: 1px; }
+.footer-row { display: flex; justify-content: space-between; align-items: center; font-size: var(--fs-text); line-height: normal; }
+/* Figma spreads three 26px rows over the 105px unicorn, which leaves ~14px between rows. */
+.find { padding: 0 25px; display: flex; flex-direction: column; align-items: flex-start; gap: 14px; }
+.find-me { display: flex; align-items: center; gap: 6px; }
+.find-me span { opacity: 0.5; }
+.find-me img { width: 20px; height: 20px; }
+.socials { display: flex; align-items: center; gap: 14px; opacity: 0.5; }
+.socials img[src$="linkedin.svg"], .socials img[src$="instagram.svg"] { width: 26px; height: 26px; }
+.socials img[src$="x.svg"] { width: 22.008px; height: 24.015px; }
+.footer-links { width: 77px; display: flex; flex-direction: column; gap: 14px; color: var(--ink-50); }
+.footer-links a { transition: color 0.2s ease; }
+.footer-links a:hover { color: var(--ink); }
+.footer-mark { padding: 0 25px; display: flex; align-items: center; }
+.footer-mark img { width: 145.256px; height: 105.398px; }
+
+/* ---- floating bits (Home frame coordinates) -------------------------------- */
+.inspos, .darkmode, .powers { position: absolute; z-index: 2; translate: var(--off) 0; }
+.inspos { left: 852px; top: 243px; }
+.inspos img { width: 43.851px; height: 37.104px; }
+.darkmode { left: 1037.51px; top: 240.23px; width: 35.221px; height: 34.782px; padding: 0; border: 0; background: none; cursor: pointer; }
+.darkmode img { position: absolute; left: -1.5px; top: -1.5px; width: 38.221px; height: 37.782px; }
+.inspos, .darkmode { transition: transform 0.2s ease; }
+.inspos:hover, .darkmode:hover { transform: translateY(-2px); }
+
+.powers { left: 962px; top: 367px; width: 271px; height: 90px; pointer-events: none; }
+.powers > * { position: absolute; display: flex; align-items: center; justify-content: center; }
+.powers img, .powers-text { rotate: 5.5deg; }
+.ring { opacity: 0.5; }
+.ring-a { left: 12.82px; top: 4.65px; width: 249.336px; height: 80.223px; }
+.ring-a img { width: 245px; height: 57px; }
+.ring-b { left: 6.23px; top: 0; width: 264.038px; height: 89.528px; }
+.ring-b img { width: 259px; height: 65px; }
+.powers-text { left: 25.22px; top: 21.92px; width: 218.49px; height: 46.68px; font-weight: 500; font-size: var(--fs-ui); color: var(--ink-50); opacity: 0.5; white-space: nowrap; }
+
+@media (prefers-reduced-motion: reduce) {
+  .nav a, .btn, .inspos, .darkmode { transition: none; }
+}

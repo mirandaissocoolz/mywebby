@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>miranda su</title>
+<link rel="icon" type="image/png" href="/tab%20icon/White%20Goose.png">
+<link rel="preload" href="../assets/miranda-head.glb" as="fetch" crossorigin>
+<link rel="preload" href="../assets/museum_of_ethnography_1k.hdr" as="fetch" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Brawler&family=Figtree:wght@400&display=swap">
+<link rel="stylesheet" href="../styles.css">
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"
+  }
+}
+</script>
+<script>
+  // The page is laid out on the Figma frame's 1200 × 811 grid and scaled to fit the window
+  // (see .stage in styles.css). Set before first paint so nothing jumps.
+  (function () {
+    function fit() {
+      var w = innerWidth, h = innerHeight;
+      var s = w >= h ? Math.min(w / 1200, h / 811) : w / 720;
+      document.documentElement.style.setProperty("--s", s);
+    }
+    fit();
+    addEventListener("resize", fit);
+  })();
+</script>
+</head>
+<body>
+
+<div class="page">
+  <main class="stage">
+
+    <nav class="dash" aria-label="Main">
+      <a href="/">About</a>
+      <a href="/v2/simple/" aria-current="page">Home</a>
+      <a href="#">Resume</a>
+    </nav>
+
+    <!-- Figma node 69:82: the home page with just the grid and glow behind the head -->
+    <img class="art grid-h" src="../assets/figma/horizontal-lines.svg" alt="">
+    <img class="art grid-v" src="../assets/figma/vertical-lines.svg" alt="">
+    <img class="art glow" src="../assets/figma/gradient-circles.svg" alt="">
+
+    <!-- Miranda's head: a still of the 3D scene until the live head is ready -->
+    <div class="head">
+      <img class="head-fallback" src="../assets/miranda-render.webp" alt="3D render of Miranda's head" width="975" height="853">
+      <canvas class="head-canvas" aria-hidden="true"></canvas>
+    </div>
+
+    <div class="intro">
+      <h1><span class="intro-hi">Hi I’m Miranda.</span> I make fun and whimsical designs that make people smile.</h1>
+      <img class="intro-arrow" src="../assets/figma/down-arrow.svg" alt="" width="26" height="26">
+    </div>
+
+  </main>
+</div>
+
+<script type="module" src="../head.js"></script>
+</body>
+</html>

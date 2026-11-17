@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pixel Bloom</title>
+<style>
+  html, body { margin: 0; height: 100%; }
+  #bloom { display: block; width: 100%; height: 100vh; }
+</style>
+</head>
+<body>
+<canvas id="bloom" role="img" aria-label="Animated pixel texture"></canvas>
+<script type="module">
+  import { createPixelBloom } from './pixel-bloom.js';
+
+  // Paste the JSON from "Save & export" in the Pixel Bloom canvas here.
+  const SETTINGS = {};
+
+  createPixelBloom(document.getElementById('bloom'), SETTINGS);
+</script>
+</body>
+</html>

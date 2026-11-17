@@ -1,0 +1,143 @@
+/* Footer from Figma "mirandaissocool.com (2.0)" → Footer (Blank) (Organized) (node 124:260).
+   Laid out on the frame's own 1200 × 566 px grid and scaled like the home stage (--fs, set
+   in index.html). Visitors stamp the empty card themselves; footer.js places the stamps. */
+
+:root {
+  --footer-brown: #3d2615;
+  --footer-yellow: #ffd683;
+  --footer-yellow-fade: rgba(255, 214, 131, 0.5);
+  --fs: 1;                                  /* footer scale, set by index.html */
+}
+
+.footer {
+  position: relative;
+  width: 100%;
+  height: calc(566px * var(--fs));
+  overflow: hidden;
+}
+.footer-stage {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 1200px;
+  height: 566px;
+  margin-left: -600px;
+  transform: scale(var(--fs));
+  transform-origin: 50% 0;
+}
+
+/* The brown card. Stamps that hang off the edge get clipped by it, like in the design. */
+.footer-card {
+  position: absolute;
+  left: 35px;
+  top: 42px;
+  width: 1130px;
+  height: 484px;
+  border-radius: 7px;
+  background: var(--footer-brown);
+  overflow: hidden;
+  isolation: isolate;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.footer-card > * { position: absolute; }
+.footer-card.is-aiming { cursor: none; }
+
+.footer-heading {
+  left: 49px;
+  top: 51px;
+  width: 564px;
+  margin: 0;
+  font: 400 55px/55px var(--font-heading);
+  color: var(--footer-yellow);
+}
+
+/* ---- Find Me / Pages ------------------------------------------------------------ */
+.footer-col {
+  top: 348px;
+  width: 67px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font: 400 15px/normal var(--font-accent);
+  z-index: 2;                               /* always above the stamps */
+  user-select: text;
+  -webkit-user-select: text;
+}
+.footer-col-find  { left: 49px; }
+.footer-col-pages { left: 154px; }
+.footer-col h2 { margin: 0; font: inherit; color: var(--footer-yellow); }
+.footer-col ul {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.footer-col a { color: var(--footer-yellow-fade); transition: color 0.2s ease; white-space: nowrap; }
+.footer-col a:hover, .footer-col a:focus-visible { color: var(--footer-yellow); }
+
+/* ---- stamps --------------------------------------------------------------------- */
+.footer-stamps { inset: 0; pointer-events: none; z-index: 1; }
+
+/* Placed by its centre (left/top), turned by --rot. Sizes come from the stamp list. */
+.stamp {
+  position: absolute;
+  translate: -50% -50%;
+  rotate: var(--rot);
+}
+.stamp img { display: block; width: 100%; height: 100%; }
+.stamp.is-new { animation: stamp-press 0.32s cubic-bezier(0.2, 0.9, 0.3, 1) both; }
+
+@keyframes stamp-press {
+  0%   { scale: 1.3;  opacity: 0; }
+  55%  { scale: 0.95; opacity: 1; }
+  100% { scale: 1;    opacity: 1; }
+}
+
+/* The next stamp, see-through, riding on the cursor. */
+.stamp-ghost {
+  left: 0;
+  top: 0;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 3;
+  transition: opacity 0.15s ease;
+}
+.stamp-ghost img { display: block; width: 100%; height: 100%; }
+.footer-card.is-aiming .stamp-ghost { opacity: 0.4; }
+
+/* Shimmer once every stamp has been placed: the same diagonal glow sweep as the
+   /photos loading shimmer (soft white bar tilted 22.59°, ease-in over the first 70% of a
+   2s loop, then a short hold), masked to the stamp shapes. The glow is one card-sized
+   gradient, offset per stamp by --sx/--sy, so a single sweep crosses the whole collage. */
+.stamp-shine {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  -webkit-mask: var(--mask) center / 100% 100% no-repeat;
+          mask: var(--mask) center / 100% 100% no-repeat;
+  background-image: linear-gradient(112.59deg,
+    rgba(255, 255, 255, 0) 43%,
+    rgba(255, 255, 255, 0.95) 50%,
+    rgba(255, 255, 255, 0) 57%);
+  background-repeat: no-repeat;
+  background-size: 3390px 484px;            /* 3 × the card, glow in the middle third */
+}
+.footer-card.is-complete .stamp-shine {
+  opacity: 1;
+  animation: stamp-shine 2s linear infinite;
+}
+
+@keyframes stamp-shine {
+  0%   { background-position: calc(-2100px - var(--sx)) calc(0px - var(--sy)); animation-timing-function: ease-in; }
+  70%  { background-position: calc(-200px - var(--sx)) calc(0px - var(--sy)); }
+  100% { background-position: calc(-200px - var(--sx)) calc(0px - var(--sy)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stamp.is-new { animation: none; }       /* the shimmer stays on, like on /photos */
+}

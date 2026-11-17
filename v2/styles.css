@@ -1,0 +1,196 @@
+/* Home page from Figma "mirandaissocool.com (2.0)" → Home Page (node 59:236).
+   Everything sits on the frame's own 1200 × 811 px grid, so positions below are the
+   Figma numbers as-is; index.html scales the whole stage to fit the window (--s). */
+
+/* FreightText Pro isn't on Google Fonts: use a locally installed copy if there is one,
+   otherwise fall back to Brawler. (An Adobe Fonts kit would make it show for everyone.) */
+@font-face {
+  font-family: "FreightText Pro Local";
+  src: local("FreightText Pro Semibold"), local("FreightTextPro-Semibold");
+  font-weight: 600;
+}
+
+:root {
+  --bg: #ffffff;
+  --black: #000000;
+  --black-fade: rgba(0, 0, 0, 0.5);
+  --white: #ffffff;
+  --purple: #9977fe;
+  --s: 1;                                   /* stage scale, set by index.html */
+
+  --font-accent: "Figtree", system-ui, sans-serif;
+  --font-heading: "Brawler", Georgia, serif;
+  --font-sticker: "FreightText Pro Local", "FreightText Pro", "freight-text-pro", "Brawler", Georgia, serif;
+
+  /* Where the head sits: centred on the head in the Figma render. The live head is taller
+     than that render (530 × 395), so it's drawn a little narrower (490 wide) to keep its
+     hair clear of the heading. head.js frames the 3D camera so the head fills the box minus
+     --head-pad on every side; the pad leaves room for the head to turn without clipping.
+     If the head's shape changes, update --head-aspect with HEAD.aspect in head.js. */
+  --head-cx: 595.25px;
+  --head-cy: 350px;
+  --head-w: 490px;
+  --head-aspect: 1.1436;
+  --head-pad: 60px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  align-items: center;
+  background: var(--bg);
+  color: var(--black);
+  overflow-x: hidden;
+}
+img { display: block; max-width: none; }
+a { color: inherit; text-decoration: none; }
+
+.page {
+  position: relative;
+  width: 100%;
+  height: calc(811px * var(--s));
+  overflow: hidden;
+}
+.stage {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 1200px;
+  height: 811px;
+  margin-left: -600px;
+  transform: scale(var(--s));
+  transform-origin: 50% 0;
+  background: var(--bg);
+}
+.stage > * { position: absolute; }
+
+/* ---- nav ---------------------------------------------------------------- */
+.dash {
+  left: 600.5px;
+  top: 64px;
+  translate: -50% 0;
+  display: flex;
+  gap: 31px;
+  font: 400 15px/normal var(--font-accent);
+  white-space: nowrap;
+  z-index: 2;
+}
+.dash a { color: var(--black-fade); transition: color 0.2s ease; }
+.dash a:hover, .dash a[aria-current="page"] { color: var(--black); }
+
+/* ---- artwork behind the head --------------------------------------------- */
+.art { pointer-events: none; }
+.grid-h        { left: 85px;     top: 104.37px;  width: 1030px;   height: 484.62px; opacity: 0.5; }
+.grid-v        { left: 193px;    top: 82.05px;   width: 858.34px; height: 531.16px; opacity: 0.5; }
+.warning-sign  { left: 795.77px; top: 378.58px;  width: 144.76px; height: 96.3px; }
+.good-design   { left: 261.65px; top: 367.41px;  width: 118.93px; height: 108.14px; }
+.glow          { left: 242.97px; top: 73.99px;   width: 714px;    height: 548px; }
+.star-small    { left: 743.25px; top: 478.88px;  width: 85.25px;  height: 85.25px; }
+
+/* Rotated pieces: placed by their centre, then turned like in Figma. */
+.burst-outline, .warning-triangle, .school-tag, .school-line,
+.connect-card, .connect-text, .connect-arrow {
+  position: absolute;
+  translate: -50% -50%;
+}
+.burst-outline    { left: 328.18px; top: 259.18px; width: 56px;      height: 56px;      rotate: -4.64deg; }
+.warning-triangle { left: 868.26px; top: 301.96px; width: 53.167px;  height: 45.917px;  rotate: 4.59deg; }
+.burst-outline img, .warning-triangle img { width: 100%; height: 100%; }
+
+/* ---- head ------------------------------------------------------------------ */
+.head {
+  left: var(--head-cx);
+  top: var(--head-cy);
+  width: calc(var(--head-w) + 2 * var(--head-pad));
+  height: calc(var(--head-w) / var(--head-aspect) + 2 * var(--head-pad));
+  translate: -50% -50%;
+}
+.head-fallback {
+  position: absolute;
+  left: var(--head-pad);
+  top: var(--head-pad);
+  width: var(--head-w);
+  height: auto;
+  transition: opacity 0.6s ease;
+}
+.head-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+.head.is-live .head-canvas { opacity: 1; }
+.head.is-live .head-fallback { opacity: 0; }
+
+/* ---- stickers in front of the head ---------------------------------------- */
+.sticker { display: block; transition: transform 0.25s ease; }
+.sticker:hover { transform: translateY(-3px); }
+.sticker, .sticker > * { position: absolute; }
+.school, .connect { left: 0; top: 0; width: 0; height: 0; }
+
+.school-tag   { left: 781.65px; top: 212.31px; width: 158px; height: 76.505px; rotate: 4.3deg; }
+.school-tag img { position: absolute; left: -9.417px; top: -5.547px; width: 173.523px; height: 92.028px; }
+.school-line {
+  font: 600 31.576px/normal var(--font-sticker);
+  color: var(--white);
+  white-space: nowrap;
+  rotate: 4.3deg;
+}
+.school-line-1 { left: 768.19px; top: 191.83px; }
+.school-line-2 { left: 788.7px;  top: 231.18px; }
+.grade-tag { left: 830.69px; top: 187.4px; width: 61px; height: 39px; }
+.grade { font: 600 24.58px/normal var(--font-sticker); color: var(--white); white-space: nowrap; }
+.grade-2 { left: 846.69px; top: 186.4px; }
+.grade-a { left: 868.69px; top: 192.4px; font-size: 18.58px; }
+
+.star-large    { left: 355.09px; top: 145.63px; width: 111.08px; height: 111.08px; }
+
+.connect-card {
+  left: 439.07px;
+  top: 487.72px;
+  width: 177px;
+  height: 34.782px;
+  rotate: 8.12deg;
+  background: var(--purple);
+  border: 5.41px solid var(--white);
+  box-shadow: -2.319px 3.092px 3.092px 0 rgba(0, 0, 0, 0.25);
+}
+.connect-text {
+  left: 431.91px;
+  top: 484.79px;
+  rotate: 8.12deg;
+  font: 600 24.406px/normal var(--font-sticker);
+  color: var(--white);
+  white-space: nowrap;
+}
+.connect-arrow { left: 512.36px; top: 499.35px; width: 8.502px; height: 0; rotate: 8.12deg; }
+.connect-arrow img { position: absolute; left: -0.773px; top: -5.69px; width: 10.048px; height: 11.384px; }
+
+.star-lavender { left: 310.61px; top: 478.84px; width: 52.43px; height: 52.07px; }
+
+/* ---- intro text ---------------------------------------------------------------- */
+.intro {
+  left: 599.5px;
+  top: 589px;
+  width: 475px;
+  translate: -50% 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+.intro h1 {
+  margin: 0;
+  font: 400 36px/43px var(--font-heading);
+  text-align: center;
+}
+.intro-hi { color: var(--black-fade); }
+
+@media (prefers-reduced-motion: reduce) {
+  .head-fallback, .head-canvas, .sticker { transition: none; }
+}

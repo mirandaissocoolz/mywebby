@@ -1,0 +1,64 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="714" height="548" viewBox="0 0 714 548" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="gradient circles">
+<g id="gradient" filter="url(#filter0_fng_0_25)">
+<circle cx="210.5" cy="210.5" r="140.5" fill="url(#paint0_radial_0_25)"/>
+</g>
+<g id="gradient_2" filter="url(#filter1_fng_0_25)">
+<circle cx="503.5" cy="337.5" r="140.5" fill="url(#paint1_radial_0_25)"/>
+</g>
+</g>
+<defs>
+<filter id="filter0_fng_0_25" x="0" y="0" width="421" height="421" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feGaussianBlur stdDeviation="35" result="effect1_foregroundBlur_0_25"/>
+<feTurbulence type="fractalNoise" baseFrequency="2 2" stitchTiles="stitch" numOctaves="3" result="noise" seed="3956" />
+<feColorMatrix in="noise" type="luminanceToAlpha" result="alphaNoise" />
+<feComponentTransfer in="alphaNoise" result="coloredNoise1">
+<feFuncA type="discrete" tableValues="0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "/>
+</feComponentTransfer>
+<feComposite operator="in" in2="effect1_foregroundBlur_0_25" in="coloredNoise1" result="noise1Clipped" />
+<feFlood flood-color="rgba(0, 0, 0, 0.25)" result="color1Flood" />
+<feComposite operator="in" in2="noise1Clipped" in="color1Flood" result="color1" />
+<feMerge result="effect2_noise_0_25">
+<feMergeNode in="effect1_foregroundBlur_0_25" />
+<feMergeNode in="color1" />
+</feMerge>
+<feTurbulence type="fractalNoise" baseFrequency="0.99900001287460327 0.99900001287460327" numOctaves="3" seed="5988" />
+<feDisplacementMap in="effect2_noise_0_25" scale="86" xChannelSelector="R" yChannelSelector="G" result="displacedImage" width="100%" height="100%" />
+<feMerge result="effect3_texture_0_25">
+<feMergeNode in="displacedImage"/>
+</feMerge>
+</filter>
+<filter id="filter1_fng_0_25" x="293" y="127" width="421" height="421" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feGaussianBlur stdDeviation="35" result="effect1_foregroundBlur_0_25"/>
+<feTurbulence type="fractalNoise" baseFrequency="2 2" stitchTiles="stitch" numOctaves="3" result="noise" seed="3956" />
+<feColorMatrix in="noise" type="luminanceToAlpha" result="alphaNoise" />
+<feComponentTransfer in="alphaNoise" result="coloredNoise1">
+<feFuncA type="discrete" tableValues="0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "/>
+</feComponentTransfer>
+<feComposite operator="in" in2="effect1_foregroundBlur_0_25" in="coloredNoise1" result="noise1Clipped" />
+<feFlood flood-color="rgba(0, 0, 0, 0.25)" result="color1Flood" />
+<feComposite operator="in" in2="noise1Clipped" in="color1Flood" result="color1" />
+<feMerge result="effect2_noise_0_25">
+<feMergeNode in="effect1_foregroundBlur_0_25" />
+<feMergeNode in="color1" />
+</feMerge>
+<feTurbulence type="fractalNoise" baseFrequency="0.99900001287460327 0.99900001287460327" numOctaves="3" seed="5988" />
+<feDisplacementMap in="effect2_noise_0_25" scale="86" xChannelSelector="R" yChannelSelector="G" result="displacedImage" width="100%" height="100%" />
+<feMerge result="effect3_texture_0_25">
+<feMergeNode in="displacedImage"/>
+</feMerge>
+</filter>
+<radialGradient id="paint0_radial_0_25" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(210.5 210.5) rotate(90) scale(140.5)">
+<stop offset="0.350962" stop-color="#FFCCE8"/>
+<stop offset="1" stop-color="#E0D6FE"/>
+</radialGradient>
+<radialGradient id="paint1_radial_0_25" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(503.5 337.5) rotate(90) scale(140.5)">
+<stop offset="0.350962" stop-color="#FFCCE8"/>
+<stop offset="1" stop-color="#E0D6FE"/>
+</radialGradient>
+</defs>
+</svg>
