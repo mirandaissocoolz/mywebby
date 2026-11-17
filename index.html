@@ -44,7 +44,13 @@
       <a href="#work" aria-current="page">Work</a>
       <a href="#">About</a>
       <a href="#">Resume</a>
-      <a class="btn btn--pink" href="mailto:mirandasu15@gmail.com">Contact</a>
+      <div class="contact">
+        <button class="btn btn--pink contact-toggle" type="button" data-email="mirandasu15@gmail.com" aria-describedby="contact-status">Contact</button>
+        <div class="btn copy-email is-copied" id="contact-copied" aria-hidden="true" hidden>
+          <span class="mail"></span><span>Email Copied</span>
+        </div>
+        <span class="visually-hidden" id="contact-status" role="status" aria-live="polite"></span>
+      </div>
     </nav>
   </header>
 
@@ -100,5 +106,7 @@
   </footer>
 
 </div>
+<script type="module" src="sfx.js"></script>
+<script type="module" src="contact.js"></script>
 </body>
 </html>

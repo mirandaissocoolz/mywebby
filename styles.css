@@ -46,14 +46,15 @@ p, h1, h2 { margin: 0; font-weight: 400; }
 }
 
 /* ---- header ---------------------------------------------------------- */
-.top { display: flex; justify-content: space-between; align-items: flex-start; padding: 0 var(--pad); }
+.top { position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: flex-start; padding: 0 var(--pad); }
 .hello { width: 551px; display: flex; flex-direction: column; gap: 16px; }
 .hello h1 { font: 400 var(--fs-display)/normal var(--font-display); }
 .hello p { font-size: var(--fs-text); line-height: normal; }
 
 .nav { display: flex; align-items: center; gap: 41px; font-size: var(--fs-footer); line-height: 22px; }
-.nav a { color: var(--ink-50); transition: color 0.2s ease; }
+.nav a { color: var(--ink-50); transition: color 0.2s ease, transform 0.2s ease; }
 .nav a:hover, .nav a[aria-current="page"] { color: var(--ink); }
+.nav a:hover { transform: translateY(-2px); } /* lifts with the tap sound in sfx.js */
 
 /* ---- Button (Figma component "Button", node 349:8) ----------------------------
    A gradient pill with a 2px 50%-white stroke, a soft inner highlight on top of the
@@ -87,16 +88,56 @@ p, h1, h2 { margin: 0; font-weight: 400; }
 }
 .btn::after { box-shadow: inset 9px 4px 7px rgba(255, 255, 255, 0.25); }
 .btn:hover { transform: translateY(-1px); }
+.contact-toggle:hover { transform: translateY(-2px); }
 .btn--pink   { --btn-from: #fc81c5; --btn-to: #ffcce8; --btn-glow: #ffcce8; --btn-ink: #fff; }
 .btn--green  { --btn-from: #b6ff00; --btn-to: #ffffff; --btn-glow: #b6ff00; --btn-ink: #35613b; }
 .btn--orange { --btn-from: #fea662; --btn-to: #ffd683; --btn-glow: #ffd683; --btn-ink: #fff; }
 .btn--purple { --btn-from: #9977fe; --btn-to: #e0d6fe; --btn-glow: #e0d6fe; --btn-ink: #fff; }
-/* Figma (node 439:1420) hugs the 18px label: 6px/15px padding + 2px border → 102 × 38 */
-.nav .btn { min-width: 102px; padding: 6px 15px; font-size: inherit; line-height: inherit; }
-.nav .btn, .nav .btn:hover { color: var(--btn-ink); }
+/* Figma "Button/Style7" (445:1592) hugs the 18px label: 7px/14px padding + 2px border → 100 × 40 */
+.contact-toggle { min-width: 100px; padding: 7px 14px; font-size: inherit; line-height: inherit; }
+.btn { cursor: pointer; }
+.btn, .btn:hover { color: var(--btn-ink); }
+
+/* ---- Contact: "Email Copied" pill (Figma "Button/Style8" 445:1590) -----------------
+   Clicking Contact copies the email and the green pill rises into place under it, right-aligned,
+   fading in with a little bounce. contact.js hides it on a click elsewhere or Escape. */
+.contact { position: relative; display: flex; }
+.copy-email {
+  position: absolute;
+  top: calc(100% + 16px);
+  right: 0;
+  min-width: 163.8px;
+  gap: 10px;
+  padding: 7px 14px;
+  font-size: var(--fs-footer);
+  line-height: 23px;
+  cursor: default;
+  pointer-events: none;
+}
+.copy-email[hidden] { display: none; }
+.copy-email.is-copied { --btn-from: #b6ff00; --btn-to: #ffffff; --btn-glow: #b6ff00; --btn-ink: #35613b; }
+/* the Figma mail icon, painted in the label colour */
+.copy-email .mail {
+  width: 12px;
+  height: 13px;
+  background: currentColor;
+  -webkit-mask: url("assets/contact/mail-green-sm.svg") 0 0 / 12px 13px no-repeat;
+  mask: url("assets/contact/mail-green-sm.svg") 0 0 / 12px 13px no-repeat;
+}
+
+/* rise up from below while fading in, overshoot a touch, settle */
+@keyframes rise-in {
+  0%   { opacity: 0; transform: translateY(14px) scale(0.92); }
+  55%  { opacity: 1; transform: translateY(-4px) scale(1.03); }
+  78%  { transform: translateY(1px) scale(0.99); }
+  100% { opacity: 1; transform: none; }
+}
+.copy-email.is-in { animation: rise-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* ---- hero: welcome text, gradient, unicorn ------------------------------ */
-/* The unicorn (flat orange, from Figma) pokes 123px up into the header row. */
+/* The unicorn (from Figma) pokes 123px up into the header row. */
 .hero { position: relative; height: 435px; margin-top: 7px; } /* 57px below the header row */
 .welcome { position: absolute; left: var(--pad); bottom: 0; z-index: 1; width: 323px; display: flex; flex-direction: column; gap: 25px; }
 .welcome-text { font-size: var(--fs-text); line-height: normal; display: flex; flex-direction: column; gap: 26px; }
@@ -118,8 +159,8 @@ p, h1, h2 { margin: 0; font-weight: 400; }
 .gradient img { position: absolute; left: -40px; top: -40px; width: 1329.1px; height: 625px; }
 
 .unicorn { position: absolute; right: 0; top: -123px; width: 775.466px; height: 558px; pointer-events: none; }
-/* the SVG is 780.127 × 562.661: the shape plus the 2.33px margin Figma exported around it */
-.unicorn img { position: absolute; left: -2.33px; top: -2.33px; width: 780.127px; height: 562.661px; }
+/* Figma export (node 439:1437): flat orange with a yellow → orange gradient on the horn */
+.unicorn img { position: absolute; left: 0; top: 0; width: 775.466px; height: 558px; }
 
 /* ---- projects ------------------------------------------------------------ */
 .projects { padding: 0 var(--pad); display: flex; flex-direction: column; gap: 50px; }
@@ -152,4 +193,7 @@ p, h1, h2 { margin: 0; font-weight: 400; }
 
 @media (prefers-reduced-motion: reduce) {
   .nav a, .btn, .shooting-star, .moon { transition: none; }
+  /* with Reduce Motion on, the pill only fades in */
+  @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+  .copy-email.is-in { animation: fade-in 0.3s ease both; }
 }
