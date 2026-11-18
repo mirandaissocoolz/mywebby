@@ -1,15 +1,12 @@
 // Contact: clicking the nav's Contact button copies the email straight away, plays the
 // celebration sound and turns the button itself into the green "Email Copied" pill
-// (Figma 467:382). It eases back to Contact after a few seconds, on a click elsewhere, or
-// on Escape. Clicking it again copies and celebrates again.
+// (Figma 467:382). Clicking Email Copied (or pressing Escape) turns it back into Contact.
 
 import { play } from "./sfx.js";
 
 const btn = document.querySelector(".contact-toggle");
 const status = document.getElementById("contact-status");
 const EMAIL = btn.dataset.email;
-const SHOW_FOR = 3000; // ms the Email Copied state stays up
-let timer = 0;
 
 async function copyText(text) {
   try {
@@ -51,22 +48,20 @@ btn.addEventListener("transitionend", (e) => {
 });
 
 function showCopied() {
-  clearTimeout(timer);
-  if (!btn.classList.contains("is-copied")) morph(() => btn.classList.add("is-copied"));
+  morph(() => btn.classList.add("is-copied"));
   btn.setAttribute("aria-label", "Email copied");
   status.textContent = "";
   status.textContent = "Email copied";
-  timer = setTimeout(reset, SHOW_FOR);
 }
 
 function reset() {
-  clearTimeout(timer);
   if (!btn.classList.contains("is-copied")) return;
   morph(() => btn.classList.remove("is-copied"));
   btn.removeAttribute("aria-label");
 }
 
 btn.addEventListener("click", async () => {
+  if (btn.classList.contains("is-copied")) { play("click"); reset(); return; } // toggle back
   play("celebrate");
   if (await copyText(EMAIL)) showCopied();
   else location.href = `mailto:${EMAIL}`; // copying blocked: open the mail app instead
@@ -74,7 +69,4 @@ btn.addEventListener("click", async () => {
 
 addEventListener("keydown", (e) => {
   if (e.key === "Escape") reset();
-});
-addEventListener("pointerdown", (e) => {
-  if (!e.target.closest(".contact")) reset();
 });
