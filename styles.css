@@ -7,7 +7,10 @@
   --bg: #ffffff;
   --ink: #000000;
   --ink-50: rgba(0, 0, 0, 0.5);
+  --ink-soft: rgba(0, 0, 0, 0.5);   /* nav + footer links at rest */
   --card: #d9d9d9;
+  --line: rgba(0, 0, 0, 0.2);       /* footer rule */
+  --caret: rgba(0, 0, 0, 0.5);
   --pink-lt: #ffcce8;
   --pink: #fc81c5;
   --orange: #fe7814;           /* unicorn orange: hover colour for header links and icons */
@@ -29,6 +32,23 @@ html, body { margin: 0; }
 /* Always reserve the scrollbar so the page width index.html measures doesn't change after load. */
 html { overflow-y: scroll; }
 body { background: var(--bg); color: var(--ink); font-family: var(--font-body); overflow-x: hidden; }
+
+/* ---- Dark mode (Figma "Home — Dark Mode" 472:304), switched on by the moon (header.js) ---- */
+:root[data-theme="dark"] {
+  --bg: #141419;
+  --ink: #f4f1eb;
+  --ink-50: rgba(244, 241, 235, 0.5);
+  --ink-soft: rgba(244, 241, 235, 0.72);
+  --card: #292930;
+  --line: rgba(244, 241, 235, 0.22);
+  --caret: rgba(244, 241, 235, 0.65);
+  color-scheme: dark;
+}
+:root[data-theme="dark"] .welcome-text .dim { color: inherit; }   /* the intro line is all cream in dark */
+:root[data-theme="dark"] .moon span { --icon: url("assets/moon-filled.svg"); } /* the moon fills in */
+/* ease between themes (only once the page has loaded, so a saved dark theme doesn't flash) */
+.theme-ready body, .theme-ready .card, .theme-ready .footer-line, .theme-ready .section-title,
+.theme-ready .welcome-text, .theme-ready .hello h1 { transition: background-color 0.5s ease, color 0.5s ease; }
 /* Thin, greyscale text smoothing like Figma's; the browser default on macOS draws text heavier. */
 body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
 img { display: block; max-width: none; }
@@ -40,7 +60,7 @@ p, h1, h2 { margin: 0; font-weight: 400; }
   position: relative;
   width: var(--page-w, 1440px);
   zoom: var(--s);
-  padding: 64px 0 70px;
+  padding: 50px 0 70px;
   display: flex;
   flex-direction: column;
   gap: 50px;
@@ -54,16 +74,14 @@ p, h1, h2 { margin: 0; font-weight: 400; }
 .nav { display: flex; align-items: center; gap: 41px; font-size: var(--fs-footer); line-height: normal; }
 /* The link itself never moves (so hover can't flicker off); its text lifts instead. The 8px
    padding (cancelled by the margin) gives a taller, easier hover area. */
-.nav a { color: var(--ink-50); transition: color 0.2s ease, text-shadow 0.3s ease; display: inline-flex; flex-direction: column; align-items: center; padding: 8px 0; margin: -8px 0; }
+.nav a { color: var(--ink-soft); transition: color 0.2s ease; display: inline-flex; flex-direction: column; align-items: center; padding: 8px 0; margin: -8px 0; }
 .nav a > span { transition: transform 0.2s ease; }
 /* Instrument Sans Medium on hover, while pressed, and for the current page (Work).
    The hidden medium-weight copy reserves the wider width so the nav doesn't jiggle. */
 .nav a::after { content: attr(data-label); font-weight: 500; height: 0; overflow: hidden; visibility: hidden; pointer-events: none; }
 .nav a:hover, .nav a:active, .nav a:focus-visible, .nav a[aria-current="page"] { font-weight: 500; }
 .nav a[aria-current="page"] { color: var(--ink); }
-.nav a:hover { color: var(--orange); text-shadow: 0 0 8px rgba(254, 120, 20, 0.55); }   /* orange glow */
-/* the clicked (current) link is plain: black, full opacity, no glow, even while hovered */
-.nav a[aria-current="page"]:hover { color: var(--ink); text-shadow: none; }
+.nav a:hover { color: var(--ink); }   /* hover: full-opacity ink (black, or cream in dark mode) */
 .nav a[aria-current="page"]:hover > span { transform: none; }
 .nav a:hover > span { transform: translateY(-2px); } /* lifts with the tap sound in sfx.js */
 
@@ -118,7 +136,7 @@ p, h1, h2 { margin: 0; font-weight: 400; }
    width between the two labels and turns it back after a few seconds, on a click elsewhere,
    or on Escape. */
 .contact { position: relative; display: flex; }
-.contact-toggle { overflow: hidden; white-space: nowrap; transition: transform 0.2s ease, filter 0.6s ease, width 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
+.contact-toggle { flex: none; left: 0; overflow: hidden; white-space: nowrap; transition: transform 0.2s ease, filter 0.6s ease, width 0.35s cubic-bezier(0.22, 1, 0.36, 1), left 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
 .contact-toggle .copied-label { display: none; align-items: center; gap: 10px; }
 .contact-toggle.is-copied { --btn-from: #b6ff00; --btn-to: #ffffff; --btn-glow: #b6ff00; --btn-ink: #35613b; border-color: #fff; }
 .contact-toggle.is-copied, .contact:hover .contact-toggle.is-copied { filter: drop-shadow(0 1px 12.75px var(--btn-glow)); }
@@ -173,6 +191,16 @@ p, h1, h2 { margin: 0; font-weight: 400; }
 .gradient { position: absolute; left: calc(-334px + min(0px, var(--off))); top: -80px; width: 1249.1px; height: 545px; pointer-events: none; }
 .gradient img { position: absolute; left: -40px; top: -40px; width: 1329.1px; height: 625px; }
 
+/* The gradient paints itself in on load. Each ribbon file (assets/gradient/1-3.svg, from Figma
+   "gradient" 439:1433) carries its own mask: a soft, feathered brush that travels along the
+   ribbon's centre line from its top-left tip to the end of the stroke. Here each ribbon also
+   fades up as it is painted. The delays match the ones inside the SVGs. */
+@keyframes ribbon-fade { from { opacity: 0; } to { opacity: 1; } }
+.gradient img { animation: ribbon-fade 3s ease both; }
+.gradient img:nth-child(1) { animation-delay: 0.2s; }
+.gradient img:nth-child(2) { animation-delay: 0.9s; }
+.gradient img:nth-child(3) { animation-delay: 1.6s; }
+
 /* Figma size (695 × 500) scaled up 6% at the request of the designer, bottom-right anchored */
 .unicorn { position: absolute; right: 0; top: -95.107px; width: 736.703px; height: 530.107px; pointer-events: none; }
 /* Pixel Bloom shader (main.js), masked to the Figma unicorn shape (node 439:1437) */
@@ -190,25 +218,29 @@ p, h1, h2 { margin: 0; font-weight: 400; }
 .section-title { display: flex; align-items: center; gap: 20px; font-size: var(--fs-title); line-height: normal; }
 .section-title { color: var(--ink-50); }
 .caret { width: 13.272px; height: 8.848px; display: flex; align-items: center; justify-content: center; }
-.caret img { width: 13.272px; height: 8.848px; }
+.caret > span { width: 13.272px; height: 8.848px; background: var(--caret); -webkit-mask: url("assets/caret.svg") 0 0 / 100% 100% no-repeat; mask: url("assets/caret.svg") 0 0 / 100% 100% no-repeat; }
 .caret--closed { width: 8.848px; height: 13.272px; }
-.caret--closed img { transform: rotate(-90deg); }
+.caret--closed > span { transform: rotate(-90deg); }
 
 .gallery { display: grid; grid-template-columns: 1fr 1fr; column-gap: 43px; row-gap: 50px; }
 .card { height: 405px; background: var(--card); border-radius: 10px; }
 
 /* ---- footer -------------------------------------------------------------- */
 .footer { padding: 0 var(--pad); display: flex; flex-direction: column; gap: 32px; }
-.footer-line { width: 100%; height: 1px; }
+.footer-line { width: 100%; height: 1px; background: var(--line); }
 .footer-row { display: flex; justify-content: space-between; align-items: stretch; font-size: var(--fs-footer); line-height: normal; }
 /* Footer (Figma "Footer!" 350:1084): each column's three rows spread over the 81px height of the unicorn. */
 .find { display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; }
 .find-me { opacity: 0.5; }
-.socials { display: flex; align-items: center; gap: 11.62px; opacity: 0.5; }
+/* Figma's 21.6px icons scaled down 15% at the designer's request; drawn as masks in currentColor
+   so they follow the theme */
+.socials { display: flex; align-items: center; gap: 9.88px; opacity: 0.5; color: var(--ink); }
 .socials a { display: flex; }
-.socials img[src$="linkedin.svg"], .socials img[src$="instagram.svg"] { width: 21.596px; height: 21.596px; }
-.socials img[src$="x.svg"] { width: 18.282px; height: 19.95px; }
-.footer-links { width: 77px; display: flex; flex-direction: column; justify-content: space-between; color: var(--ink-50); }
+.socials span { display: block; background: currentColor; -webkit-mask: var(--icon) 0 0 / 100% 100% no-repeat; mask: var(--icon) 0 0 / 100% 100% no-repeat; }
+.socials .linkedin { --icon: url("assets/linkedin.svg"); width: 18.357px; height: 18.357px; }
+.socials .x { --icon: url("assets/x.svg"); width: 15.54px; height: 16.958px; }
+.socials .instagram { --icon: url("assets/instagram.svg"); width: 18.357px; height: 18.357px; }
+.footer-links { width: 77px; display: flex; flex-direction: column; justify-content: space-between; color: var(--ink-soft); }
 .footer-links a { transition: color 0.2s ease; }
 .footer-links a:hover { color: var(--ink); }
 .footer-mark { display: flex; align-items: center; }
@@ -216,4 +248,6 @@ p, h1, h2 { margin: 0; font-weight: 400; }
 
 @media (prefers-reduced-motion: reduce) {
   .nav a, .nav a > span, .btn, .shooting-star, .moon, .shooting-star > span, .moon > span { transition: none; }
+  /* with Reduce Motion on, the ribbons simply fade in (the SVGs skip the brush too) */
+  .gradient img { animation-duration: 1.2s; }
 }

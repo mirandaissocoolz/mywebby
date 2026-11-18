@@ -10,6 +10,10 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Brawler&family=Instrument+Sans:wght@400;500&display=swap">
 <link rel="stylesheet" href="styles.css">
 <script>
+  // Dark mode remembered from a previous visit, applied before the page paints.
+  try { if (localStorage.getItem("theme") === "dark") document.documentElement.dataset.theme = "dark"; } catch (e) {}
+</script>
+<script>
   // Laid out on the Figma frame's 1440px grid and zoomed out (never in) by --s so that:
   //   - the whole unicorn fits in the first screen: its bottom is FOLD px down the page,
   //     plus a little breathing room;
@@ -17,7 +21,7 @@
   // --page-w is the layout width at that zoom, and --off is how far it differs from 1440 on
   // each side. Wider layouts fill the window (100px side margins, unicorn flush right).
   (function () {
-    var MIN = 1330, FOLD = 673 + 40, FLOOR = 0.6;
+    var MIN = 1330, FOLD = 659 + 40, FLOOR = 0.6;
     function fit() {
       var de = document.documentElement, r = de.style;
       var w = de.clientWidth, h = innerHeight;
@@ -66,32 +70,32 @@
         <p>Explore my creations below</p>
       </div>
     </div>
-    <span class="gradient" aria-hidden="true"><img src="assets/gradient.svg" alt=""></span>
+    <span class="gradient" aria-hidden="true"><img src="assets/gradient/1.svg" alt=""><img src="assets/gradient/2.svg" alt=""><img src="assets/gradient/3.svg" alt=""></span>
     <div class="unicorn" role="img" aria-label="A pixelated orange and pink unicorn, gently shimmering"><canvas aria-hidden="true"></canvas></div>
   </section>
 
   <section class="projects">
     <div class="work" id="work">
-      <h2 class="section-title"><span class="caret"><img src="assets/caret.svg" alt=""></span>Work</h2>
+      <h2 class="section-title"><span class="caret"><span></span></span>Work</h2>
       <div class="gallery">
         <div class="card"></div><div class="card"></div>
         <div class="card"></div><div class="card"></div>
         <div class="card"></div><div class="card"></div>
       </div>
     </div>
-    <h2 class="section-title play" id="play"><span class="caret caret--closed"><img src="assets/caret.svg" alt=""></span>Play</h2>
+    <h2 class="section-title play" id="play"><span class="caret caret--closed"><span></span></span>Play</h2>
   </section>
 
   <footer class="footer">
-    <img class="footer-line" src="assets/line.svg" alt="">
+    <div class="footer-line" aria-hidden="true"></div>
     <div class="footer-row">
       <div class="find">
         <p class="find-me">Find me</p>
         <a href="mailto:mirandasu15@gmail.com">mirandasu15@gmail.com</a>
         <div class="socials">
-          <a href="https://www.linkedin.com/in/miranda-suu/" aria-label="LinkedIn"><img src="assets/linkedin.svg" alt=""></a>
-          <a href="https://x.com/mirandaiscoolz" aria-label="X"><img src="assets/x.svg" alt=""></a>
-          <a href="https://www.instagram.com/mirandasuissocool/" aria-label="Instagram"><img src="assets/instagram.svg" alt=""></a>
+          <a href="https://www.linkedin.com/in/miranda-suu/" aria-label="LinkedIn"><span class="linkedin"></span></a>
+          <a href="https://x.com/mirandaiscoolz" aria-label="X"><span class="x"></span></a>
+          <a href="https://www.instagram.com/mirandasuissocool/" aria-label="Instagram"><span class="instagram"></span></a>
         </div>
       </div>
       <nav class="footer-links" aria-label="Footer">

@@ -1,6 +1,7 @@
-// Header click states. Clicking Work / About / Resume makes it the current page (plain black,
-// Medium, no glow). The shooting star and moon toggle on click: on = plain black at full
-// opacity with no glow, click again to turn it off.
+// Header click states. Clicking Work / About / Resume makes it the current page (plain ink,
+// Medium). The shooting star toggles on click (on = plain ink at full opacity, no glow). The
+// moon switches the site between light and dark mode (Figma "Home — Dark Mode" 472:304) and
+// remembers the choice for the next visit.
 
 const links = document.querySelectorAll(".nav a");
 for (const link of links) {
@@ -10,10 +11,24 @@ for (const link of links) {
   });
 }
 
-for (const icon of document.querySelectorAll(".shooting-star, .moon")) {
-  icon.addEventListener("click", (e) => {
-    if (icon.matches("a[href='#']")) e.preventDefault(); // no page yet: don't jump to the top
-    const on = icon.classList.toggle("is-active");
-    icon.setAttribute("aria-pressed", String(on));
-  });
+const star = document.querySelector(".shooting-star");
+star.addEventListener("click", (e) => {
+  e.preventDefault(); // no page yet: don't jump to the top
+  const on = star.classList.toggle("is-active");
+  star.setAttribute("aria-pressed", String(on));
+});
+
+const root = document.documentElement;
+const moon = document.querySelector(".moon");
+function setDark(on) {
+  if (on) root.dataset.theme = "dark"; else delete root.dataset.theme;
+  moon.classList.toggle("is-active", on);
+  moon.setAttribute("aria-pressed", String(on));
+  try { localStorage.setItem("theme", on ? "dark" : "light"); } catch {}
 }
+moon.classList.toggle("is-active", root.dataset.theme === "dark");
+moon.setAttribute("aria-pressed", String(root.dataset.theme === "dark"));
+moon.addEventListener("click", () => setDark(root.dataset.theme !== "dark"));
+
+// turn on the theme cross-fade only after the first paint
+requestAnimationFrame(() => requestAnimationFrame(() => root.classList.add("theme-ready")));
