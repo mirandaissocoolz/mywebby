@@ -1,4 +1,4 @@
-/* Home from Figma "mirandaissocool.com (2.0)" → Home (Even Smaller Header) (node 429:1085), on its 1440px frame.
+/* Home from Figma "mirandaissocool.com (2.0)" → Home (… Lined Up) (NEW FONT) (node 439:1409), on its 1440px frame.
    index.html zooms the page out by --s so the whole unicorn fits in the window (never zooms
    in). The page fills any width: content keeps 100px side margins and the unicorn and its
    small icons stay pinned to the right edge (--off is half the extra width). */
@@ -10,6 +10,7 @@
   --card: #d9d9d9;
   --pink-lt: #ffcce8;
   --pink: #fc81c5;
+  --orange: #fe7814;           /* unicorn orange: hover colour for header links and icons */
   --s: 1;
   --off: 0px;                 /* (window − 1440) / 2, from −55px up; set by index.html */
   --pad: calc(100px + min(0px, var(--off)));   /* 100px, giving back up to 55px on narrow windows */
@@ -18,9 +19,9 @@
 
   /* Type scale, from Figma */
   --fs-display: 48px;   /* headline */
-  --fs-title: 24px;     /* Work / Play */
-  --fs-text: 20px;      /* intro line, welcome text */
-  --fs-footer: 18px;    /* nav and footer text (Figma "nav-and-footer") */
+  --fs-title: 18px;     /* Work / Play (Figma "larger text") */
+  --fs-text: 16px;      /* intro line, welcome text */
+  --fs-footer: 16px;    /* nav and footer text (Figma "nav-and-footer") */
   }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -47,14 +48,21 @@ p, h1, h2 { margin: 0; font-weight: 400; }
 
 /* ---- header ---------------------------------------------------------- */
 .top { position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: flex-start; padding: 0 var(--pad); }
-.hello { width: 551px; display: flex; flex-direction: column; gap: 16px; }
+.hello { width: 551px; }
 .hello h1 { font: 400 var(--fs-display)/normal var(--font-display); }
-.hello p { font-size: var(--fs-text); line-height: normal; }
 
-.nav { display: flex; align-items: center; gap: 41px; font-size: var(--fs-footer); line-height: 22px; }
-.nav a { color: var(--ink-50); transition: color 0.2s ease, transform 0.2s ease; }
-.nav a:hover, .nav a[aria-current="page"] { color: var(--ink); }
-.nav a:hover { transform: translateY(-2px); } /* lifts with the tap sound in sfx.js */
+.nav { display: flex; align-items: center; gap: 41px; font-size: var(--fs-footer); line-height: normal; }
+/* The link itself never moves (so hover can't flicker off); its text lifts instead. The 8px
+   padding (cancelled by the margin) gives a taller, easier hover area. */
+.nav a { color: var(--ink-50); transition: color 0.2s ease, text-shadow 0.3s ease; display: inline-flex; flex-direction: column; align-items: center; padding: 8px 0; margin: -8px 0; }
+.nav a > span { transition: transform 0.2s ease; }
+/* Instrument Sans Medium on hover, while pressed, and for the current page (Work).
+   The hidden medium-weight copy reserves the wider width so the nav doesn't jiggle. */
+.nav a::after { content: attr(data-label); font-weight: 500; height: 0; overflow: hidden; visibility: hidden; pointer-events: none; }
+.nav a:hover, .nav a:active, .nav a:focus-visible, .nav a[aria-current="page"] { font-weight: 500; }
+.nav a[aria-current="page"] { color: var(--ink); }
+.nav a:hover { color: var(--orange); text-shadow: 0 0 8px rgba(254, 120, 20, 0.55); }   /* orange glow */
+.nav a:hover > span { transform: translateY(-2px); } /* lifts with the tap sound in sfx.js */
 
 /* ---- Button (Figma component "Button", node 349:8) ----------------------------
    A gradient pill with a 2px 50%-white stroke, a soft inner highlight on top of the
@@ -88,79 +96,87 @@ p, h1, h2 { margin: 0; font-weight: 400; }
 }
 .btn::after { box-shadow: inset 9px 4px 7px rgba(255, 255, 255, 0.25); }
 .btn:hover { transform: translateY(-1px); }
-.contact-toggle:hover { transform: translateY(-2px); }
+.contact:hover .contact-toggle { transform: translateY(-2px); } /* hover on the still wrapper, lift the button */
+/* Contact's pink glow is hidden at rest and fades in slowly on hover */
+.contact-toggle { filter: drop-shadow(0 1px 12.75px transparent); transition: transform 0.2s ease, filter 0.6s ease; }
+.contact:hover .contact-toggle, .contact-toggle:focus-visible { filter: drop-shadow(0 1px 12.75px var(--btn-glow)); }
 .btn--pink   { --btn-from: #fc81c5; --btn-to: #ffcce8; --btn-glow: #ffcce8; --btn-ink: #fff; }
 .btn--green  { --btn-from: #b6ff00; --btn-to: #ffffff; --btn-glow: #b6ff00; --btn-ink: #35613b; }
 .btn--orange { --btn-from: #fea662; --btn-to: #ffd683; --btn-glow: #ffd683; --btn-ink: #fff; }
 .btn--purple { --btn-from: #9977fe; --btn-to: #e0d6fe; --btn-glow: #e0d6fe; --btn-ink: #fff; }
-/* Figma "Button/Style7" (445:1592) hugs the 18px label: 7px/14px padding + 2px border → 100 × 40 */
-.contact-toggle { min-width: 100px; padding: 7px 14px; font-size: inherit; line-height: inherit; }
+/* Figma "Button/Style7" (445:1592) hugs the 16px label: 7px/14px padding + 2px border */
+.contact-toggle { padding: 7px 14px; font-size: inherit; line-height: inherit; }
 .btn { cursor: pointer; }
 .btn, .btn:hover { color: var(--btn-ink); }
 
-/* ---- Contact: "Email Copied" pill (Figma "Button/Style8" 445:1590) -----------------
-   Clicking Contact copies the email and the green pill rises into place under it, right-aligned,
-   fading in with a little bounce. contact.js hides it on a click elsewhere or Escape. */
+/* ---- Contact → "Email Copied" (Figma 467:382) -------------------------------
+   Clicking Contact copies the email and the button itself turns into the green Email Copied
+   pill (white → #b6ff00 gradient, white stroke, lime glow, mail icon). contact.js eases the
+   width between the two labels and turns it back after a few seconds, on a click elsewhere,
+   or on Escape. */
 .contact { position: relative; display: flex; }
-.copy-email {
-  position: absolute;
-  top: calc(100% + 16px);
-  right: 0;
-  min-width: 163.8px;
-  gap: 10px;
-  padding: 7px 14px;
-  font-size: var(--fs-footer);
-  line-height: 23px;
-  cursor: default;
-  pointer-events: none;
-}
-.copy-email[hidden] { display: none; }
-.copy-email.is-copied { --btn-from: #b6ff00; --btn-to: #ffffff; --btn-glow: #b6ff00; --btn-ink: #35613b; }
-/* the Figma mail icon, painted in the label colour */
-.copy-email .mail {
-  width: 12px;
-  height: 13px;
+.contact-toggle { overflow: hidden; white-space: nowrap; transition: transform 0.2s ease, filter 0.6s ease, width 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
+.contact-toggle .copied-label { display: none; align-items: center; gap: 10px; }
+.contact-toggle.is-copied { --btn-from: #b6ff00; --btn-to: #ffffff; --btn-glow: #b6ff00; --btn-ink: #35613b; border-color: #fff; }
+.contact-toggle.is-copied, .contact:hover .contact-toggle.is-copied { filter: drop-shadow(0 1px 12.75px var(--btn-glow)); }
+.contact-toggle.is-copied .contact-label { display: none; }
+.contact-toggle.is-copied .copied-label { display: inline-flex; }
+.contact-toggle .mail {
+  flex: none;
+  width: 18px;
+  height: 19px;
   background: currentColor;
-  -webkit-mask: url("assets/contact/mail-green-sm.svg") 0 0 / 12px 13px no-repeat;
-  mask: url("assets/contact/mail-green-sm.svg") 0 0 / 12px 13px no-repeat;
+  -webkit-mask: url("assets/contact/mail-green.svg") 0 0 / 18px 19px no-repeat;
+  mask: url("assets/contact/mail-green.svg") 0 0 / 18px 19px no-repeat;
 }
-
-/* rise up from below while fading in, overshoot a touch, settle */
-@keyframes rise-in {
-  0%   { opacity: 0; transform: translateY(14px) scale(0.92); }
-  55%  { opacity: 1; transform: translateY(-4px) scale(1.03); }
-  78%  { transform: translateY(1px) scale(0.99); }
-  100% { opacity: 1; transform: none; }
-}
-.copy-email.is-in { animation: rise-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
 
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* ---- hero: welcome text, gradient, unicorn ------------------------------ */
-/* The unicorn (from Figma) pokes 123px up into the header row. */
+/* The unicorn pokes 95px up into the header row. */
 .hero { position: relative; height: 435px; margin-top: 7px; } /* 57px below the header row */
-.welcome { position: absolute; left: var(--pad); bottom: 0; z-index: 1; width: 323px; display: flex; flex-direction: column; gap: 25px; }
-.welcome-text { font-size: var(--fs-text); line-height: normal; display: flex; flex-direction: column; gap: 26px; }
+.welcome { position: absolute; left: var(--pad); bottom: 0; z-index: 1; width: 348px; display: flex; flex-direction: column; gap: 25px; }
+.welcome-text { font-size: var(--fs-text); line-height: normal; display: flex; flex-direction: column; gap: 1lh; } /* one blank line, as in Figma */
 
 /* ---- small things: shooting star + moon, in a row above the welcome text ---- */
 .small-things { display: flex; align-items: center; gap: 27px; height: 20px; }
-.small-things > * { opacity: 0.5; }
+.small-things > * { opacity: 0.5; color: var(--ink); }
 .shooting-star, .moon { position: relative; display: block; width: 20px; height: 20px; padding: 0; border: 0; background: none; cursor: pointer; }
-.shooting-star img, .moon img { position: absolute; }
+/* each stroke is drawn as a mask filled with currentColor, so hover can turn it orange */
+.shooting-star span, .moon span { position: absolute; background: currentColor; -webkit-mask: var(--icon) 0 0 / 100% 100% no-repeat; mask: var(--icon) 0 0 / 100% 100% no-repeat; }
+.shooting-star span:nth-child(1) { --icon: url("assets/shooting-star/1.svg"); }
+.shooting-star span:nth-child(2) { --icon: url("assets/shooting-star/2.svg"); }
+.shooting-star span:nth-child(3) { --icon: url("assets/shooting-star/3.svg"); }
+.shooting-star span:nth-child(4) { --icon: url("assets/shooting-star/4.svg"); }
+.moon span { --icon: url("assets/moon.svg"); }
+/* the button stays put and its strokes lift, so hover can't flicker off */
+.shooting-star > span, .moon > span { transition: transform 0.2s ease; }
+.shooting-star:hover > span, .moon:hover > span { transform: translateY(-2px); }
 /* the four strokes of the Figma ShootingStar icon, each box padded by its half-stroke */
-.shooting-star img:nth-child(1) { left: 6.75px; top: 1.13px; width: 12.12px; height: 11.5px; }
-.shooting-star img:nth-child(2) { left: 1.13px; top: 8.43px; width: 6.07px; height: 6.07px; }
-.shooting-star img:nth-child(3) { left: 2.38px; top: 13.21px; width: 5.66px; height: 5.66px; }
-.shooting-star img:nth-child(4) { left: 8.00px; top: 13.13px; width: 5.74px; height: 5.74px; }
-.moon img { left: 2.38px; top: 1.45px; width: 16.18px; height: 16.18px; }
-.shooting-star, .moon { transition: transform 0.2s ease, opacity 0.2s ease; }
-.shooting-star:hover, .moon:hover { transform: translateY(-2px); opacity: 0.8; }
+.shooting-star span:nth-child(1) { left: 6.75px; top: 1.13px; width: 12.12px; height: 11.5px; }
+.shooting-star span:nth-child(2) { left: 1.13px; top: 8.43px; width: 6.07px; height: 6.07px; }
+.shooting-star span:nth-child(3) { left: 2.38px; top: 13.21px; width: 5.66px; height: 5.66px; }
+.shooting-star span:nth-child(4) { left: 8.00px; top: 13.13px; width: 5.74px; height: 5.74px; }
+.moon span { left: 2.38px; top: 1.45px; width: 16.18px; height: 16.18px; }
+.shooting-star, .moon { transition: opacity 0.2s ease, color 0.2s ease, filter 0.3s ease; }
+.shooting-star, .moon { filter: drop-shadow(0 0 4px rgba(254, 120, 20, 0)); }
+.shooting-star:hover, .moon:hover, .shooting-star:focus-visible, .moon:focus-visible {
+  opacity: 1; color: var(--orange);
+  filter: drop-shadow(0 0 4px rgba(254, 120, 20, 0.75));   /* orange glow */
+}
 .gradient { position: absolute; left: calc(-334px + min(0px, var(--off))); top: -80px; width: 1249.1px; height: 545px; pointer-events: none; }
 .gradient img { position: absolute; left: -40px; top: -40px; width: 1329.1px; height: 625px; }
 
-.unicorn { position: absolute; right: 0; top: -123px; width: 775.466px; height: 558px; pointer-events: none; }
-/* Figma export (node 439:1437): flat orange with a yellow → orange gradient on the horn */
-.unicorn img { position: absolute; left: 0; top: 0; width: 775.466px; height: 558px; }
+/* Figma size (695 × 500) scaled up 6% at the request of the designer, bottom-right anchored */
+.unicorn { position: absolute; right: 0; top: -95.107px; width: 736.703px; height: 530.107px; pointer-events: none; }
+/* Pixel Bloom shader (main.js), masked to the Figma unicorn shape (node 439:1437) */
+.unicorn canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  -webkit-mask: url("assets/unicorn-mask.svg") 0 0 / 100% 100% no-repeat;
+  mask: url("assets/unicorn-mask.svg") 0 0 / 100% 100% no-repeat;
+}
 
 /* ---- projects ------------------------------------------------------------ */
 .projects { padding: 0 var(--pad); display: flex; flex-direction: column; gap: 50px; }
@@ -192,8 +208,5 @@ p, h1, h2 { margin: 0; font-weight: 400; }
 .footer-mark img { width: 145.256px; height: 105.398px; }
 
 @media (prefers-reduced-motion: reduce) {
-  .nav a, .btn, .shooting-star, .moon { transition: none; }
-  /* with Reduce Motion on, the pill only fades in */
-  @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-  .copy-email.is-in { animation: fade-in 0.3s ease both; }
+  .nav a, .nav a > span, .btn, .shooting-star, .moon, .shooting-star > span, .moon > span { transition: none; }
 }

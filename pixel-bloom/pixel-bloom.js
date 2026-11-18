@@ -4,6 +4,7 @@
  *   import { createPixelBloom } from './pixel-bloom.js';
  *   const bloom = createPixelBloom(document.querySelector('canvas'), SETTINGS);
  *   bloom.update({ speed: 0.2 });   // change settings live
+ *   bloom.update({ mouse: [x, y] }); // move the highlight (CSS px inside the canvas)
  *   bloom.destroy();                // stop and clean up
  * SETTINGS is the JSON copied from "Save & export" in the Pixel Bloom canvas.
  * Any key you leave out falls back to DEFAULTS below.
@@ -13,7 +14,8 @@ export const DEFAULTS = {
   colors: ['#F7F6F9', '#FFB8DA', '#FF6FB8', '#FF3D9A'],
   pattern: 0, scale: 1.2, warp: 1.6, seed: 3.7, steps: 4, contrast: 1.1,
   px: 3, maxLvl: 3, split: 0.5, cluster: 0.6, tex: [1, 2, 4, 5, 7], layout: 1, zscale: 1.2, zblend: 0.5, tscale: 2,
-  fray: 0.25, grain: 0.15, contour: 0, slices: 8, lineCol: 3, scan: 0, animate: true, speed: 0.4
+  fray: 0.25, grain: 0.15, contour: 0, slices: 8, lineCol: 3, scan: 0, animate: true, speed: 0.4,
+  mouse: null // [x, y] CSS px inside the canvas: where the bloom highlight sits
 };
 
 const VERT = 'attribute vec2 aPos; void main(){ gl_Position = vec4(aPos, 0.0, 1.0); }';
@@ -271,7 +273,9 @@ export function createPixelBloom(canvas, settings = {}) {
     const texArr = new Float32Array(9); tex.forEach((t, i) => { texArr[i] = t; });
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.uniform2f(u.uRes, canvas.width, canvas.height);
-    gl.uniform2f(u.uMouse, canvas.width / 2, canvas.height / 2);
+    // mouse: [x, y] in CSS px from the canvas's top-left (GL's y runs bottom-up); centre if unset
+    if (s.mouse) gl.uniform2f(u.uMouse, s.mouse[0] * dpr, canvas.height - s.mouse[1] * dpr);
+    else gl.uniform2f(u.uMouse, canvas.width / 2, canvas.height / 2);
     gl.uniform1f(u.uTime, time);
     gl.uniform1f(u.uPx, Math.max(1, Math.round(s.px * dpr)));
     gl.uniform1f(u.uMaxLvl, s.maxLvl);

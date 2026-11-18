@@ -1,14 +1,15 @@
 // Contact: clicking the nav's Contact button copies the email straight away, plays the
-// celebration sound and bounces a green "Email Copied" pill (Figma "Button/Style8") up into
-// place under it. Clicking Contact again copies and celebrates again; a click elsewhere or
-// Escape hides the pill.
+// celebration sound and turns the button itself into the green "Email Copied" pill
+// (Figma 467:382). It eases back to Contact after a few seconds, on a click elsewhere, or
+// on Escape. Clicking it again copies and celebrates again.
 
 import { play } from "./sfx.js";
 
-const toggle = document.querySelector(".contact-toggle");
-const pill = document.getElementById("contact-copied");
+const btn = document.querySelector(".contact-toggle");
 const status = document.getElementById("contact-status");
-const EMAIL = toggle.dataset.email;
+const EMAIL = btn.dataset.email;
+const SHOW_FOR = 3000; // ms the Email Copied state stays up
+let timer = 0;
 
 async function copyText(text) {
   try {
@@ -27,29 +28,53 @@ async function copyText(text) {
   }
 }
 
-function show() {
-  pill.hidden = false;
-  pill.classList.remove("is-in");
-  void pill.offsetWidth; // restart the bounce on every click
-  pill.classList.add("is-in");
+// Swap the button's state and ease its width from the old label's size to the new one's. The
+// label stays full size; the button just widens (clipping it) until it fits.
+// Widths come from the computed style (CSS px), not getBoundingClientRect, which is in screen
+// px and so shrinks with the page zoom (--s).
+const cssWidth = () => parseFloat(getComputedStyle(btn).width);
+function morph(apply) {
+  const from = cssWidth();
+  btn.style.transition = "none"; // measure the new label's natural width without animating
+  btn.style.width = "";
+  apply();
+  const to = cssWidth();
+  btn.style.width = from + "px";
+  void btn.offsetWidth;
+  btn.style.transition = "";
+  btn.style.width = from + "px";
+  void btn.offsetWidth;
+  btn.style.width = to + "px";
+}
+btn.addEventListener("transitionend", (e) => {
+  if (e.propertyName === "width") btn.style.width = ""; // back to hugging its label
+});
+
+function showCopied() {
+  clearTimeout(timer);
+  if (!btn.classList.contains("is-copied")) morph(() => btn.classList.add("is-copied"));
+  btn.setAttribute("aria-label", "Email copied");
   status.textContent = "";
   status.textContent = "Email copied";
+  timer = setTimeout(reset, SHOW_FOR);
 }
 
-function hide() {
-  pill.hidden = true;
-  pill.classList.remove("is-in");
+function reset() {
+  clearTimeout(timer);
+  if (!btn.classList.contains("is-copied")) return;
+  morph(() => btn.classList.remove("is-copied"));
+  btn.removeAttribute("aria-label");
 }
 
-toggle.addEventListener("click", async () => {
+btn.addEventListener("click", async () => {
   play("celebrate");
-  if (await copyText(EMAIL)) show();
+  if (await copyText(EMAIL)) showCopied();
   else location.href = `mailto:${EMAIL}`; // copying blocked: open the mail app instead
 });
 
 addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && !pill.hidden) hide();
+  if (e.key === "Escape") reset();
 });
 addEventListener("pointerdown", (e) => {
-  if (!pill.hidden && !e.target.closest(".contact")) hide();
+  if (!e.target.closest(".contact")) reset();
 });

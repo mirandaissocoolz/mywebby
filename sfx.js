@@ -1,4 +1,4 @@
-// UI sound effects: a tap when the pointer moves onto a nav item, a toggle click when a nav link
+// UI sound effects: a tap when the pointer moves onto a nav item or header icon, a toggle click when a nav link
 // is pressed, and a celebration when Contact copies the email (played from contact.js).
 // Uses Web Audio so the very short tap plays with no delay. Browsers keep audio muted until the
 // visitor's first click, tap or key press on the page, so hover sounds start after that.
@@ -8,7 +8,9 @@ const SOUNDS = {
   click: "soundeffects/toggle_off%20copy.wav",
   celebrate: "soundeffects/celebration%20copy.wav",
 };
-const HOVER_TARGETS = ".nav a, .nav .btn"; // nav links and Contact
+// These elements never move on hover (only what's inside them lifts), so pointerenter fires
+// reliably once per visit instead of flickering when an item lifts out from under the cursor.
+const HOVER_TARGETS = ".nav a, .contact, .shooting-star, .moon"; // nav links, Contact and the two icons
 const CLICK_TARGETS = ".nav a";            // Contact plays the celebration instead
 
 const Ctx = window.AudioContext || window.webkitAudioContext;
