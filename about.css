@@ -1,0 +1,106 @@
+/* About, from Figma "mirandaissocool.com (2.0)" → About (320:375). Builds on styles.css
+   (tokens, header, nav, Contact button, footer) and keeps Home's 100px side margins. */
+
+/* ---- header: logo on the left instead of Home's headline ---- */
+.top--logo { align-items: center; }
+.logo { display: block; width: 40px; height: 40px; transition: transform 0.2s ease; }
+.logo img { width: 40px; height: 40px; }
+.logo:hover { transform: rotate(-6deg) scale(1.06); }
+
+.about-main { padding: 5px var(--pad) 0; display: flex; flex-direction: column; gap: 150px; } /* 150px between sections */
+.about-main > .memories { margin-top: -95px; } /* the intro sits 55px above the first section */
+
+/* ---- section titles: Brawler 32px at 50%, a hand-drawn pink highlight under one word ---- */
+.hl-title { position: relative; display: inline-block; align-self: flex-start; font: 400 32px/normal var(--font-display); }
+.hl-text { position: relative; color: var(--ink-50); }
+.hl { position: absolute; pointer-events: none; }
+.fill { position: absolute; }
+.fill img { display: block; width: 100%; height: 100%; }
+.hl-title--faded { opacity: 0.5; }
+.hl-title--faded .hl-text { color: var(--ink); }
+.fill .hl-dark { display: none; }
+:root[data-theme="dark"] .fill .hl-light { display: none; }
+:root[data-theme="dark"] .fill .hl-dark { display: block; }
+/* dark: titles go full cream; the highlights are their own, softer files (Figma 485:327) */
+:root[data-theme="dark"] .hl-text { color: var(--ink); }
+:root[data-theme="dark"] .hl-title--faded { opacity: 1; }
+.about .dim { color: var(--ink-soft); }
+section { display: flex; flex-direction: column; gap: 25px; }
+
+/* ---- intro: text beside a strip of photos that scrolls sideways (Figma "first" 482:610).
+   The strip runs off the right edge of the page so the next photo peeks in; drag, swipe or
+   trackpad-scroll it (about.js adds mouse dragging). */
+.intro { flex-direction: row; align-items: flex-start; gap: 91px; margin-right: calc(-1 * var(--pad)); }
+.intro-text { flex: none; width: 521px; height: 428px; display: flex; flex-direction: column; gap: 29px; font-size: var(--fs-text); line-height: normal; }
+.intro-body { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+.prose { display: flex; flex-direction: column; gap: 1lh; }
+.now { margin: 0; padding-left: 24px; }
+.intro-strip {
+  flex: 1; min-width: 0; display: flex; gap: 70px; padding-right: var(--pad);
+  overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-behavior: smooth;
+  scrollbar-width: none; cursor: grab;
+}
+.intro-strip::-webkit-scrollbar { display: none; }
+.intro-strip:focus-visible { outline: 2px solid var(--pink); outline-offset: 4px; }
+.intro-strip.is-dragging { cursor: grabbing; scroll-snap-type: none; scroll-behavior: auto; }
+.intro-shot { position: relative; flex: none; width: 583px; height: 428px; margin: 0; overflow: hidden; scroll-snap-align: start; }
+.intro-shot img { position: absolute; max-width: none; user-select: none; -webkit-user-drag: none; }
+
+/* ---- core memories: five circular photos with a soft gradient ring ---- */
+.memory-field { position: relative; width: 1218px; height: 695px; align-self: center; margin-top: 0; }
+.memory { position: absolute; margin: 0; width: var(--d); height: var(--d); transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
+.memory:hover { transform: scale(1.04) rotate(-1.5deg); z-index: 1; }
+.memory-clip {
+  position: absolute; inset: 0;
+  -webkit-mask: var(--mask) 0 0 / 100% 100% no-repeat;
+  mask: var(--mask) 0 0 / 100% 100% no-repeat;
+}
+.memory-photo { position: absolute; object-fit: cover; }
+.v { position: absolute; }
+.v--rot { display: flex; align-items: center; justify-content: center; }
+.v--rot > span { position: relative; flex: none; transform: rotate(-14.72deg); }
+.memory-ring { position: absolute; left: -11.6%; top: -11.6%; width: 123.2%; height: 123.2%; pointer-events: none; }
+
+/* ---- awards ---- */
+.award-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 19px; }
+.award-list li { display: flex; justify-content: space-between; padding-bottom: 14px; border-bottom: 1px solid var(--line); font-size: 18px; line-height: normal; color: var(--ink-soft); }
+
+/* ---- media gems: tabs switch which shelf is showing (Figma "media" 360:304) ---- */
+.media { gap: 30px; }
+.media-tabs { display: flex; align-items: center; gap: 40px; height: 48px; margin-bottom: 16px; position: relative; }
+.media-tabs::after { content: ""; position: absolute; left: 0; right: 0; bottom: -16px; height: 1px; background: var(--line); }
+.media-tab {
+  display: inline-flex; align-items: center; padding: 8px 20px; border: 0; border-radius: 29px;
+  background: rgba(217, 217, 217, 0); color: var(--ink-soft); font: 400 18px/normal var(--font-body);
+  cursor: pointer; transition: background-color 0.3s ease, color 0.2s ease;
+}
+.media-tab:hover { color: var(--ink); }
+.media-tab.is-active { background: rgba(217, 217, 217, 0.2); color: var(--ink); }
+:root[data-theme="dark"] .media-tab.is-active { background: var(--card); }
+.media-tab:focus-visible { outline: 2px solid var(--pink); outline-offset: 2px; }
+/* each tab's icon tucks away when it isn't selected and slides open when it is */
+.media-tab .ic {
+  flex: none; width: 0; height: var(--w); margin-right: 0; opacity: 0;
+  background: currentColor;
+  -webkit-mask: var(--ic) center / var(--w) var(--w) no-repeat;
+  mask: var(--ic) center / var(--w) var(--w) no-repeat;
+  transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1), margin-right 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
+}
+.media-tab.is-active .ic { width: var(--w); margin-right: 10px; opacity: 1; }
+
+.media-panels { margin-top: 16px; }
+.media-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 100px; align-items: start; }
+.media-grid[hidden] { display: none; }
+.media-grid img { width: 100%; height: auto; }
+.media-grid--albums img { aspect-ratio: 1; object-fit: cover; }
+/* covers deal in one after another when a shelf opens (about.js adds .is-entering) */
+@keyframes cover-in { from { opacity: 0; transform: translateY(14px) scale(0.98); } to { opacity: 1; transform: none; } }
+.media-grid.is-entering img { animation: cover-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(var(--i) * 45ms); }
+
+.about .footer { margin-top: 30px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .memory, .logo, .media-tab, .media-tab .ic { transition: none; }
+  .memory:hover { transform: none; }
+  .media-grid.is-entering img { animation: none; }
+}

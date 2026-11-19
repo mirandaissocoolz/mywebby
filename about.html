@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>about · miranda su</title>
+<link rel="icon" type="image/png" href="/tab%20icon/White%20Goose.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Brawler&family=Instrument+Sans:wght@400;500&display=swap">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="about.css">
+<script>
+  try { if (localStorage.getItem("theme") === "dark") document.documentElement.dataset.theme = "dark"; } catch (e) {}
+</script>
+<script>
+  // Same 1440px grid as Home, zoomed out (never in) so the layout is at least MIN px wide.
+  (function () {
+    var MIN = 1330, FLOOR = 0.6;
+    function fit() {
+      var de = document.documentElement, r = de.style;
+      var w = de.clientWidth;
+      var s = Math.max(FLOOR, Math.min(1, w / MIN));
+      var layout = Math.max(w / s, MIN);
+      r.setProperty("--s", s);
+      r.setProperty("--page-w", layout + "px");
+      r.setProperty("--off", (layout - 1440) / 2 + "px");
+    }
+    fit();
+    addEventListener("resize", fit);
+  })();
+</script>
+</head>
+<body>
+<!-- About, from Figma "mirandaissocool.com (2.0)" → About (320:375); media tabs from "media" (360:304) -->
+<div class="page about">
+
+  <header class="top top--logo">
+    <a class="logo" href="/" aria-label="Home"><img src="assets/about/logo.png" alt="" width="40" height="40"></a>
+    <nav class="nav" aria-label="Main">
+      <a href="/#work" data-label="Work"><span>Work</span></a>
+      <a href="/about" aria-current="page" data-label="About"><span>About</span></a>
+      <a href="#" data-label="Resume"><span>Resume</span></a>
+      <div class="contact">
+        <button class="btn btn--pink contact-toggle" type="button" data-email="mirandasu15@gmail.com" aria-describedby="contact-status">
+          <span class="contact-label">Contact</span>
+          <span class="copied-label" aria-hidden="true"><span class="mail"></span>Email Copied</span>
+        </button>
+        <span class="visually-hidden" id="contact-status" role="status" aria-live="polite"></span>
+      </div>
+    </nav>
+  </header>
+
+  <main class="about-main">
+
+    <section class="intro">
+      <div class="intro-text">
+        <h1 class="hl-title">
+          <span class="hl" style="left:63px;top:20px;width:164px;height:9px"><span class="fill" style="inset:-122% -3.54% -105.12% -4.92%"><img class="hl-light" src="assets/about/hl-miranda.svg" alt=""><img class="hl-dark" src="assets/about/hl-miranda-dark.svg" alt=""></span></span>
+          <span class="hl-text">hi i’m miranda!</span>
+        </h1>
+        <div class="intro-body">
+        <div class="prose">
+          <p>My love for design started in Grade 8, when my teacher asked me to make a video for a school-wide assembly. Time flew by every time I went onto iMovie.</p>
+          <p>In high school, I did a lot of graphic design for clubs and organizations. Today, I study design at the University of Waterloo and looking to break into product!</p>
+        </div>
+        <ul class="now">
+          <li>Building <span class="dim">mirandaissoocool.com</span></li>
+          <li>Doing fun <span class="dim">design sidequests</span></li>
+          <li>Binging <span class="dim">Sunshine through the Rain</span> and <span class="dim">Natural High Season 4</span></li>
+        </ul>
+        <div class="prose">
+          <p>Outside of design, I really love eating good food, while watching a cozy show. I also love taking hikes and long runs in nature.</p>
+          <p>I love spending my time with family and friends. They are what inspire me to create more</p>
+        </div>
+        </div>
+      </div>
+      <!-- scrolls sideways: the next photo peeks in at the right edge -->
+      <div class="intro-strip" tabindex="0" role="group" aria-label="Photos, scroll sideways for more">
+        <figure class="intro-shot"><img src="assets/about/hero.jpg" alt="Miranda grinning in front of a turquoise mountain lake" draggable="false" style="left:-29px;top:0;width:642.157px;height:428px"></figure>
+        <figure class="intro-shot"><img src="assets/about/intro-2.jpg" alt="Ferns and little round leaves floating on a forest pond" draggable="false" style="left:-361px;top:-386px;width:1248px;height:936px"></figure>
+      </div>
+    </section>
+
+    <section class="memories">
+      <h2 class="hl-title">
+        <span class="hl" style="left:52.88px;top:14.7px;width:87.844px;height:11.252px"><span class="fill" style="inset:-59.47% -7.14% -70.42% -8.57%"><img class="hl-light" src="assets/about/hl-core.svg" alt=""><img class="hl-dark" src="assets/about/hl-core-dark.svg" alt=""></span></span>
+        <span class="hl-text">my core memories</span>
+      </h2>
+      <div class="memory-field">
+        <figure class="memory" style="--d:256px;--mask:url(assets/about/memories/mask-256.svg);left:0;top:53px">
+          <div class="memory-clip">
+            <img class="memory-photo" src="assets/about/memories/tc.jpg" alt="Friends making heart hands at TC Media" style="left:-61px;top:0;width:377.333px;height:283px">
+            <span class="v" style="left:96.5px;top:172px;width:151px;height:98px"><span class="fill" style="inset:-30.61% -19.87%"><img src="assets/about/memories/tc-v1.svg" alt=""></span></span>
+            <span class="v" style="left:15px;top:10px;width:129.5px;height:85px"><span class="fill" style="inset:-58.82% -38.61%"><img src="assets/about/memories/tc-v2.svg" alt=""></span></span>
+          </div>
+          <img class="memory-ring" src="assets/about/memories/ring-256.svg" alt="">
+        </figure>
+        <figure class="memory" style="--d:274px;--mask:url(assets/about/memories/mask-274.svg);left:614px;top:421px">
+          <div class="memory-clip">
+            <img class="memory-photo" src="assets/about/memories/china.jpg" alt="Revisiting China" style="left:-9.63px;top:-59.94px;width:297.547px;height:396.729px">
+            <span class="v" style="left:16.05px;top:10.7px;width:138.605px;height:90.977px"><span class="fill" style="inset:-58.82% -38.61%"><img src="assets/about/memories/china-v1.svg" alt=""></span></span>
+          </div>
+          <img class="memory-ring" src="assets/about/memories/ring-274.svg" alt="">
+        </figure>
+        <figure class="memory" style="--d:281px;--mask:url(assets/about/memories/mask-281.svg);left:423px;top:0">
+          <div class="memory-clip">
+            <img class="memory-photo" src="assets/about/memories/cottage.jpg" alt="The annual cottage trip" style="left:-90.48px;top:1.1px;width:444.033px;height:294.172px">
+            <span class="v" style="left:6.59px;top:13.17px;width:89.459px;height:87.264px"><span class="fill" style="inset:-37.74% -36.81%"><img src="assets/about/memories/cottage-v1.svg" alt=""></span></span>
+            <span class="v v--rot" style="left:121.84px;top:163.55px;width:174.21px;height:170.296px"><span style="width:143.793px;height:138.305px"><span class="fill" style="inset:-23.81% -22.9%"><img src="assets/about/memories/cottage-v2.svg" alt=""></span></span></span>
+          </div>
+          <img class="memory-ring" src="assets/about/memories/ring-281.svg" alt="">
+        </figure>
+        <figure class="memory" style="--d:350px;--mask:url(assets/about/memories/mask-350.svg);left:127px;top:355px">
+          <div class="memory-clip">
+            <img class="memory-photo" src="assets/about/memories/deca.jpg" alt="Competing in DECA" style="left:-101px;top:-35px;width:628px;height:421px">
+            <span class="v" style="left:59px;top:9.5px;width:81.5px;height:79.5px"><span class="fill" style="inset:-37.74% -36.81%"><img src="assets/about/memories/deca-v1.svg" alt=""></span></span>
+            <span class="v v--rot" style="left:237.14px;top:176.43px;width:158.711px;height:155.145px"><span style="width:131px;height:126px"><span class="fill" style="inset:-23.81% -22.9%"><img src="assets/about/memories/deca-v2.svg" alt=""></span></span></span>
+          </div>
+          <img class="memory-ring" src="assets/about/memories/ring-350.svg" alt="">
+        </figure>
+        <figure class="memory" style="--d:350px;--mask:url(assets/about/memories/mask-350.svg);left:868px;top:53px">
+          <div class="memory-clip">
+            <img class="memory-photo" src="assets/about/memories/dorm.jpg" alt="The view from my first-year dorm" style="left:-23px;top:-80px;width:395px;height:526.667px">
+            <span class="v" style="left:59px;top:9.5px;width:81.5px;height:79.5px"><span class="fill" style="inset:-62.89% -61.35%"><img src="assets/about/memories/dorm-v1.svg" alt=""></span></span>
+            <span class="v v--rot" style="left:173.27px;top:159.5px;width:239.739px;height:210.109px"><span style="width:204.952px;height:163.405px"><span class="fill" style="inset:-30.6% -24.4%"><img src="assets/about/memories/dorm-v2.svg" alt=""></span></span></span>
+          </div>
+          <img class="memory-ring" src="assets/about/memories/ring-350.svg" alt="">
+        </figure>
+      </div>
+    </section>
+
+    <section class="awards">
+      <h2 class="hl-title">
+        <span class="hl" style="left:63px;top:20px;width:94.512px;height:8.865px"><span class="fill" style="inset:-123.87% -6.14% -106.91% -8.69%"><img class="hl-light" src="assets/about/hl-awards.svg" alt=""><img class="hl-dark" src="assets/about/hl-awards-dark.svg" alt=""></span></span>
+        <span class="hl-text">my awards</span>
+      </h2>
+      <ul class="award-list">
+        <li><span>Uoft Design Jam</span><span>2nd Place</span></li>
+        <li><span>GBDA Society</span><span>1st Place</span></li>
+        <li><span>Figma Waterloo x SFU Surge</span><span>1st Place</span></li>
+        <li><span>UW/UX Waterloo x UW Blueprint</span><span>Organizer’s Choice</span></li>
+      </ul>
+    </section>
+
+    <section class="media">
+      <h2 class="hl-title hl-title--faded">
+        <span class="hl" style="left:64.49px;top:13.56px;width:165.515px;height:21.938px"><span class="fill" style="inset:-37.25% 0 -35.27% -5.43%"><img class="hl-light" src="assets/about/hl-media.svg" alt=""><img class="hl-dark" src="assets/about/hl-media-dark.svg" alt=""></span></span>
+        <span class="hl-text">my media gems</span>
+      </h2>
+
+      <div class="media-tabs" role="tablist" aria-label="Media">
+        <button class="media-tab is-active" role="tab" id="tab-albums" aria-controls="panel-albums" aria-selected="true" style="--ic:url(assets/about/icon-albums.svg);--w:18.281px"><span class="ic"></span>Albums</button>
+        <button class="media-tab" role="tab" id="tab-books" aria-controls="panel-books" aria-selected="false" tabindex="-1" style="--ic:url(assets/about/icon-books.svg);--w:24px"><span class="ic"></span>Books</button>
+        <button class="media-tab" role="tab" id="tab-movies" aria-controls="panel-movies" aria-selected="false" tabindex="-1" style="--ic:url(assets/about/icon-movies.svg);--w:26px"><span class="ic"></span>Movies</button>
+        <button class="media-tab" role="tab" id="tab-dramas" aria-controls="panel-dramas" aria-selected="false" tabindex="-1" style="--ic:url(assets/about/icon-dramas.svg);--w:32px"><span class="ic"></span>Dramas</button>
+      </div>
+
+      <div class="media-panels">
+        <div class="media-grid media-grid--albums" role="tabpanel" id="panel-albums" aria-labelledby="tab-albums">
+          <img src="assets/about/media/album-1.png" alt="Ashe — The Girl of Your Dreams">
+          <img src="assets/about/media/album-2.png" alt="Olivia Rodrigo — You Seem Pretty Sad for a Girl So in Love">
+          <img src="assets/about/media/album-3.jpg" alt="Album cover">
+          <img src="assets/about/media/album-4.png" alt="Role Model — Kansas Anymore">
+          <img src="assets/about/media/album-5.jpg" alt="Album cover">
+          <img src="assets/about/media/album-6.png" alt="Taylor Swift — folklore">
+          <img src="assets/about/media/album-7.jpg" alt="Gracie Abrams — minor">
+          <img src="assets/about/media/album-8.jpg" alt="Album cover">
+        </div>
+        <div class="media-grid" role="tabpanel" id="panel-books" aria-labelledby="tab-books" hidden>
+          <img src="assets/about/media/book-1.jpg" alt="The Rom-Commers by Katherine Center" loading="lazy">
+          <img src="assets/about/media/book-2.jpg" alt="Yours Truly by Abby Jimenez" loading="lazy">
+          <img src="assets/about/media/book-3.jpg" alt="The Roughest Draft by Emily Wibberley and Austin Siegemund-Broka" loading="lazy">
+          <img src="assets/about/media/book-4.jpg" alt="People We Meet on Vacation by Emily Henry" loading="lazy">
+          <img src="assets/about/media/book-5.jpg" alt="Tuesdays with Morrie by Mitch Albom" loading="lazy">
+          <img src="assets/about/media/book-6.jpg" alt="Fahrenheit 451 by Ray Bradbury" loading="lazy">
+        </div>
+        <div class="media-grid" role="tabpanel" id="panel-movies" aria-labelledby="tab-movies" hidden>
+          <img src="assets/about/media/movie-1.jpg" alt="Movie poster" loading="lazy">
+          <img src="assets/about/media/movie-2.jpg" alt="Knives Out" loading="lazy">
+          <img src="assets/about/media/movie-3.jpg" alt="Love, Rosie" loading="lazy">
+          <img src="assets/about/media/movie-4.jpg" alt="Up" loading="lazy">
+        </div>
+        <div class="media-grid" role="tabpanel" id="panel-dramas" aria-labelledby="tab-dramas" hidden>
+          <img src="assets/about/media/drama-1.jpg" alt="Drama poster" loading="lazy">
+          <img src="assets/about/media/drama-2.jpg" alt="Drama poster" loading="lazy">
+          <img src="assets/about/media/drama-3.jpg" alt="Drama poster" loading="lazy">
+          <img src="assets/about/media/drama-4.jpg" alt="Drama poster" loading="lazy">
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="footer-line" aria-hidden="true"></div>
+    <div class="footer-row">
+      <div class="find">
+        <p class="find-me">Find me</p>
+        <a href="mailto:mirandasu15@gmail.com">mirandasu15@gmail.com</a>
+        <div class="socials">
+          <a href="https://www.linkedin.com/in/miranda-suu/" aria-label="LinkedIn"><span class="linkedin"></span></a>
+          <a href="https://x.com/mirandaiscoolz" aria-label="X"><span class="x"></span></a>
+          <a href="https://www.instagram.com/mirandasuissocool/" aria-label="Instagram"><span class="instagram"></span></a>
+        </div>
+      </div>
+      <nav class="footer-links" aria-label="Footer">
+        <a href="/about">About</a><a href="/#work">Work</a><a href="#">Resume</a>
+      </nav>
+      <div class="footer-mark"><img src="assets/footer-unicorn.svg" alt=""></div>
+    </div>
+  </footer>
+
+</div>
+<script type="module" src="sfx.js"></script>
+<script type="module" src="contact.js"></script>
+<script type="module" src="header.js"></script>
+<script type="module" src="about.js"></script>
+</body>
+</html>

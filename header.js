@@ -12,7 +12,7 @@ for (const link of links) {
 }
 
 const star = document.querySelector(".shooting-star");
-star.addEventListener("click", (e) => {
+star?.addEventListener("click", (e) => {
   e.preventDefault(); // no page yet: don't jump to the top
   const on = star.classList.toggle("is-active");
   star.setAttribute("aria-pressed", String(on));
@@ -26,9 +26,11 @@ function setDark(on) {
   moon.setAttribute("aria-pressed", String(on));
   try { localStorage.setItem("theme", on ? "dark" : "light"); } catch {}
 }
-moon.classList.toggle("is-active", root.dataset.theme === "dark");
-moon.setAttribute("aria-pressed", String(root.dataset.theme === "dark"));
-moon.addEventListener("click", () => setDark(root.dataset.theme !== "dark"));
+if (moon) { // About has no moon; it just follows the saved theme
+  moon.classList.toggle("is-active", root.dataset.theme === "dark");
+  moon.setAttribute("aria-pressed", String(root.dataset.theme === "dark"));
+  moon.addEventListener("click", () => setDark(root.dataset.theme !== "dark"));
+}
 
 // turn on the theme cross-fade only after the first paint
 requestAnimationFrame(() => requestAnimationFrame(() => root.classList.add("theme-ready")));

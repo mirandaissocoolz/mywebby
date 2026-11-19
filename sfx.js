@@ -10,8 +10,8 @@ const SOUNDS = {
 };
 // These elements never move on hover (only what's inside them lifts), so pointerenter fires
 // reliably once per visit instead of flickering when an item lifts out from under the cursor.
-const HOVER_TARGETS = ".nav a, .contact, .shooting-star, .moon"; // nav links, Contact and the two icons
-const CLICK_TARGETS = ".nav a";            // Contact plays the celebration instead
+const HOVER_TARGETS = ".nav a, .contact, .shooting-star, .moon, .media-tab"; // nav links, Contact and the two icons
+const CLICK_TARGETS = ".nav a, .media-tab";           // Contact plays the celebration instead
 
 const Ctx = window.AudioContext || window.webkitAudioContext;
 const ctx = Ctx ? new Ctx() : null;
