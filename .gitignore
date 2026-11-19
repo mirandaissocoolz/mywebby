@@ -1,11 +1,26 @@
-photowall/node_modules/
-photowall/DEMO/
-photowall/equipment photos/
-photowall/music audio/
-photowall/photos.csv
-photowall/make_csv.py
-photowall/package.json
-photowall/package-lock.json
-photowall/.claude/
+# System files
 .DS_Store
-photowall/
+Thumbs.db
+.mcp.json
+
+# Dependencies
+node_modules/
+
+# Photo wall working files (the photos themselves live in Supabase)
+photos/DEMO/
+photos/equipment photos/
+photos/music audio/
+photos/photos.csv
+photos/make_csv.py
+photos/package.json
+photos/package-lock.json
+
+# Source and unused files: keep them on your computer, not on the live site
+*.blend
+*.blend1
+Miranda.png
+assets/shader-still.png
+
+# Claude local settings (private)
+.claude/settings.local.json
+**/.claude/settings.local.json

@@ -75,8 +75,14 @@ section { display: flex; flex-direction: column; gap: 25px; }
   cursor: pointer; transition: background-color 0.3s ease, color 0.2s ease;
 }
 .media-tab:hover { color: var(--ink); }
-.media-tab.is-active { background: rgba(217, 217, 217, 0.2); color: var(--ink); }
-:root[data-theme="dark"] .media-tab.is-active { background: var(--card); }
+.media-tab { position: relative; z-index: 1; }
+.media-tab.is-active { color: var(--ink); }
+/* one grey pill sits behind the selected tab and glides to whichever tab you pick (about.js moves it) */
+.media-pill {
+  position: absolute; left: 0; border-radius: 29px; pointer-events: none;
+  background: rgba(217, 217, 217, 0.2);
+}
+:root[data-theme="dark"] .media-pill { background: var(--card); }
 .media-tab:focus-visible { outline: 2px solid var(--pink); outline-offset: 2px; }
 /* each tab's icon tucks away when it isn't selected and slides open when it is */
 .media-tab .ic {
@@ -89,18 +95,39 @@ section { display: flex; flex-direction: column; gap: 25px; }
 .media-tab.is-active .ic { width: var(--w); margin-right: 10px; opacity: 1; }
 
 .media-panels { margin-top: 16px; }
-.media-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 100px; align-items: start; }
+.media-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 70px 100px; align-items: start; }
 .media-grid[hidden] { display: none; }
-.media-grid img { width: 100%; height: auto; }
+.media-grid img { display: block; width: 100%; height: auto; }
 .media-grid--albums img { aspect-ratio: 1; object-fit: cover; }
+/* hover a cover → its title and artist / author / year fade in 15px below it (Figma "hover" 365:36).
+   The caption keeps its space even while hidden, so a long title makes its row taller instead of
+   running into the covers below. */
+.cover { position: relative; margin: 0; outline: none; }
+.cover figcaption {
+  margin-top: 15px;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  font: 400 16px/normal var(--font-body); text-align: center; overflow-wrap: break-word;
+  opacity: 0; transform: translateY(-4px); pointer-events: none;
+  transition: opacity 0.45s ease, transform 0.45s ease;
+}
+.cover-title { color: var(--ink); }
+.cover-sub { color: var(--ink-50); }
+.cover-sub:empty { display: none; }
+.cover:hover figcaption, .cover:focus-visible figcaption { opacity: 1; transform: none; }
+/* the cover itself hops up a little while hovered */
+.cover img { transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.cover:hover img, .cover:focus-visible img { transform: translateY(-8px); }
+.cover:focus-visible img { outline: 2px solid var(--pink); outline-offset: 4px; }
 /* covers deal in one after another when a shelf opens (about.js adds .is-entering) */
 @keyframes cover-in { from { opacity: 0; transform: translateY(14px) scale(0.98); } to { opacity: 1; transform: none; } }
-.media-grid.is-entering img { animation: cover-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(var(--i) * 45ms); }
+.media-grid.is-entering > .cover { animation: cover-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(var(--i) * 45ms); }
 
-.about .footer { margin-top: 30px; }
+.about .footer { margin-top: 120px; }
 
 @media (prefers-reduced-motion: reduce) {
   .memory, .logo, .media-tab, .media-tab .ic { transition: none; }
   .memory:hover { transform: none; }
-  .media-grid.is-entering img { animation: none; }
+  .media-grid.is-entering > .cover { animation: none; }
+  .cover figcaption, .cover img { transition: none; }
+  .cover:hover img, .cover:focus-visible img { transform: none; }
 }

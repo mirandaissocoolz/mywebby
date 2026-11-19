@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>about · miranda su</title>
-<link rel="icon" type="image/png" href="/tab%20icon/White%20Goose.png">
+<link rel="icon" type="image/png" href="/tab-icon/white-goose.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Brawler&family=Instrument+Sans:wght@400;500&display=swap">
@@ -150,6 +150,7 @@
       </h2>
 
       <div class="media-tabs" role="tablist" aria-label="Media">
+        <span class="media-pill" aria-hidden="true"></span>
         <button class="media-tab is-active" role="tab" id="tab-albums" aria-controls="panel-albums" aria-selected="true" style="--ic:url(assets/about/icon-albums.svg);--w:18.281px"><span class="ic"></span>Albums</button>
         <button class="media-tab" role="tab" id="tab-books" aria-controls="panel-books" aria-selected="false" tabindex="-1" style="--ic:url(assets/about/icon-books.svg);--w:24px"><span class="ic"></span>Books</button>
         <button class="media-tab" role="tab" id="tab-movies" aria-controls="panel-movies" aria-selected="false" tabindex="-1" style="--ic:url(assets/about/icon-movies.svg);--w:26px"><span class="ic"></span>Movies</button>
@@ -158,34 +159,34 @@
 
       <div class="media-panels">
         <div class="media-grid media-grid--albums" role="tabpanel" id="panel-albums" aria-labelledby="tab-albums">
-          <img src="assets/about/media/album-1.png" alt="Ashe — The Girl of Your Dreams">
-          <img src="assets/about/media/album-2.png" alt="Olivia Rodrigo — You Seem Pretty Sad for a Girl So in Love">
-          <img src="assets/about/media/album-3.jpg" alt="Album cover">
-          <img src="assets/about/media/album-4.png" alt="Role Model — Kansas Anymore">
-          <img src="assets/about/media/album-5.jpg" alt="Album cover">
-          <img src="assets/about/media/album-6.png" alt="Taylor Swift — folklore">
-          <img src="assets/about/media/album-7.jpg" alt="Gracie Abrams — minor">
-          <img src="assets/about/media/album-8.jpg" alt="Album cover">
+          <figure class="cover" tabindex="0"><img src="assets/about/media/album-1.png" alt="Ashe — The Girl of Your Dreams"><figcaption><span class="cover-title">The Girl of Your Dreams</span><span class="cover-sub">Ashe</span></figcaption></figure>
+          <figure class="cover" tabindex="0"><img src="assets/about/media/album-2.png" alt="Olivia Rodrigo — You Seem Pretty Sad for a Girl So in Love"><figcaption><span class="cover-title">You Seem Pretty Sad for a Girl So in Love</span><span class="cover-sub">Olivia Rodrigo</span></figcaption></figure>
+          <figure class="cover" tabindex="0"><img src="assets/about/media/album-3.jpg" alt="Album cover"></figure>
+          <figure class="cover" tabindex="0"><img src="assets/about/media/album-4.png" alt="Role Model — Kansas Anymore"><figcaption><span class="cover-title">Kansas Anymore</span><span class="cover-sub">Role Model</span></figcaption></figure>
+          <figure class="cover" tabindex="0"><img src="assets/about/media/album-5.jpg" alt="Album cover"></figure>
+          <figure class="cover" tabindex="0"><img src="assets/about/media/album-6.png" alt="Taylor Swift — folklore"><figcaption><span class="cover-title">folklore</span><span class="cover-sub">Taylor Swift</span></figcaption></figure>
+          <figure class="cover" tabindex="0"><img src="assets/about/media/album-7.jpg" alt="Gracie Abrams — minor"><figcaption><span class="cover-title">minor</span><span class="cover-sub">Gracie Abrams</span></figcaption></figure>
+          <figure class="cover" tabindex="0"><img src="assets/about/media/album-8.jpg" alt="Album cover"></figure>
         </div>
         <div class="media-grid" role="tabpanel" id="panel-books" aria-labelledby="tab-books" hidden>
-          <img src="assets/about/media/book-1.jpg" alt="The Rom-Commers by Katherine Center" loading="lazy">
-          <img src="assets/about/media/book-2.jpg" alt="Yours Truly by Abby Jimenez" loading="lazy">
-          <img src="assets/about/media/book-3.jpg" alt="The Roughest Draft by Emily Wibberley and Austin Siegemund-Broka" loading="lazy">
-          <img src="assets/about/media/book-4.jpg" alt="People We Meet on Vacation by Emily Henry" loading="lazy">
-          <img src="assets/about/media/book-5.jpg" alt="Tuesdays with Morrie by Mitch Albom" loading="lazy">
-          <img src="assets/about/media/book-6.jpg" alt="Fahrenheit 451 by Ray Bradbury" loading="lazy">
+          <figure class="cover" tabindex="0"><img src="assets/about/media/book-1.jpg" alt="The Rom-Commers by Katherine Center" loading="lazy"><figcaption><span class="cover-title">The Rom-Commers</span><span class="cover-sub">Katherine Center</span></figcaption></figure>
+          <figure class="cover" tabindex="0"><img src="assets/about/media/book-2.jpg" alt="Yours Truly by Abby Jimenez" loading="lazy"><figcaption><span class="cover-title">Yours Truly</span><span class="cover-sub">Abby Jimenez</span></figcaption></figure>
+          <figure class="cover" tabindex="0"><img src="assets/about/media/book-3.jpg" alt="The Roughest Draft by Emily Wibberley and Austin Siegemund-Broka" loading="lazy"><figcaption><span class="cover-title">The Roughest Draft</span><span class="cover-sub">Emily Wibberley and Austin Siegemund-Broka</span></figcaption></figure>
+          <figure class="cover" tabindex="0"><img src="assets/about/media/book-4.jpg" alt="People We Meet on Vacation by Emily Henry" loading="lazy"><figcaption><span class="cover-title">People We Meet on Vacation</span><span class="cover-sub">Emily Henry</span></figcaption></figure>
+          <figure class="cover" tabindex="0"><img src="assets/about/media/book-5.jpg" alt="Tuesdays with Morrie by Mitch Albom" loading="lazy"><figcaption><span class="cover-title">Tuesdays with Morrie</span><span class="cover-sub">Mitch Albom</span></figcaption></figure>
+          <figure class="cover" tabindex="0"><img src="assets/about/media/book-6.jpg" alt="Fahrenheit 451 by Ray Bradbury" loading="lazy"><figcaption><span class="cover-title">Fahrenheit 451</span><span class="cover-sub">Ray Bradbury</span></figcaption></figure>
         </div>
         <div class="media-grid" role="tabpanel" id="panel-movies" aria-labelledby="tab-movies" hidden>
-          <img src="assets/about/media/movie-1.jpg" alt="Movie poster" loading="lazy">
-          <img src="assets/about/media/movie-2.jpg" alt="Knives Out" loading="lazy">
-          <img src="assets/about/media/movie-3.jpg" alt="Love, Rosie" loading="lazy">
-          <img src="assets/about/media/movie-4.jpg" alt="Up" loading="lazy">
+          <figure class="cover" tabindex="0"><img src="assets/about/media/movie-1.jpg" alt="Movie poster" loading="lazy"></figure>
+          <figure class="cover" tabindex="0"><img src="assets/about/media/movie-2.jpg" alt="Knives Out" loading="lazy"><figcaption><span class="cover-title">Knives Out</span><span class="cover-sub"></span></figcaption></figure>
+          <figure class="cover" tabindex="0"><img src="assets/about/media/movie-3.jpg" alt="Love, Rosie" loading="lazy"><figcaption><span class="cover-title">Love, Rosie</span><span class="cover-sub"></span></figcaption></figure>
+          <figure class="cover" tabindex="0"><img src="assets/about/media/movie-4.jpg" alt="Up" loading="lazy"><figcaption><span class="cover-title">Up</span><span class="cover-sub"></span></figcaption></figure>
         </div>
         <div class="media-grid" role="tabpanel" id="panel-dramas" aria-labelledby="tab-dramas" hidden>
-          <img src="assets/about/media/drama-1.jpg" alt="Drama poster" loading="lazy">
-          <img src="assets/about/media/drama-2.jpg" alt="Drama poster" loading="lazy">
-          <img src="assets/about/media/drama-3.jpg" alt="Drama poster" loading="lazy">
-          <img src="assets/about/media/drama-4.jpg" alt="Drama poster" loading="lazy">
+          <figure class="cover" tabindex="0"><img src="assets/about/media/drama-1.jpg" alt="Drama poster" loading="lazy"></figure>
+          <figure class="cover" tabindex="0"><img src="assets/about/media/drama-2.jpg" alt="Drama poster" loading="lazy"></figure>
+          <figure class="cover" tabindex="0"><img src="assets/about/media/drama-3.jpg" alt="Drama poster" loading="lazy"></figure>
+          <figure class="cover" tabindex="0"><img src="assets/about/media/drama-4.jpg" alt="Drama poster" loading="lazy"></figure>
         </div>
       </div>
     </section>

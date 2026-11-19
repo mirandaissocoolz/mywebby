@@ -1,16 +1,17 @@
-// UI sound effects: a tap when the pointer moves onto a nav item or header icon, a toggle click when a nav link
+// UI sound effects: a tap when the pointer moves onto anything hoverable, a toggle click when a nav link
 // is pressed, and a celebration when Contact copies the email (played from contact.js).
 // Uses Web Audio so the very short tap plays with no delay. Browsers keep audio muted until the
 // visitor's first click, tap or key press on the page, so hover sounds start after that.
 
 const SOUNDS = {
-  hover: "soundeffects/tap_05%20copy.wav",
-  click: "soundeffects/toggle_off%20copy.wav",
-  celebrate: "soundeffects/celebration%20copy.wav",
+  hover: "soundeffects/tap_05.wav",
+  click: "soundeffects/toggle_off.wav",
+  celebrate: "soundeffects/celebration.wav",
 };
-// These elements never move on hover (only what's inside them lifts), so pointerenter fires
-// reliably once per visit instead of flickering when an item lifts out from under the cursor.
-const HOVER_TARGETS = ".nav a, .contact, .shooting-star, .moon, .media-tab"; // nav links, Contact and the two icons
+// Every hoverable thing on the site plays the tap when the pointer moves onto it: links, buttons,
+// media tabs, media covers, memory photos and cards. When one sits inside another (a link inside a
+// card), only the outer one counts, so moving within it stays quiet.
+const HOVER_TARGETS = "a, button, [role='tab'], .cover, .memory, .card";
 const CLICK_TARGETS = ".nav a, .media-tab";           // Contact plays the celebration instead
 
 const Ctx = window.AudioContext || window.webkitAudioContext;
@@ -48,13 +49,30 @@ export function play(name) {
   else ctx.resume().then(() => start(name));
 }
 
-for (const el of document.querySelectorAll(HOVER_TARGETS)) {
-  // pointerenter fires once per entry (not for every child), and only for a real pointer.
-  // Hover never wakes audio itself, so it stays silent until the first click.
-  el.addEventListener("pointerenter", (e) => {
-    if (e.pointerType === "mouse" && ctx?.state === "running") start("hover");
-  });
+// One listener for the whole page, so covers added later (the media shelves load from Supabase)
+// play too. Some things lift on hover and can slip out from under a still cursor for a moment;
+// the short cooldown stops that from sounding like a double tap.
+function hoverTarget(node) {
+  let hit = null;
+  for (let el = node instanceof Element ? node : null; el && el !== document.body; el = el.parentElement) {
+    if (el.matches(HOVER_TARGETS)) hit = el; // keep climbing: the outermost match wins
+  }
+  return hit;
 }
+let current = null, lastEl = null, lastAt = 0;
+addEventListener("pointerover", (e) => {
+  if (e.pointerType !== "mouse") return;
+  const el = hoverTarget(e.target);
+  if (el === current) return;
+  current = el;
+  if (!el || ctx?.state !== "running") return;
+  const now = performance.now();
+  if (el === lastEl && now - lastAt < 250) return;
+  lastEl = el; lastAt = now;
+  start("hover"); // hover never wakes audio itself, so it stays silent until the first click
+});
+addEventListener("pointerout", (e) => { if (!e.relatedTarget) current = null; });
+
 for (const el of document.querySelectorAll(CLICK_TARGETS)) {
   el.addEventListener("pointerdown", () => play("click"));
 }

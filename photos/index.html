@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Photos | miranda su</title>
-  <link rel="icon" type="image/png" href="/tab%20icon/White%20Goose.png">
+  <link rel="icon" type="image/png" href="/tab-icon/white-goose.png">
   <meta property="og:title" content="Photo Wall">
   <meta property="og:type" content="website">
-  <meta property="og:image" content="COVER.JPG">
+  <meta property="og:image" content="cover.jpg">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Photo Wall">
-  <meta name="twitter:image" content="COVER.JPG">
+  <meta name="twitter:image" content="cover.jpg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Rethink+Sans:wght@400;500;600&family=DM+Mono:ital,wght@0,300;1,300&family=Figtree:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -1524,7 +1524,7 @@
         </div>
         <div class="story-body">
           <div class="story-pic">
-            <img src="/photos/story/story_pic.jpg" alt="">
+            <img src="/photos/story/story-pic.webp" alt="">
           </div>
           <div class="story-footer">
             <div class="story-line"></div>
@@ -2190,10 +2190,10 @@
           } catch (_) {}
         };
       }
-      const playCelebration = makeSound('/photos/sound%20effects/celebration.wav', 0.2);
-      const playSelect      = makeSound('/photos/sound%20effects/select.wav');
-      const playCaution     = makeSound('/photos/sound%20effects/caution.wav');
-      const playTransition  = makeSound('/photos/sound%20effects/transition_up.wav');
+      const playCelebration = makeSound('/photos/sound-effects/celebration.wav', 0.2);
+      const playSelect      = makeSound('/photos/sound-effects/select.wav');
+      const playCaution     = makeSound('/photos/sound-effects/caution.wav');
+      const playTransition  = makeSound('/photos/sound-effects/transition_up.wav');
 
       metaTitleLink.addEventListener('mouseenter', () => { playSelect(); });
       metaTitleLink.addEventListener('click', () => { playTransition(); });
@@ -2214,7 +2214,7 @@
           const AC = window.AudioContext || window.webkitAudioContext;
           if (AC) {
             typeAudioCtx = new AC();
-            fetch('/photos/sound%20effects/type_05.wav')
+            fetch('/photos/sound-effects/type_05.wav')
               .then(r => r.arrayBuffer())
               .then(buf => new Promise((res, rej) => {
                 // Safari's older decodeAudioData only supports the callback

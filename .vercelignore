@@ -1,0 +1,16 @@
+# Files Vercel should never upload, even when deploying straight from your computer
+.claude/
+**/.claude/
+*.md
+*.blend
+*.blend1
+node_modules/
+photos/DEMO/
+photos/equipment photos/
+photos/music audio/
+photos/photos.csv
+photos/make_csv.py
+photos/package.json
+photos/package-lock.json
+Miranda.png
+assets/shader-still.png
