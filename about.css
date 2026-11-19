@@ -17,7 +17,8 @@
 
 /* About runs 100px from the window edges like Home (var(--pad), which gives a little back on narrow
    windows), with the nav 63px from the top (Figma 504:593).
-   Gaps between sections: nav → intro 55, intro → memories 96, memories → awards 150,
+   Gaps between sections: nav → intro 55, intro → memories 96 (plus the intro's own 100px padding
+   above and below), memories → awards 150,
    awards → experience 50, experience → media gems 50 (media gems → footer is set further down). */
 .about { --side: var(--pad); padding-top: 63px; }
 .about .top { height: 36px; padding: 0 var(--side); } /* the nav row is 36px tall in Figma (Contact centres in it) */
@@ -47,7 +48,7 @@
 section { display: flex; flex-direction: column; gap: 25px; }
 
 /* ---- intro: the text block, centred (Figma 504:593) ---- */
-.intro { align-items: center; }
+.intro { align-items: center; padding: 100px 0; } /* extra room above and below "hi i’m miranda!" */
 .intro-text { width: 540px; display: flex; flex-direction: column; gap: 29px; font-size: var(--fs-text); line-height: normal; }
 .intro-body { display: flex; flex-direction: column; gap: 30px; }
 .prose { display: flex; flex-direction: column; gap: 1lh; }
@@ -76,6 +77,17 @@ section { display: flex; flex-direction: column; gap: 25px; }
 .v--rot { display: flex; align-items: center; justify-content: center; }
 .v--rot > span { position: relative; flex: none; transform: rotate(-14.72deg); }
 .memory-ring { position: absolute; left: -11.6%; top: -11.6%; width: 123.2%; height: 123.2%; max-width: none; pointer-events: none; }
+/* The cottage orb holds a spatial photo (a stereo pair from Annual Cottage Trip_spatial.heic).
+   At rest you see the still photo. On hover both views fade in over it and the right-eye view
+   eases in and out over the left, so the scene rocks gently and shows its depth. They sit under
+   the light shapes and colour fill, so the orb keeps its look. */
+.memory-spatial { position: absolute; inset: 0; opacity: 0; transition: opacity 0.3s ease; }
+.memory-spatial img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.memory-spatial-r { opacity: 0; }
+.memory:hover .memory-spatial { opacity: 1; }
+.memory:hover .memory-spatial-r { animation: spatial-rock 1.6s ease-in-out infinite; }
+@keyframes spatial-rock { 0%, 30% { opacity: 0; } 50%, 80% { opacity: 1; } 100% { opacity: 0; } }
+
 /* hover an orb → its caption fades in below it, like the media covers */
 .memory-cap {
   position: absolute; top: calc(100% + 15px); left: -40px; right: -40px;
@@ -161,6 +173,7 @@ a.cover { cursor: pointer; }
   .logo:hover .logo-mark { transform: none; }
   .memory:hover { transform: none; }
   .memory-cap { transition: none; }
+  .memory:hover .memory-spatial { opacity: 0; } /* no rocking: keep the still photo */
   .media-grid.is-entering > .cover { animation: none; }
   .cover .cover-cap, .cover img { transition: none; }
   .cover:hover img, .cover:focus-visible img { transform: none; }
