@@ -4,6 +4,21 @@
 const tabs = [...document.querySelectorAll(".media-tab")];
 const panels = tabs.map((t) => document.getElementById(t.getAttribute("aria-controls")));
 
+// Section highlights: each one draws itself on, left to right, once its heading is mostly on screen.
+if ("IntersectionObserver" in window && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  const titles = document.querySelectorAll(".hl-title");
+  document.documentElement.classList.add("hl-armed");
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      // draw once it is 60% on screen; one already above the window (jumped past) just shows
+      if (e.intersectionRatio < 0.6 && e.boundingClientRect.bottom > 0) continue;
+      e.target.classList.add("is-drawn");
+      io.unobserve(e.target);
+    }
+  }, { threshold: [0, 0.6], rootMargin: "0px 0px -8% 0px" });
+  titles.forEach((t) => io.observe(t));
+}
+
 const stagger = (panel) => [...panel.children].forEach((el, i) => el.style.setProperty("--i", i));
 panels.forEach(stagger);
 
@@ -68,28 +83,6 @@ tabs.forEach((tab, i) => {
   });
 });
 
-// Intro photos: the strip scrolls sideways with a trackpad, touch or the arrow keys. With a
-// mouse you can also grab it and drag; letting go snaps to the nearest photo.
-const strip = document.querySelector(".intro-strip");
-let drag = null;
-strip.addEventListener("pointerdown", (e) => {
-  if (e.pointerType !== "mouse" || e.button !== 0) return;
-  drag = { x: e.clientX, left: strip.scrollLeft, k: strip.clientWidth / strip.getBoundingClientRect().width };
-  strip.setPointerCapture(e.pointerId);
-  strip.classList.add("is-dragging");
-});
-strip.addEventListener("pointermove", (e) => {
-  if (!drag) return;
-  strip.scrollLeft = drag.left - (e.clientX - drag.x) * drag.k; // k undoes the page zoom (--s)
-});
-const endDrag = () => {
-  if (!drag) return;
-  drag = null;
-  strip.classList.remove("is-dragging"); // snapping comes back on and settles on a photo
-};
-strip.addEventListener("pointerup", endDrag);
-strip.addEventListener("pointercancel", endDrag);
-
 // Media shelves come from Supabase: one table per tab, one row per cover. Hovering a cover shows
 // its title plus the artist (albums), author (books) or year (movies, dramas). created_at holds the
 // release date, so it sets the order (newest first) and the year. If a request fails, the covers
@@ -111,16 +104,22 @@ const coverSrc = (folder, file) =>
     ? file
     : `${SUPABASE_URL}/storage/v1/object/public/${COVER_BUCKET}/${folder}/${encodeURIComponent(file)}`;
 
-function coverEl(title, sub, src, lazy, w, h) {
-  const fig = document.createElement("figure");
-  fig.className = "cover";
-  fig.tabIndex = 0;
+// A cover with a link opens it in a new tab; the click sound comes from sfx.js like every link.
+function coverEl(title, sub, src, lazy, w, h, href) {
+  const el = document.createElement(href ? "a" : "div");
+  el.className = "cover";
+  if (href) {
+    el.href = href;
+    el.target = "_blank";
+    el.rel = "noopener";
+  }
   const img = document.createElement("img");
   img.src = src;
   img.alt = sub ? `${title} — ${sub}` : title;
   if (lazy) img.loading = "lazy";
   if (+w && +h) { img.width = +w; img.height = +h; } // reserves the cover's shape before it loads
-  const cap = document.createElement("figcaption");
+  const cap = document.createElement("span");
+  cap.className = "cover-cap";
   const t = document.createElement("span");
   t.className = "cover-title";
   t.textContent = title;
@@ -128,8 +127,8 @@ function coverEl(title, sub, src, lazy, w, h) {
   s.className = "cover-sub";
   s.textContent = sub;
   cap.append(t, s);
-  fig.append(img, cap);
-  return fig;
+  el.append(img, cap);
+  return el;
 }
 
 async function loadShelf({ table, panel, sub }) {
@@ -141,9 +140,34 @@ async function loadShelf({ table, panel, sub }) {
   if (!rows.length) return;
   const el = document.getElementById(panel);
   el.replaceChildren(
-    ...rows.map((row) => coverEl(clean(row.title), clean(sub(row)), coverSrc(table, clean(row.file_name)), panel !== "panel-albums", row.width, row.height))
+    ...rows.map((row) => coverEl(clean(row.title), clean(sub(row)), coverSrc(table, clean(row.file_name)), panel !== "panel-albums", row.width, row.height,
+      clean(row.links || row.link)))
   );
   stagger(el);
 }
 
 for (const shelf of SHELVES) loadShelf(shelf).catch((e) => console.warn("media shelf", e));
+
+// About-me photos come from the Supabase "me" table (files in mywebby/me/). Rows with a caption
+// are the core-memory orbs; rows without one aren't shown on the page right now. Each row finds its
+// spot by file name (data-me in about.html), so the orbs keep their places and colours.
+async function loadMe() {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/me?select=*`, {
+    headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` },
+  });
+  if (!r.ok) throw new Error(`me: ${r.status}`);
+  for (const row of await r.json()) {
+    const file = clean(row.file_name);
+    const img = file && document.querySelector(`[data-me="${CSS.escape(file.replace(/\.[^.]+$/, ""))}"]`);
+    if (!img) continue;
+    img.src = coverSrc("me", file);
+    const memory = img.closest(".memory");
+    if (!memory) continue;
+    img.removeAttribute("style");
+    img.classList.add("is-fitted");
+    img.alt = ""; // the caption below names it
+    const caption = clean(row.caption);
+    if (caption) memory.querySelector(".memory-cap").textContent = caption;
+  }
+}
+loadMe().catch((e) => console.warn("me photos", e));

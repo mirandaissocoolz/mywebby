@@ -1,14 +1,26 @@
 /* About, from Figma "mirandaissocool.com (2.0)" → About (320:375). Builds on styles.css
    (tokens, header, nav, Contact button, footer) and keeps Home's 100px side margins. */
 
-/* ---- header: logo on the left instead of Home's headline ---- */
+/* ---- header: the unicorn on the left instead of Home's headline ---- */
 .top--logo { align-items: center; }
-.logo { display: block; width: 40px; height: 40px; transition: transform 0.2s ease; }
-.logo img { width: 40px; height: 40px; }
+/* the unicorn (Figma "Nav Bar (NEW)" 504:1055), drawn in the ink colour so it flips with the theme */
+.logo { display: block; width: 40px; height: 29.024px; color: var(--ink); transition: transform 0.2s ease, color 0.2s ease; }
+.logo-mark {
+  display: block; width: 100%; height: 100%; background: currentColor;
+  -webkit-mask: url(assets/about/logo-unicorn.svg) center / contain no-repeat;
+  mask: url(assets/about/logo-unicorn.svg) center / contain no-repeat;
+}
 .logo:hover { transform: rotate(-6deg) scale(1.06); }
 
-.about-main { padding: 5px var(--pad) 0; display: flex; flex-direction: column; gap: 150px; } /* 150px between sections */
-.about-main > .memories { margin-top: -95px; } /* the intro sits 55px above the first section */
+/* About runs 100px from the window edges like Home (var(--pad), which gives a little back on narrow
+   windows), with the nav 63px from the top (Figma 504:593).
+   Gaps between sections: nav → intro 55, intro → memories 96, memories → awards 150,
+   awards → experience 50, experience → media gems 50 (media gems → footer is set further down). */
+.about { --side: var(--pad); padding-top: 63px; }
+.about .top { height: 36px; padding: 0 var(--side); } /* the nav row is 36px tall in Figma (Contact centres in it) */
+.about-main { margin-top: 5px; padding: 0 var(--side); display: flex; flex-direction: column; gap: 150px; } /* + the page's 50px gap = 55 */
+.about-main > .memories { margin-top: -54px; }
+.about-main > .experience, .about-main > .media { margin-top: -100px; }
 
 /* ---- section titles: Brawler 32px at 50%, a hand-drawn pink highlight under one word ---- */
 .hl-title { position: relative; display: inline-block; align-self: flex-start; font: 400 32px/normal var(--font-display); }
@@ -16,6 +28,10 @@
 .hl { position: absolute; pointer-events: none; }
 .fill { position: absolute; }
 .fill img { display: block; width: 100%; height: 100%; }
+/* highlights draw on left → right the first time their heading scrolls into view (about.js adds
+   .hl-armed to the page, then .is-drawn to each heading). Without JavaScript they just show. */
+.hl-armed .hl .fill { clip-path: inset(0 100% 0 0); }
+.hl-armed .hl-title.is-drawn .hl .fill { clip-path: inset(0 0 0 0); transition: clip-path 0.9s cubic-bezier(0.65, 0, 0.35, 1) 0.15s; }
 .hl-title--faded { opacity: 0.5; }
 .hl-title--faded .hl-text { color: var(--ink); }
 .fill .hl-dark { display: none; }
@@ -27,39 +43,45 @@
 .about .dim { color: var(--ink-soft); }
 section { display: flex; flex-direction: column; gap: 25px; }
 
-/* ---- intro: text beside a strip of photos that scrolls sideways (Figma "first" 482:610).
-   The strip runs off the right edge of the page so the next photo peeks in; drag, swipe or
-   trackpad-scroll it (about.js adds mouse dragging). */
-.intro { flex-direction: row; align-items: flex-start; gap: 91px; margin-right: calc(-1 * var(--pad)); }
-.intro-text { flex: none; width: 521px; height: 428px; display: flex; flex-direction: column; gap: 29px; font-size: var(--fs-text); line-height: normal; }
-.intro-body { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+/* ---- intro: the text block, centred (Figma 504:593) ---- */
+.intro { align-items: center; }
+.intro-text { width: 540px; display: flex; flex-direction: column; gap: 29px; font-size: var(--fs-text); line-height: normal; }
+.intro-body { display: flex; flex-direction: column; gap: 30px; }
 .prose { display: flex; flex-direction: column; gap: 1lh; }
-.now { margin: 0; padding-left: 24px; }
-.intro-strip {
-  flex: 1; min-width: 0; display: flex; gap: 70px; padding-right: var(--pad);
-  overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-behavior: smooth;
-  scrollbar-width: none; cursor: grab;
-}
-.intro-strip::-webkit-scrollbar { display: none; }
-.intro-strip:focus-visible { outline: 2px solid var(--pink); outline-offset: 4px; }
-.intro-strip.is-dragging { cursor: grabbing; scroll-snap-type: none; scroll-behavior: auto; }
-.intro-shot { position: relative; flex: none; width: 583px; height: 428px; margin: 0; overflow: hidden; scroll-snap-align: start; }
-.intro-shot img { position: absolute; max-width: none; user-select: none; -webkit-user-drag: none; }
+.intro-rule { width: 100%; height: 1px; margin: 0; border: 0; background: var(--ink-50); }
 
 /* ---- core memories: five circular photos with a soft gradient ring ---- */
 .memory-field { position: relative; width: 1218px; height: 695px; align-self: center; margin-top: 0; }
 .memory { position: absolute; margin: 0; width: var(--d); height: var(--d); transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
 .memory:hover { transform: scale(1.04) rotate(-1.5deg); z-index: 1; }
-.memory-clip {
-  position: absolute; inset: 0;
-  -webkit-mask: var(--mask) 0 0 / 100% 100% no-repeat;
-  mask: var(--mask) 0 0 / 100% 100% no-repeat;
+/* One circle clips the photo, the soft light shapes and the ring's colour fill together, so they all
+   share the same edge (Figma clips them to one mask). The glow outside the circle is drawn here
+   rather than taken from the ring file: the file cuts its glow out at the circle's edge, and once
+   the browser scales it that cut lands a pixel or two wide, leaving a dark rim on dark pages.
+   A box-shadow starts exactly at the edge. Its blur is 2× the ring's stdDeviation (the same
+   Gaussian), and the circle under the photo is the ring's edge colour, so the clip's softened
+   edge pixels blend into colour, not into the page. Values per orb are on each figure. */
+.memory::before {
+  content: ""; position: absolute; inset: 0; border-radius: 50%;
+  background: var(--edge); box-shadow: 0 0 calc(var(--sigma) * 2) var(--glow);
 }
+.memory-clip { position: absolute; inset: 0; clip-path: circle(50% at 50% 50%); }
 .memory-photo { position: absolute; object-fit: cover; }
+/* photos from Supabase come pre-cropped to the orb, so they just fill it */
+.memory-photo.is-fitted { inset: 0; width: 100%; height: 100%; }
 .v { position: absolute; }
 .v--rot { display: flex; align-items: center; justify-content: center; }
 .v--rot > span { position: relative; flex: none; transform: rotate(-14.72deg); }
-.memory-ring { position: absolute; left: -11.6%; top: -11.6%; width: 123.2%; height: 123.2%; pointer-events: none; }
+.memory-ring { position: absolute; left: -11.6%; top: -11.6%; width: 123.2%; height: 123.2%; max-width: none; pointer-events: none; }
+/* hover an orb → its caption fades in below it, like the media covers */
+.memory-cap {
+  position: absolute; top: calc(100% + 15px); left: -40px; right: -40px;
+  font: 400 16px/normal var(--font-body); color: var(--ink); text-align: center;
+  opacity: 0; transform: translateY(-4px); pointer-events: none;
+  transition: opacity 0.45s ease, transform 0.45s ease;
+}
+.memory-cap:empty { display: none; }
+.memory:hover .memory-cap { opacity: 1; transform: none; }
 
 /* ---- awards ---- */
 .award-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 19px; }
@@ -67,13 +89,17 @@ section { display: flex; flex-direction: column; gap: 25px; }
 
 /* ---- media gems: tabs switch which shelf is showing (Figma "media" 360:304) ---- */
 .media { gap: 30px; }
-.media-tabs { display: flex; align-items: center; gap: 40px; height: 48px; margin-bottom: 16px; position: relative; }
+.media-tabs { display: flex; align-items: center; gap: 20px; height: 48px; margin-bottom: 16px; position: relative; }
 .media-tabs::after { content: ""; position: absolute; left: 0; right: 0; bottom: -16px; height: 1px; background: var(--line); }
 .media-tab {
   display: inline-flex; align-items: center; padding: 8px 20px; border: 0; border-radius: 29px;
   background: rgba(217, 217, 217, 0); color: var(--ink-soft); font: 400 18px/normal var(--font-body);
-  cursor: pointer; transition: background-color 0.3s ease, color 0.2s ease;
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.2s ease, margin-left 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
+/* when Albums isn't selected it has no pill around it, so its word slides out to the left edge and
+   lines up with the rule below; it steps back in when the pill returns */
+.media-tab:first-of-type:not(.is-active) { margin-left: -20px; }
 .media-tab:hover { color: var(--ink); }
 .media-tab { position: relative; z-index: 1; }
 .media-tab.is-active { color: var(--ink); }
@@ -95,15 +121,16 @@ section { display: flex; flex-direction: column; gap: 25px; }
 .media-tab.is-active .ic { width: var(--w); margin-right: 10px; opacity: 1; }
 
 .media-panels { margin-top: 16px; }
-.media-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 70px 100px; align-items: start; }
+.media-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 40px 100px; align-items: start; }
 .media-grid[hidden] { display: none; }
 .media-grid img { display: block; width: 100%; height: auto; }
 .media-grid--albums img { aspect-ratio: 1; object-fit: cover; }
 /* hover a cover → its title and artist / author / year fade in 15px below it (Figma "hover" 365:36).
    The caption keeps its space even while hidden, so a long title makes its row taller instead of
    running into the covers below. */
-.cover { position: relative; margin: 0; outline: none; }
-.cover figcaption {
+.cover { position: relative; display: block; margin: 0; outline: none; color: inherit; text-decoration: none; }
+a.cover { cursor: pointer; }
+.cover .cover-cap {
   margin-top: 15px;
   display: flex; flex-direction: column; align-items: center; gap: 2px;
   font: 400 16px/normal var(--font-body); text-align: center; overflow-wrap: break-word;
@@ -113,7 +140,8 @@ section { display: flex; flex-direction: column; gap: 25px; }
 .cover-title { color: var(--ink); }
 .cover-sub { color: var(--ink-50); }
 .cover-sub:empty { display: none; }
-.cover:hover figcaption, .cover:focus-visible figcaption { opacity: 1; transform: none; }
+.cover .cover-cap > span { display: block; }
+.cover:hover .cover-cap, .cover:focus-visible .cover-cap { opacity: 1; transform: none; }
 /* the cover itself hops up a little while hovered */
 .cover img { transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
 .cover:hover img, .cover:focus-visible img { transform: translateY(-8px); }
@@ -122,12 +150,14 @@ section { display: flex; flex-direction: column; gap: 25px; }
 @keyframes cover-in { from { opacity: 0; transform: translateY(14px) scale(0.98); } to { opacity: 1; transform: none; } }
 .media-grid.is-entering > .cover { animation: cover-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(var(--i) * 45ms); }
 
-.about .footer { margin-top: 120px; }
+.about .footer { margin-top: 5px; } /* 55px below the media gems, with the page’s 50px gap */
 
 @media (prefers-reduced-motion: reduce) {
+  .hl-armed .hl .fill { clip-path: none; }
   .memory, .logo, .media-tab, .media-tab .ic { transition: none; }
   .memory:hover { transform: none; }
+  .memory-cap { transition: none; }
   .media-grid.is-entering > .cover { animation: none; }
-  .cover figcaption, .cover img { transition: none; }
+  .cover .cover-cap, .cover img { transition: none; }
   .cover:hover img, .cover:focus-visible img { transform: none; }
 }

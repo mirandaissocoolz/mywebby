@@ -1,5 +1,5 @@
-// UI sound effects: a tap when the pointer moves onto anything hoverable, a toggle click when a nav link
-// is pressed, and a celebration when Contact copies the email (played from contact.js).
+// UI sound effects: a tap when the pointer moves onto anything hoverable, a toggle click when anything
+// clickable is pressed, and a celebration when Contact copies the email (played from contact.js).
 // Uses Web Audio so the very short tap plays with no delay. Browsers keep audio muted until the
 // visitor's first click, tap or key press on the page, so hover sounds start after that.
 
@@ -12,7 +12,9 @@ const SOUNDS = {
 // media tabs, media covers, memory photos and cards. When one sits inside another (a link inside a
 // card), only the outer one counts, so moving within it stays quiet.
 const HOVER_TARGETS = "a, button, [role='tab'], .cover, .memory, .card";
-const CLICK_TARGETS = ".nav a, .media-tab";           // Contact plays the celebration instead
+// Anything clickable plays the toggle-off click when pressed. Contact plays the celebration instead.
+const CLICK_TARGETS = "a[href], button, [role='tab'], summary, label, input, select";
+const CLICK_SKIP = ".contact-toggle";
 
 const Ctx = window.AudioContext || window.webkitAudioContext;
 const ctx = Ctx ? new Ctx() : null;
@@ -73,6 +75,8 @@ addEventListener("pointerover", (e) => {
 });
 addEventListener("pointerout", (e) => { if (!e.relatedTarget) current = null; });
 
-for (const el of document.querySelectorAll(CLICK_TARGETS)) {
-  el.addEventListener("pointerdown", () => play("click"));
-}
+addEventListener("pointerdown", (e) => {
+  if (e.button !== 0) return;
+  const el = e.target instanceof Element ? e.target.closest(CLICK_TARGETS) : null;
+  if (el && !el.matches(CLICK_SKIP) && !el.disabled) play("click");
+}, { capture: true });

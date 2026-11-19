@@ -32,15 +32,14 @@
 </script>
 </head>
 <body>
-<!-- About, from Figma "mirandaissocool.com (2.0)" → About (320:375); media tabs from "media" (360:304) -->
+<!-- About, from Figma "mirandaissocool.com (2.0)" → About — Dark Mode (504:593); media tabs from "media" (360:304) -->
 <div class="page about">
 
   <header class="top top--logo">
-    <a class="logo" href="/" aria-label="Home"><img src="assets/about/logo.png" alt="" width="40" height="40"></a>
+    <a class="logo" href="/" aria-label="Home"><span class="logo-mark"></span></a>
     <nav class="nav" aria-label="Main">
       <a href="/#work" data-label="Work"><span>Work</span></a>
       <a href="/about" aria-current="page" data-label="About"><span>About</span></a>
-      <a href="#" data-label="Resume"><span>Resume</span></a>
       <div class="contact">
         <button class="btn btn--pink contact-toggle" type="button" data-email="mirandasu15@gmail.com" aria-describedby="contact-status">
           <span class="contact-label">Contact</span>
@@ -53,6 +52,7 @@
 
   <main class="about-main">
 
+    <!-- intro text, centred (Figma "About — Dark Mode" 504:593) -->
     <section class="intro">
       <div class="intro-text">
         <h1 class="hl-title">
@@ -60,25 +60,16 @@
           <span class="hl-text">hi i’m miranda!</span>
         </h1>
         <div class="intro-body">
-        <div class="prose">
-          <p>My love for design started in Grade 8, when my teacher asked me to make a video for a school-wide assembly. Time flew by every time I went onto iMovie.</p>
-          <p>In high school, I did a lot of graphic design for clubs and organizations. Today, I study design at the University of Waterloo and looking to break into product!</p>
+          <div class="prose">
+            <p>My love for design started in Grade 8, when my teacher asked me to make a video for a school-wide assembly. Time flew by every time I went onto iMovie.</p>
+            <p>In high school, I did a lot of graphic design for clubs and organizations. Today, I study design at the University of Waterloo and looking to break into product!</p>
+          </div>
+          <hr class="intro-rule">
+          <div class="prose">
+            <p>Outside of design, I really love eating good food, while watching a cozy show. I also love taking hikes and long runs in nature.</p>
+            <p>I love spending my time with family and friends. They are what inspire me to create more</p>
+          </div>
         </div>
-        <ul class="now">
-          <li>Building <span class="dim">mirandaissoocool.com</span></li>
-          <li>Doing fun <span class="dim">design sidequests</span></li>
-          <li>Binging <span class="dim">Sunshine through the Rain</span> and <span class="dim">Natural High Season 4</span></li>
-        </ul>
-        <div class="prose">
-          <p>Outside of design, I really love eating good food, while watching a cozy show. I also love taking hikes and long runs in nature.</p>
-          <p>I love spending my time with family and friends. They are what inspire me to create more</p>
-        </div>
-        </div>
-      </div>
-      <!-- scrolls sideways: the next photo peeks in at the right edge -->
-      <div class="intro-strip" tabindex="0" role="group" aria-label="Photos, scroll sideways for more">
-        <figure class="intro-shot"><img src="assets/about/hero.jpg" alt="Miranda grinning in front of a turquoise mountain lake" draggable="false" style="left:-29px;top:0;width:642.157px;height:428px"></figure>
-        <figure class="intro-shot"><img src="assets/about/intro-2.jpg" alt="Ferns and little round leaves floating on a forest pond" draggable="false" style="left:-361px;top:-386px;width:1248px;height:936px"></figure>
       </div>
     </section>
 
@@ -88,44 +79,49 @@
         <span class="hl-text">my core memories</span>
       </h2>
       <div class="memory-field">
-        <figure class="memory" style="--d:256px;--mask:url(assets/about/memories/mask-256.svg);left:0;top:53px">
+        <figure class="memory" style="--glow:rgb(253 197 147 / 0.8);--sigma:14.848px;--edge:rgb(254 166 98 / 0.8);--d:256px;--mask:url(assets/about/memories/mask-256.svg);left:0;top:53px">
           <div class="memory-clip">
-            <img class="memory-photo" src="assets/about/memories/tc.jpg" alt="Friends making heart hands at TC Media" style="left:-61px;top:0;width:377.333px;height:283px">
+            <img data-me="tc-digital-media" class="memory-photo" src="assets/about/memories/tc.jpg" alt="Friends making heart hands at TC Media" style="left:-61px;top:0;width:377.333px;height:283px">
             <span class="v" style="left:96.5px;top:172px;width:151px;height:98px"><span class="fill" style="inset:-30.61% -19.87%"><img src="assets/about/memories/tc-v1.svg" alt=""></span></span>
             <span class="v" style="left:15px;top:10px;width:129.5px;height:85px"><span class="fill" style="inset:-58.82% -38.61%"><img src="assets/about/memories/tc-v2.svg" alt=""></span></span>
+            <img class="memory-ring" src="assets/about/memories/ring-256.svg" alt="">
           </div>
-          <img class="memory-ring" src="assets/about/memories/ring-256.svg" alt="">
+          <figcaption class="memory-cap">tc digital media team</figcaption>
         </figure>
-        <figure class="memory" style="--d:274px;--mask:url(assets/about/memories/mask-274.svg);left:614px;top:421px">
+        <figure class="memory" style="--glow:rgb(253 197 147 / 0.8);--sigma:15.892px;--edge:rgb(254 166 98 / 0.8);--d:274px;--mask:url(assets/about/memories/mask-274.svg);left:614px;top:421px">
           <div class="memory-clip">
-            <img class="memory-photo" src="assets/about/memories/china.jpg" alt="Revisiting China" style="left:-9.63px;top:-59.94px;width:297.547px;height:396.729px">
+            <img data-me="revisiting-china" class="memory-photo" src="assets/about/memories/china.jpg" alt="Revisiting China" style="left:-9.63px;top:-59.94px;width:297.547px;height:396.729px">
             <span class="v" style="left:16.05px;top:10.7px;width:138.605px;height:90.977px"><span class="fill" style="inset:-58.82% -38.61%"><img src="assets/about/memories/china-v1.svg" alt=""></span></span>
+            <img class="memory-ring" src="assets/about/memories/ring-274.svg" alt="">
           </div>
-          <img class="memory-ring" src="assets/about/memories/ring-274.svg" alt="">
+          <figcaption class="memory-cap">revisiting china</figcaption>
         </figure>
-        <figure class="memory" style="--d:281px;--mask:url(assets/about/memories/mask-281.svg);left:423px;top:0">
+        <figure class="memory" style="--glow:rgb(224 214 254 / 0.8);--sigma:16.298px;--edge:rgb(153 119 254 / 0.8);--d:281px;--mask:url(assets/about/memories/mask-281.svg);left:423px;top:0">
           <div class="memory-clip">
-            <img class="memory-photo" src="assets/about/memories/cottage.jpg" alt="The annual cottage trip" style="left:-90.48px;top:1.1px;width:444.033px;height:294.172px">
+            <img data-me="annual-cottage-trip" class="memory-photo" src="assets/about/memories/cottage.jpg" alt="The annual cottage trip" style="left:-90.48px;top:1.1px;width:444.033px;height:294.172px">
             <span class="v" style="left:6.59px;top:13.17px;width:89.459px;height:87.264px"><span class="fill" style="inset:-37.74% -36.81%"><img src="assets/about/memories/cottage-v1.svg" alt=""></span></span>
             <span class="v v--rot" style="left:121.84px;top:163.55px;width:174.21px;height:170.296px"><span style="width:143.793px;height:138.305px"><span class="fill" style="inset:-23.81% -22.9%"><img src="assets/about/memories/cottage-v2.svg" alt=""></span></span></span>
+            <img class="memory-ring" src="assets/about/memories/ring-281.svg" alt="">
           </div>
-          <img class="memory-ring" src="assets/about/memories/ring-281.svg" alt="">
+          <figcaption class="memory-cap">annual cottage trip</figcaption>
         </figure>
-        <figure class="memory" style="--d:350px;--mask:url(assets/about/memories/mask-350.svg);left:127px;top:355px">
+        <figure class="memory" style="--glow:rgb(255 204 232 / 0.5);--sigma:20.3px;--edge:rgb(252 129 197 / 0.8);--d:350px;--mask:url(assets/about/memories/mask-350.svg);left:127px;top:355px">
           <div class="memory-clip">
-            <img class="memory-photo" src="assets/about/memories/deca.jpg" alt="Competing in DECA" style="left:-101px;top:-35px;width:628px;height:421px">
+            <img data-me="deca" class="memory-photo" src="assets/about/memories/deca.jpg" alt="Competing in DECA" style="left:-101px;top:-35px;width:628px;height:421px">
             <span class="v" style="left:59px;top:9.5px;width:81.5px;height:79.5px"><span class="fill" style="inset:-37.74% -36.81%"><img src="assets/about/memories/deca-v1.svg" alt=""></span></span>
             <span class="v v--rot" style="left:237.14px;top:176.43px;width:158.711px;height:155.145px"><span style="width:131px;height:126px"><span class="fill" style="inset:-23.81% -22.9%"><img src="assets/about/memories/deca-v2.svg" alt=""></span></span></span>
+            <img class="memory-ring" src="assets/about/memories/ring-350-deca.svg" alt="">
           </div>
-          <img class="memory-ring" src="assets/about/memories/ring-350.svg" alt="">
+          <figcaption class="memory-cap">competing in deca</figcaption>
         </figure>
-        <figure class="memory" style="--d:350px;--mask:url(assets/about/memories/mask-350.svg);left:868px;top:53px">
+        <figure class="memory" style="--glow:rgb(255 204 232 / 0.5);--sigma:20.3px;--edge:rgb(252 129 197 / 0.8);--d:350px;--mask:url(assets/about/memories/mask-350.svg);left:868px;top:53px">
           <div class="memory-clip">
-            <img class="memory-photo" src="assets/about/memories/dorm.jpg" alt="The view from my first-year dorm" style="left:-23px;top:-80px;width:395px;height:526.667px">
+            <img data-me="my-first-year-dorm" class="memory-photo" src="assets/about/memories/dorm.jpg" alt="The view from my first-year dorm" style="left:-23px;top:-80px;width:395px;height:526.667px">
             <span class="v" style="left:59px;top:9.5px;width:81.5px;height:79.5px"><span class="fill" style="inset:-62.89% -61.35%"><img src="assets/about/memories/dorm-v1.svg" alt=""></span></span>
             <span class="v v--rot" style="left:173.27px;top:159.5px;width:239.739px;height:210.109px"><span style="width:204.952px;height:163.405px"><span class="fill" style="inset:-30.6% -24.4%"><img src="assets/about/memories/dorm-v2.svg" alt=""></span></span></span>
+            <img class="memory-ring" src="assets/about/memories/ring-350.svg" alt="">
           </div>
-          <img class="memory-ring" src="assets/about/memories/ring-350.svg" alt="">
+          <figcaption class="memory-cap">my first year dorm</figcaption>
         </figure>
       </div>
     </section>
@@ -140,6 +136,19 @@
         <li><span>GBDA Society</span><span>1st Place</span></li>
         <li><span>Figma Waterloo x SFU Surge</span><span>1st Place</span></li>
         <li><span>UW/UX Waterloo x UW Blueprint</span><span>Organizer’s Choice</span></li>
+      </ul>
+    </section>
+
+    <section class="awards experience">
+      <h2 class="hl-title">
+        <span class="hl" style="left:55.85px;top:19.09px;width:176.862px;height:11.392px"><span class="fill" style="inset:-106.45% -0.25% -99.54% -5.91%"><img class="hl-light" src="assets/about/hl-experience.svg" alt=""><img class="hl-dark" src="assets/about/hl-experience-dark.svg" alt=""></span></span>
+        <span class="hl-text">my experience</span>
+      </h2>
+      <ul class="award-list">
+        <li><span>Hack the 6ix</span><span>Design Coordinator</span></li>
+        <li><span>GBDA Society</span><span>Design Coordinator</span></li>
+        <li><span>UW/UX</span><span>Podcast Coordinator</span></li>
+        <li><span>University of Waterloo, Campus Housing</span><span>Vice President of Communications</span></li>
       </ul>
     </section>
 
@@ -159,34 +168,34 @@
 
       <div class="media-panels">
         <div class="media-grid media-grid--albums" role="tabpanel" id="panel-albums" aria-labelledby="tab-albums">
-          <figure class="cover" tabindex="0"><img src="assets/about/media/album-1.png" alt="Ashe — The Girl of Your Dreams"><figcaption><span class="cover-title">The Girl of Your Dreams</span><span class="cover-sub">Ashe</span></figcaption></figure>
-          <figure class="cover" tabindex="0"><img src="assets/about/media/album-2.png" alt="Olivia Rodrigo — You Seem Pretty Sad for a Girl So in Love"><figcaption><span class="cover-title">You Seem Pretty Sad for a Girl So in Love</span><span class="cover-sub">Olivia Rodrigo</span></figcaption></figure>
-          <figure class="cover" tabindex="0"><img src="assets/about/media/album-3.jpg" alt="Album cover"></figure>
-          <figure class="cover" tabindex="0"><img src="assets/about/media/album-4.png" alt="Role Model — Kansas Anymore"><figcaption><span class="cover-title">Kansas Anymore</span><span class="cover-sub">Role Model</span></figcaption></figure>
-          <figure class="cover" tabindex="0"><img src="assets/about/media/album-5.jpg" alt="Album cover"></figure>
-          <figure class="cover" tabindex="0"><img src="assets/about/media/album-6.png" alt="Taylor Swift — folklore"><figcaption><span class="cover-title">folklore</span><span class="cover-sub">Taylor Swift</span></figcaption></figure>
-          <figure class="cover" tabindex="0"><img src="assets/about/media/album-7.jpg" alt="Gracie Abrams — minor"><figcaption><span class="cover-title">minor</span><span class="cover-sub">Gracie Abrams</span></figcaption></figure>
-          <figure class="cover" tabindex="0"><img src="assets/about/media/album-8.jpg" alt="Album cover"></figure>
+          <div class="cover"><img src="assets/about/media/album-1.png" alt="Ashe — The Girl of Your Dreams"><span class="cover-cap"><span class="cover-title">The Girl of Your Dreams</span><span class="cover-sub">Ashe</span></span></div>
+          <div class="cover"><img src="assets/about/media/album-2.png" alt="Olivia Rodrigo — You Seem Pretty Sad for a Girl So in Love"><span class="cover-cap"><span class="cover-title">You Seem Pretty Sad for a Girl So in Love</span><span class="cover-sub">Olivia Rodrigo</span></span></div>
+          <div class="cover"><img src="assets/about/media/album-3.jpg" alt="Album cover"></div>
+          <div class="cover"><img src="assets/about/media/album-4.png" alt="Role Model — Kansas Anymore"><span class="cover-cap"><span class="cover-title">Kansas Anymore</span><span class="cover-sub">Role Model</span></span></div>
+          <div class="cover"><img src="assets/about/media/album-5.jpg" alt="Album cover"></div>
+          <div class="cover"><img src="assets/about/media/album-6.png" alt="Taylor Swift — folklore"><span class="cover-cap"><span class="cover-title">folklore</span><span class="cover-sub">Taylor Swift</span></span></div>
+          <div class="cover"><img src="assets/about/media/album-7.jpg" alt="Gracie Abrams — minor"><span class="cover-cap"><span class="cover-title">minor</span><span class="cover-sub">Gracie Abrams</span></span></div>
+          <div class="cover"><img src="assets/about/media/album-8.jpg" alt="Album cover"></div>
         </div>
         <div class="media-grid" role="tabpanel" id="panel-books" aria-labelledby="tab-books" hidden>
-          <figure class="cover" tabindex="0"><img src="assets/about/media/book-1.jpg" alt="The Rom-Commers by Katherine Center" loading="lazy"><figcaption><span class="cover-title">The Rom-Commers</span><span class="cover-sub">Katherine Center</span></figcaption></figure>
-          <figure class="cover" tabindex="0"><img src="assets/about/media/book-2.jpg" alt="Yours Truly by Abby Jimenez" loading="lazy"><figcaption><span class="cover-title">Yours Truly</span><span class="cover-sub">Abby Jimenez</span></figcaption></figure>
-          <figure class="cover" tabindex="0"><img src="assets/about/media/book-3.jpg" alt="The Roughest Draft by Emily Wibberley and Austin Siegemund-Broka" loading="lazy"><figcaption><span class="cover-title">The Roughest Draft</span><span class="cover-sub">Emily Wibberley and Austin Siegemund-Broka</span></figcaption></figure>
-          <figure class="cover" tabindex="0"><img src="assets/about/media/book-4.jpg" alt="People We Meet on Vacation by Emily Henry" loading="lazy"><figcaption><span class="cover-title">People We Meet on Vacation</span><span class="cover-sub">Emily Henry</span></figcaption></figure>
-          <figure class="cover" tabindex="0"><img src="assets/about/media/book-5.jpg" alt="Tuesdays with Morrie by Mitch Albom" loading="lazy"><figcaption><span class="cover-title">Tuesdays with Morrie</span><span class="cover-sub">Mitch Albom</span></figcaption></figure>
-          <figure class="cover" tabindex="0"><img src="assets/about/media/book-6.jpg" alt="Fahrenheit 451 by Ray Bradbury" loading="lazy"><figcaption><span class="cover-title">Fahrenheit 451</span><span class="cover-sub">Ray Bradbury</span></figcaption></figure>
+          <div class="cover"><img src="assets/about/media/book-1.jpg" alt="The Rom-Commers by Katherine Center" loading="lazy"><span class="cover-cap"><span class="cover-title">The Rom-Commers</span><span class="cover-sub">Katherine Center</span></span></div>
+          <div class="cover"><img src="assets/about/media/book-2.jpg" alt="Yours Truly by Abby Jimenez" loading="lazy"><span class="cover-cap"><span class="cover-title">Yours Truly</span><span class="cover-sub">Abby Jimenez</span></span></div>
+          <div class="cover"><img src="assets/about/media/book-3.jpg" alt="The Roughest Draft by Emily Wibberley and Austin Siegemund-Broka" loading="lazy"><span class="cover-cap"><span class="cover-title">The Roughest Draft</span><span class="cover-sub">Emily Wibberley and Austin Siegemund-Broka</span></span></div>
+          <div class="cover"><img src="assets/about/media/book-4.jpg" alt="People We Meet on Vacation by Emily Henry" loading="lazy"><span class="cover-cap"><span class="cover-title">People We Meet on Vacation</span><span class="cover-sub">Emily Henry</span></span></div>
+          <div class="cover"><img src="assets/about/media/book-5.jpg" alt="Tuesdays with Morrie by Mitch Albom" loading="lazy"><span class="cover-cap"><span class="cover-title">Tuesdays with Morrie</span><span class="cover-sub">Mitch Albom</span></span></div>
+          <div class="cover"><img src="assets/about/media/book-6.jpg" alt="Fahrenheit 451 by Ray Bradbury" loading="lazy"><span class="cover-cap"><span class="cover-title">Fahrenheit 451</span><span class="cover-sub">Ray Bradbury</span></span></div>
         </div>
         <div class="media-grid" role="tabpanel" id="panel-movies" aria-labelledby="tab-movies" hidden>
-          <figure class="cover" tabindex="0"><img src="assets/about/media/movie-1.jpg" alt="Movie poster" loading="lazy"></figure>
-          <figure class="cover" tabindex="0"><img src="assets/about/media/movie-2.jpg" alt="Knives Out" loading="lazy"><figcaption><span class="cover-title">Knives Out</span><span class="cover-sub"></span></figcaption></figure>
-          <figure class="cover" tabindex="0"><img src="assets/about/media/movie-3.jpg" alt="Love, Rosie" loading="lazy"><figcaption><span class="cover-title">Love, Rosie</span><span class="cover-sub"></span></figcaption></figure>
-          <figure class="cover" tabindex="0"><img src="assets/about/media/movie-4.jpg" alt="Up" loading="lazy"><figcaption><span class="cover-title">Up</span><span class="cover-sub"></span></figcaption></figure>
+          <div class="cover"><img src="assets/about/media/movie-1.jpg" alt="Movie poster" loading="lazy"></div>
+          <div class="cover"><img src="assets/about/media/movie-2.jpg" alt="Knives Out" loading="lazy"><span class="cover-cap"><span class="cover-title">Knives Out</span><span class="cover-sub"></span></span></div>
+          <div class="cover"><img src="assets/about/media/movie-3.jpg" alt="Love, Rosie" loading="lazy"><span class="cover-cap"><span class="cover-title">Love, Rosie</span><span class="cover-sub"></span></span></div>
+          <div class="cover"><img src="assets/about/media/movie-4.jpg" alt="Up" loading="lazy"><span class="cover-cap"><span class="cover-title">Up</span><span class="cover-sub"></span></span></div>
         </div>
         <div class="media-grid" role="tabpanel" id="panel-dramas" aria-labelledby="tab-dramas" hidden>
-          <figure class="cover" tabindex="0"><img src="assets/about/media/drama-1.jpg" alt="Drama poster" loading="lazy"></figure>
-          <figure class="cover" tabindex="0"><img src="assets/about/media/drama-2.jpg" alt="Drama poster" loading="lazy"></figure>
-          <figure class="cover" tabindex="0"><img src="assets/about/media/drama-3.jpg" alt="Drama poster" loading="lazy"></figure>
-          <figure class="cover" tabindex="0"><img src="assets/about/media/drama-4.jpg" alt="Drama poster" loading="lazy"></figure>
+          <div class="cover"><img src="assets/about/media/drama-1.jpg" alt="Drama poster" loading="lazy"></div>
+          <div class="cover"><img src="assets/about/media/drama-2.jpg" alt="Drama poster" loading="lazy"></div>
+          <div class="cover"><img src="assets/about/media/drama-3.jpg" alt="Drama poster" loading="lazy"></div>
+          <div class="cover"><img src="assets/about/media/drama-4.jpg" alt="Drama poster" loading="lazy"></div>
         </div>
       </div>
     </section>
@@ -197,7 +206,7 @@
     <div class="footer-line" aria-hidden="true"></div>
     <div class="footer-row">
       <div class="find">
-        <p class="find-me">Find me</p>
+        <p class="find-me">Thanks for visiting!</p>
         <a href="mailto:mirandasu15@gmail.com">mirandasu15@gmail.com</a>
         <div class="socials">
           <a href="https://www.linkedin.com/in/miranda-suu/" aria-label="LinkedIn"><span class="linkedin"></span></a>
