@@ -17,11 +17,11 @@
   // Laid out on the Figma frame's 1440px grid and zoomed out (never in) by --s so that:
   //   - the whole unicorn fits in the first screen: its bottom is FOLD px down the page,
   //     plus a little breathing room;
-  //   - the layout is at least MIN px wide (100px side margins can give back 55px each).
+  //   - the layout is at least MIN px wide (120px side margins can give back 55px each).
   // --page-w is the layout width at that zoom, and --off is how far it differs from 1440 on
-  // each side. Wider layouts fill the window (100px side margins, unicorn flush right).
+  // each side. Wider layouts fill the window (120px side margins, unicorn flush right).
   (function () {
-    var MIN = 1330, FOLD = 659 + 40, FLOOR = 0.6;
+    var MIN = 1330, FOLD = 651 + 40, FLOOR = 0.6; // unicorn bottom: 42 top + 118 header + 57 + 435 hero − 1
     function fit() {
       var de = document.documentElement, r = de.style;
       var w = de.clientWidth, h = innerHeight;
@@ -37,7 +37,7 @@
 </script>
 </head>
 <body>
-<div class="page">
+<div class="page home">
 
   <header class="top">
     <div class="hello">

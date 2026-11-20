@@ -1,6 +1,6 @@
 /* Home from Figma "mirandaissocool.com (2.0)" → Home (… Lined Up) (NEW FONT) (node 439:1409), on its 1440px frame.
    index.html zooms the page out by --s so the whole unicorn fits in the window (never zooms
-   in). The page fills any width: content keeps 100px side margins and the unicorn and its
+   in). The page fills any width: content keeps 120px side margins and the unicorn and its
    small icons stay pinned to the right edge (--off is half the extra width). */
 
 :root {
@@ -16,7 +16,7 @@
   --orange: #fe7814;           /* unicorn orange: hover colour for header links and icons */
   --s: 1;
   --off: 0px;                 /* (window − 1440) / 2, from −55px up; set by index.html */
-  --pad: calc(100px + min(0px, var(--off)));   /* 100px, giving back up to 55px on narrow windows */
+  --pad: calc(120px + min(0px, var(--off)));   /* 120px sides (Home and About), giving back up to 55px on narrow windows */
   --font-display: "Brawler", Georgia, serif;
   --font-body: "Instrument Sans", "Helvetica Neue", Arial, sans-serif;
 
@@ -60,11 +60,16 @@ p, h1, h2 { margin: 0; font-weight: 400; }
   position: relative;
   width: var(--page-w, 1440px);
   zoom: var(--s);
-  padding: 50px 0 70px;
+  padding: 42px 0 64px;   /* Figma: 42px top, 64px bottom on both pages */
   display: flex;
   flex-direction: column;
   gap: 50px;
 }
+
+/* ---- Home spacing (Figma "Home — Dark Mode" 472:304) -------------------
+   hero → Work and Play → footer are 100px apart (the page's 50px gap + 50). */
+.home .projects, .home .footer { margin-top: 50px; }
+.home .nav { gap: 32px; } /* Work · About · Contact sit 32px apart on Home */
 
 /* ---- header ---------------------------------------------------------- */
 .top { position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: flex-start; padding: 0 var(--pad); }
@@ -192,7 +197,7 @@ p, h1, h2 { margin: 0; font-weight: 400; }
 .gradient img { position: absolute; left: -40px; top: -40px; width: 1329.1px; height: 625px; }
 
 /* The gradient paints itself in on load. Each ribbon file (assets/gradient/1-3.svg, from Figma
-   "gradient" 439:1433) carries its own mask: a soft, feathered brush that travels along the
+   "gradient", now 472:328 in the dark Home frame) carries its own mask: a soft, feathered brush that travels along the
    ribbon's centre line from its top-left tip to the end of the stroke. Here each ribbon also
    fades up as it is painted. The delays match the ones inside the SVGs. */
 @keyframes ribbon-fade { from { opacity: 0; } to { opacity: 1; } }
@@ -222,7 +227,7 @@ p, h1, h2 { margin: 0; font-weight: 400; }
 .caret--closed { width: 8.848px; height: 13.272px; }
 .caret--closed > span { transform: rotate(-90deg); }
 
-.gallery { display: grid; grid-template-columns: 1fr 1fr; column-gap: 43px; row-gap: 50px; }
+.gallery { display: grid; grid-template-columns: 1fr 1fr; column-gap: 50px; row-gap: 50px; } /* 575px cards at 1440 */
 .card { height: 405px; background: var(--card); border-radius: 10px; }
 
 /* ---- footer -------------------------------------------------------------- */
