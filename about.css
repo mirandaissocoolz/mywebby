@@ -55,7 +55,7 @@ section { display: flex; flex-direction: column; gap: 25px; }
    sheen (--sheen); orbs further back are smaller and blurrier. Hover (or focus) one and
    the rest blur back while the ring slows almost to a
    stop. The inline left/top in about.html are Figma's 4 × 3 grid, used only without JavaScript. */
-.memory-field { position: relative; width: 1181px; height: 660px; align-self: center; margin-top: 0; }
+.memory-field { position: relative; width: 100%; height: 660px; align-self: center; margin-top: 0; }
 .memory {
   position: absolute; margin: 0; width: 256px; height: 256px; outline: none;
   --sheen: 0deg; transform-origin: 50% 50%;

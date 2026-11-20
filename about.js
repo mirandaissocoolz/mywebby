@@ -207,13 +207,30 @@ loadMe().catch((e) => console.warn("me photos", e));
   const DIM = 0.5, BLUR = 6, CALM = 0.9, LIFT = 1.15;
   const DEPTH_BLUR = 5; // px of blur on the orb at the very back of the ring; the front one is sharp
   const SIZE = 256, TAU = Math.PI * 2;
-  // the ring: a wide, flat oval tipped a few degrees, as wide as the field allows
-  const RX = 560, RY = 175, CX = 590.5, CY = 330;
+  // the ring: a wide, flat oval tipped a few degrees. Its width is fitted (fit below) so the
+  // outermost orbs just reach the field's edges, which sit on the page's 120px side padding.
+  const RY = 175, CY = 330;
+  let RX = 480, CX = 600;
   const TIP = (-7 * Math.PI) / 180, COS = Math.cos(TIP), SIN = Math.sin(TIP);
   // size by depth: every orb on the front half of the ring is the same size (none swells as it
   // passes the middle); along the back half they ease down to half that at the very back
   const FRONT = 0.92, BACK = 0.48;
   const sizeAt = (d) => { const k = Math.min(1, d / 0.5); return BACK + (FRONT - BACK) * k * k * (3 - 2 * k); };
+  // how far the ring reaches from its centre (orb edges included, at full breath) for a given width
+  const reach = (rx) => {
+    let m = 0;
+    for (let a = 0; a < TAU; a += TAU / 360) {
+      const ex = rx * Math.cos(a), ey = RY * Math.sin(a);
+      m = Math.max(m, Math.abs(ex * COS - ey * SIN) + (SIZE * sizeAt((Math.sin(a) + 1) / 2) * (1 + BREATHE)) / 2);
+    }
+    return m;
+  };
+  const fit = () => {
+    const half = field.clientWidth / 2;
+    CX = half;
+    RX = Math.max(0, half - 125);
+    for (let i = 0; i < 4; i++) RX = Math.max(0, RX - (reach(RX) - half));
+  };
   const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
   let focus = -1, t = 0, eff = 1, last = 0, raf = 0, onScreen = true;
   const dims = orbs.map(() => 1); // eases 1 → 0 as an orb fades back for another's focus
@@ -264,6 +281,8 @@ loadMe().catch((e) => console.warn("me photos", e));
   };
 
   if (orbs.length) {
+    fit();
+    addEventListener("resize", () => { fit(); if (still) place(0); });
     place(0); // lay the ring out once, so it's right even before (or without) the motion
     // reduced motion: the ring stands still, and focusing an orb still blurs the rest
     if (!still) {
