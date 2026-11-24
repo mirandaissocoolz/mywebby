@@ -60,7 +60,7 @@ p, h1, h2 { margin: 0; font-weight: 400; }
   position: relative;
   width: var(--page-w, 1440px);
   zoom: var(--s);
-  padding: 42px 0 64px;   /* Figma: 42px top, 64px bottom on both pages */
+  padding: 64px 0;   /* Figma: 64px top and bottom on both pages */
   display: flex;
   flex-direction: column;
   gap: 50px;
@@ -69,9 +69,22 @@ p, h1, h2 { margin: 0; font-weight: 400; }
 /* ---- Home spacing (Figma "Home — Dark Mode" 472:304) -------------------
    hero → Work and Play → footer are 100px apart (the page's 50px gap + 50). */
 .home .projects, .home .footer { margin-top: 50px; }
-.home .nav { gap: 32px; } /* Work · About · Contact sit 32px apart on Home */
+.home .nav { gap: 32px; } /* Home · About · Contact sit 32px apart on Home */
 
 /* ---- header ---------------------------------------------------------- */
+/* the unicorn (Figma "Nav Bar (NEW)" 504:1055), drawn in the ink colour so it flips with the theme */
+.logo { display: block; width: 40px; height: 29.024px; color: var(--ink); transition: color 0.2s ease; }
+.logo-mark {
+  display: block; width: 100%; height: 100%; background: currentColor;
+  -webkit-mask: url("assets/about/logo-unicorn.svg") center / contain no-repeat;
+  mask: url("assets/about/logo-unicorn.svg") center / contain no-repeat;
+}
+/* hover: the unicorn hops up a little. Only the drawing moves, so the link stays under the
+   pointer and the hover never flickers. */
+.logo-mark { transition: transform 0.2s ease; }
+.logo:hover .logo-mark { transform: translateY(-4px); }
+
+.home .logo { display: none; } /* Home has its headline there instead; the logo shows on phones */
 .top { position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: flex-start; padding: 0 var(--pad); }
 .hello { width: 551px; }
 .hello h1 { font: 400 var(--fs-display)/normal var(--font-display); }
@@ -89,6 +102,11 @@ p, h1, h2 { margin: 0; font-weight: 400; }
 .nav a:hover { color: var(--ink); }   /* hover: full-opacity ink (black, or cream in dark mode) */
 .nav a[aria-current="page"]:hover > span { transform: none; }
 .nav a:hover > span { transform: translateY(-2px); } /* lifts with the tap sound in sfx.js */
+/* hover (or tab to) one nav item and the others blur, so only that one stays sharp */
+.nav > a, .nav > .contact { transition: color 0.2s ease, filter 0.3s ease; }
+.nav:has(> :hover, > :focus-visible, :focus-visible) > :not(:hover, :focus-visible, :has(:focus-visible)) { filter: blur(2.5px); }
+/* on About, hovering the unicorn blurs the whole nav the same way */
+.top:has(.logo:hover, .logo:focus-visible) .nav > * { filter: blur(2.5px); }
 
 /* ---- Button (Figma component "Button", node 349:8) ----------------------------
    A gradient pill with a 2px 50%-white stroke, a soft inner highlight on top of the
@@ -107,11 +125,11 @@ p, h1, h2 { margin: 0; font-weight: 400; }
   border: 2px solid rgba(255, 255, 255, 0.5);
   border-radius: 27px;
   background: linear-gradient(to top, var(--btn-from), var(--btn-to)) border-box;
-  filter: drop-shadow(0 1px 12.75px var(--btn-glow));
+  box-shadow: 0 1px 12.75px var(--btn-glow);   /* the glow; box-shadow follows the rounded corners in every browser */
   color: var(--btn-ink);
   font: 400 20px/normal var(--font-body);
   white-space: nowrap;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.6s ease;
 }
 .btn::after {
   content: "";
@@ -124,8 +142,8 @@ p, h1, h2 { margin: 0; font-weight: 400; }
 .btn:hover { transform: translateY(-1px); }
 .contact:hover .contact-toggle { transform: translateY(-2px); } /* hover on the still wrapper, lift the button */
 /* Contact's pink glow is hidden at rest and fades in slowly on hover */
-.contact-toggle { filter: drop-shadow(0 1px 12.75px transparent); transition: transform 0.2s ease, filter 0.6s ease; }
-.contact:hover .contact-toggle, .contact-toggle:focus-visible { filter: drop-shadow(0 1px 12.75px var(--btn-glow)); }
+.contact-toggle { box-shadow: 0 1px 12.75px transparent; }
+.contact:hover .contact-toggle, .contact-toggle:focus-visible { box-shadow: 0 1px 12.75px var(--btn-glow); }
 .btn--pink   { --btn-from: #fc81c5; --btn-to: #ffcce8; --btn-glow: #ffcce8; --btn-ink: #fff; }
 .btn--green  { --btn-from: #b6ff00; --btn-to: #ffffff; --btn-glow: #b6ff00; --btn-ink: #35613b; }
 .btn--orange { --btn-from: #fea662; --btn-to: #ffd683; --btn-glow: #ffd683; --btn-ink: #fff; }
@@ -141,10 +159,10 @@ p, h1, h2 { margin: 0; font-weight: 400; }
    width between the two labels and turns it back after a few seconds, on a click elsewhere,
    or on Escape. */
 .contact { position: relative; display: flex; }
-.contact-toggle { flex: none; left: 0; overflow: hidden; white-space: nowrap; transition: transform 0.2s ease, filter 0.6s ease, width 0.35s cubic-bezier(0.22, 1, 0.36, 1), left 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
+.contact-toggle { flex: none; overflow: hidden; white-space: nowrap; transition: transform 0.2s ease, box-shadow 0.6s ease, width 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
 .contact-toggle .copied-label { display: none; align-items: center; gap: 10px; }
 .contact-toggle.is-copied { --btn-from: #b6ff00; --btn-to: #ffffff; --btn-glow: #b6ff00; --btn-ink: #35613b; border-color: #fff; }
-.contact-toggle.is-copied, .contact:hover .contact-toggle.is-copied { filter: drop-shadow(0 1px 12.75px var(--btn-glow)); }
+.contact-toggle.is-copied, .contact:hover .contact-toggle.is-copied { box-shadow: 0 1px 12.75px var(--btn-glow); }
 .contact-toggle.is-copied .contact-label { display: none; }
 .contact-toggle.is-copied .copied-label { display: inline-flex; }
 .contact-toggle .mail {
@@ -250,6 +268,62 @@ p, h1, h2 { margin: 0; font-weight: 400; }
 .footer-links a:hover { color: var(--ink); }
 .footer-mark { display: flex; align-items: center; }
 .footer-mark img { width: 111.035px; height: 80.567px; }
+
+/* ---- phones and narrow windows (Figma "Home — Dark Mode" mobile 556:585, 402px frame) ----------
+   index.html stops zooming at 800px and below; the page is laid out at the device width instead.
+   24px top, 20px sides, sections 48px apart. The nav is just the unicorn and Contact; the hero
+   (nav + headline + welcome) is 400px tall, with the gradient behind it at 62.5% and no big
+   unicorn. Work is one column of cards, and the footer stacks with the big unicorn at the bottom. */
+@media (max-width: 800px) {
+  :root { --pad: 20px; }
+  .page { width: auto; zoom: 1; padding: 24px 0 0; gap: 48px; }
+  .wide-only { display: none; }
+
+  .top { display: grid; grid-template-columns: auto 1fr; align-items: center; row-gap: 48px; }
+  .logo, .home .logo { display: block; width: 33.647px; height: 24.418px; }
+  .logo, .nav { grid-row: 1; }
+  .nav { grid-column: 2; justify-self: end; gap: 0; }
+  .nav > a { display: none; }
+  .hello { grid-row: 2; grid-column: 1 / -1; width: auto; }
+  .hello h1 { font-size: 32px; }
+
+  /* Contact: 25px tall with 10px type, and its pink glow always on (there's no hover on touch) */
+  .contact-toggle {
+    height: 25px; padding: 0 13.516px; border-width: 1.5px; border-radius: 26.067px;
+    font-size: 10px; line-height: normal;
+  }
+  .contact-toggle, .contact:hover .contact-toggle { box-shadow: 0 0.965px 12.31px var(--btn-glow); }
+  .contact-toggle::after { border-radius: 26.067px; box-shadow: inset 8.689px 3.862px 6.758px rgba(255, 255, 255, 0.25); }
+  .contact-toggle .copied-label { gap: 6px; }
+  .contact-toggle .mail { width: 10.5px; height: 11.08px; -webkit-mask-size: 100% 100%; mask-size: 100% 100%; }
+
+  .hero { height: 201px; margin-top: 0; }   /* nav + 48 + headline + 48 + this = 400px */
+  .welcome { left: var(--pad); right: var(--pad); width: auto; gap: 20px; }
+  .small-things { height: 16px; }
+  .shooting-star { display: none; }
+  .moon { width: 16px; height: 16px; }
+  .moon span { left: 1.9px; top: 1.16px; width: 12.94px; height: 12.94px; }
+  .unicorn { display: none; }
+  /* the same three ribbons as desktop, scaled to Figma's 781 × 324 and placed 76px below the
+     top of the nav, 216px off the left of the content */
+  .gradient { left: calc(var(--pad) - 216px); top: var(--grad-top, -123px); transform: scale(0.6252); transform-origin: 0 0; }
+
+  .home .projects, .home .footer { margin-top: 0; }
+  .projects { gap: 48px; }
+  .work { gap: 25px; }
+  .gallery { grid-template-columns: 1fr; gap: 50px; }
+  .card { height: auto; aspect-ratio: 575 / 405; border-radius: 5px; }
+
+  /* footer: everything stacks, the big unicorn last, running off the right edge */
+  .footer-row { flex-direction: column; gap: 30px; }
+  .find { gap: 10px; justify-content: flex-start; }
+  .socials { gap: 12px; }
+  .socials .linkedin, .socials .instagram { width: 17.277px; height: 17.277px; }
+  .socials .x { width: 14.624px; height: 15.958px; }
+  .footer-links { width: auto; gap: 10px; justify-content: flex-start; }
+  .footer-mark { margin-top: -3px; }   /* 27px under the links */
+  .footer-mark img { width: 351.311px; height: 254.912px; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .nav a, .nav a > span, .btn, .shooting-star, .moon, .shooting-star > span, .moon > span { transition: none; }

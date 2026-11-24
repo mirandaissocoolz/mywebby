@@ -27,18 +27,13 @@ async function copyText(text) {
 
 // Swap the button's state and ease its width from the old label's size to the new one's. The
 // label stays full size; the button just widens (clipping it) until it fits.
-// The Contact slot in the nav keeps its width the whole time, so Work / About / Resume never
-// move (they used to slide left, out from under the cursor). The wider Email Copied pill grows
-// into the empty page margin on the right, and only if that margin is too narrow does it also
-// reach a little to the left.
+// The nav sits against the right page margin, so the pill's right edge stays put and it grows
+// to the left only, nudging Work / About inward rather than spilling into the margin.
 // Widths come from the computed style (CSS px), not getBoundingClientRect, which is in screen
 // px and so shrinks with the page zoom (--s).
-const wrap = btn.parentElement; // .contact
 const cssWidth = () => parseFloat(getComputedStyle(btn).width);
 function morph(apply) {
   const from = cssWidth();
-  if (!wrap.style.width) wrap.style.width = from + "px"; // lock the slot
-  const slot = parseFloat(wrap.style.width);
   btn.style.transition = "none"; // measure the new label's natural width without animating
   btn.style.width = "";
   apply();
@@ -46,22 +41,10 @@ function morph(apply) {
   btn.style.width = from + "px";
   void btn.offsetWidth;
   btn.style.transition = "";
-
-  let shift = 0;
-  const grow = to - slot;
-  if (grow > 0) {
-    const r = wrap.getBoundingClientRect();
-    const k = r.width / slot;                                   // screen px per CSS px
-    const room = (document.documentElement.clientWidth - r.right) / k - 6; // margin, minus a sliver
-    shift = -Math.max(0, grow - Math.max(0, room));
-  }
-  btn.style.left = shift + "px";
   btn.style.width = to + "px";
 }
 btn.addEventListener("transitionend", (e) => {
-  if (e.propertyName !== "width") return;
-  btn.style.width = ""; // back to hugging its label
-  if (!btn.classList.contains("is-copied")) { wrap.style.width = ""; btn.style.left = ""; }
+  if (e.propertyName === "width") btn.style.width = ""; // back to hugging its label
 });
 
 function showCopied() {

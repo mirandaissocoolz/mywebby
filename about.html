@@ -20,6 +20,8 @@
     function fit() {
       var de = document.documentElement, r = de.style;
       var w = de.clientWidth;
+      // phones and narrow windows get the mobile layout (max-width: 800px) unzoomed
+      if (w <= 800) { r.setProperty("--s", 1); r.removeProperty("--page-w"); r.setProperty("--off", "0px"); return; }
       var s = Math.max(FLOOR, Math.min(1, w / MIN));
       var layout = Math.max(w / s, MIN);
       r.setProperty("--s", s);
@@ -233,7 +235,7 @@
         <li><span>Hack the 6ix</span><span>Design Coordinator</span></li>
         <li><span>GBDA Society</span><span>Design Coordinator</span></li>
         <li><span>UW/UX</span><span>Podcast Coordinator</span></li>
-        <li><span>University of Waterloo, Campus Housing</span><span>Vice President of Communications</span></li>
+        <li><span><span class="wide-only">University of Waterloo, </span>Campus Housing</span><span>Vice President of Communications</span></li>
       </ul>
     </section>
 

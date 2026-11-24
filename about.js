@@ -211,6 +211,8 @@ loadMe().catch((e) => console.warn("me photos", e));
   // outermost orbs just reach the field's edges, which sit on the page's 120px side padding.
   const RY = 175, CY = 330;
   let RX = 480, CX = 600;
+  // K shrinks the whole ring on narrow screens (phones): orbs, ring and field all scale together
+  let K = 1;
   const TIP = (-7 * Math.PI) / 180, COS = Math.cos(TIP), SIN = Math.sin(TIP);
   // size by depth: every orb on the front half of the ring is the same size (none swells as it
   // passes the middle); along the back half they ease down to half that at the very back
@@ -221,18 +223,23 @@ loadMe().catch((e) => console.warn("me photos", e));
     let m = 0;
     for (let a = 0; a < TAU; a += TAU / 360) {
       const ex = rx * Math.cos(a), ey = RY * Math.sin(a);
-      m = Math.max(m, Math.abs(ex * COS - ey * SIN) + (SIZE * sizeAt((Math.sin(a) + 1) / 2) * (1 + BREATHE)) / 2);
+      m = Math.max(m, Math.abs(ex * COS - ey * K * SIN) + (SIZE * K * sizeAt((Math.sin(a) + 1) / 2) * (1 + BREATHE)) / 2);
     }
     return m;
   };
   const fit = () => {
-    const half = field.clientWidth / 2;
+    const w = field.clientWidth;
+    K = w < 700 ? w / 684 : 1; // a 342px phone column draws the ring at half size
+    field.style.setProperty("--k", K);
+    field.style.height = K < 1 ? `${Math.round(660 * K)}px` : "";
+    const half = w / 2;
     CX = half;
-    RX = Math.max(0, half - 125);
+    RX = Math.max(0, half - 125 * K);
     for (let i = 0; i < 4; i++) RX = Math.max(0, RX - (reach(RX) - half));
   };
   const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
   let focus = -1, t = 0, eff = 1, last = 0, raf = 0, onScreen = true;
+  let spin = 0; // extra turn speed from a swipe, easing away
   const dims = orbs.map(() => 1); // eases 1 → 0 as an orb fades back for another's focus
 
   const setFocus = (i) => {
@@ -253,7 +260,8 @@ loadMe().catch((e) => console.warn("me photos", e));
 
   const place = (dt) => {
     eff += ((focus >= 0 ? 1 - CALM : 1) - eff) * Math.min(1, dt * 3.5);
-    if (!still) t += dt * eff * SPEED;
+    if (!still) t += dt * eff * SPEED + spin * dt;
+    spin *= Math.exp(-dt * 2.5);
     const n = orbs.length;
     orbs.forEach((o, i) => {
       const phase = (SYNC * i * TAU) / n;
@@ -261,11 +269,11 @@ loadMe().catch((e) => console.warn("me photos", e));
       const d = (Math.sin(ang) + 1) / 2; // 0 at the back of the ring, 1 at the front
       const on = focus === i;
       const breath = 1 + BREATHE * Math.sin(t * 2.2 + phase * 1.3);
-      const scale = breath * (on ? LIFT : 1) * sizeAt(d);
+      const scale = breath * (on ? LIFT : 1) * sizeAt(d) * K;
       dims[i] += ((focus >= 0 && !on ? 0 : 1) - dims[i]) * Math.min(1, dt * 6);
       const back = 1 - dims[i];
-      const ex = RX * Math.cos(ang), ey = RY * Math.sin(ang);
-      const x = CX + ex * COS - ey * SIN - SIZE / 2, y = CY + ex * SIN + ey * COS - SIZE / 2;
+      const ex = RX * Math.cos(ang), ey = RY * K * Math.sin(ang);
+      const x = CX + ex * COS - ey * SIN - SIZE / 2, y = CY * K + ex * SIN + ey * COS - SIZE / 2;
       o.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) scale(${scale.toFixed(4)})`;
       o.style.opacity = (1 - back * (1 - DIM)).toFixed(3);
       const blur = on ? 0 : (1 - d) * DEPTH_BLUR + back * BLUR;
@@ -279,6 +287,42 @@ loadMe().catch((e) => console.warn("me photos", e));
     last = now;
     raf = onScreen ? requestAnimationFrame(frame) : 0;
   };
+
+  // touch: swipe sideways to spin the ring (it coasts to a stop), tap an orb to bring it forward
+  // and show its caption, tap anywhere else to let it go
+  let drag = null, tapFrom = -1, swiped = false;
+  field?.addEventListener("pointerdown", (e) => {
+    if (e.pointerType === "mouse") return;
+    tapFrom = focus; swiped = false; // the tap's own emulated mouseenter/focus changes focus before click
+    drag = { x: e.clientX, last: e.clientX, time: performance.now(), moved: false, v: 0 };
+  });
+  addEventListener("pointermove", (e) => {
+    if (!drag) return;
+    const dx = e.clientX - drag.last, now = performance.now();
+    if (Math.abs(e.clientX - drag.x) > 6) drag.moved = true;
+    if (!drag.moved) return;
+    const turn = -dx * 0.0075; // a swipe across the phone turns the ring about a quarter
+    t += turn;
+    drag.v = turn / Math.max(0.008, (now - drag.time) / 1000);
+    drag.last = e.clientX; drag.time = now;
+    if (still) place(0);
+  });
+  const endDrag = () => {
+    if (drag?.moved) { swiped = true; if (!still) spin = Math.max(-6, Math.min(6, drag.v)); }
+    drag = null;
+  };
+  addEventListener("pointerup", endDrag);
+  addEventListener("pointercancel", endDrag);
+  orbs.forEach((o, i) => o.addEventListener("click", (e) => {
+    if (matchMedia("(hover: hover)").matches) return; // mouse: hover already does this
+    e.preventDefault();
+    if (swiped) return;
+    setFocus(tapFrom === i ? -1 : i);
+    if (still) place(1);
+  }));
+  document.addEventListener("pointerdown", (e) => {
+    if (e.pointerType !== "mouse" && focus >= 0 && !e.target.closest?.(".memory")) { setFocus(-1); if (still) place(1); }
+  });
 
   if (orbs.length) {
     fit();

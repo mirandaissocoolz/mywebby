@@ -3,20 +3,11 @@
 
 /* ---- header: the unicorn on the left instead of Home's headline ---- */
 .top--logo { align-items: center; }
-/* the unicorn (Figma "Nav Bar (NEW)" 504:1055), drawn in the ink colour so it flips with the theme */
-.logo { display: block; width: 40px; height: 29.024px; color: var(--ink); transition: color 0.2s ease; }
-.logo-mark {
-  display: block; width: 100%; height: 100%; background: currentColor;
-  -webkit-mask: url(assets/about/logo-unicorn.svg) center / contain no-repeat;
-  mask: url(assets/about/logo-unicorn.svg) center / contain no-repeat;
-}
-/* hover: the unicorn hops up a little. Only the drawing moves, so the link stays under the
-   pointer and the hover never flickers. */
-.logo-mark { transition: transform 0.2s ease; }
-.logo:hover .logo-mark { transform: translateY(-4px); }
+/* the unicorn logo itself is in styles.css (Home shows it on phones) */
 
-/* About (Figma "About — Dark Mode" 504:593): 120px sides like Home (var(--pad)), 42px from the top,
-   and every section 100px apart: nav → intro → memories → awards → experience → media gems.
+/* About (Figma "About — Dark Mode" 504:593): 120px sides like Home (var(--pad)), 64px from the top,
+   and sections 100px apart: nav → intro, memories → awards → experience → media gems.
+   Intro → memories is 150px (set on .memories below).
    Media gems → footer is 100px too (set further down). */
 .about { --side: var(--pad); }
 .about .top { height: 36px; padding: 0 var(--side); } /* the nav row is 36px tall in Figma (Contact centres in it) */
@@ -49,6 +40,7 @@ section { display: flex; flex-direction: column; gap: 25px; }
 .intro-body { display: flex; flex-direction: column; gap: 30px; }
 .prose { display: flex; flex-direction: column; gap: 1lh; }
 .intro-rule { width: 100%; height: 1px; margin: 0; border: 0; background: var(--ink-50); }
+.about-main > .memories { margin-top: 50px; } /* intro → core memories is 150px (Figma 504:609), the flex gap + 50 */
 
 /* ---- core memories: twelve photo orbs (Figma 527:842) riding one tilted ring ----
    about.js places each orb on the ring (transform, opacity, stacking) every frame and turns its
@@ -176,7 +168,7 @@ section { display: flex; flex-direction: column; gap: 25px; }
 }
 .media-tab.is-active .ic { width: var(--w); margin-right: 9.375px; opacity: 1; }
 
-.media-panels { margin-top: calc(43.125px - 30px); } /* 43px under the rule, less the section's 30px gap */
+.media-panels { margin-top: calc(43.125px - 30px); padding: 0 50px; } /* 43px under the rule, less the section's 30px gap; 50px in from each side (Figma 504:691) */
 .media-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 40px 100px; align-items: start; }
 .media-grid[hidden] { display: none; }
 .media-grid img { display: block; width: 100%; height: auto; border-radius: 5px; } /* Figma corner rounding: 5 */
@@ -207,6 +199,46 @@ a.cover { cursor: pointer; }
 .media-grid.is-entering > .cover { animation: cover-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(var(--i) * 45ms); }
 
 .about .footer { margin-top: 50px; } /* 100px below the media gems, with the page’s 50px gap */
+
+/* ---- phones and narrow windows (Figma "About — Dark Mode" mobile 545:729, 402px frame) ----------
+   30px sides, the nav 48px above the intro, sections 100px apart, headings at 24px with their
+   highlights moved to match. The intro text runs the full width; long award and role names wrap;
+   the media covers sit two to a row, 48px apart, without hover captions. Core memories keep the
+   ring, drawn at half size (about.js), and can be swiped round and tapped. */
+@media (max-width: 800px) {
+  .about { --side: 30px; }
+  .about .top { height: auto; }
+  .about-main { margin-top: 0; gap: 100px; }
+  .about-main > .memories { margin-top: 0; }
+  .about .footer { padding: 0 var(--side); margin-top: 0; }
+
+  .hl-title { font-size: 24px; }
+  .intro .hl { left: 16px !important; top: 14px !important; }
+  .memories .hl { left: 30px !important; top: 14px !important; width: 66px !important; height: 8.5px !important; }
+  .awards:not(.experience) .hl { left: 38px !important; top: 14px !important; }
+  .experience .hl { left: 44px !important; top: 12px !important; width: 134px !important; height: 11px !important; }
+  .media .hl { left: 50px !important; top: 10px !important; width: 132px !important; height: 22px !important; }
+
+  .intro { align-items: stretch; }
+  .intro-text { width: auto; }
+  .intro-body { gap: 20px; }
+
+  .award-list li { gap: 16px; }
+  /* the role keeps its line (up to 55% of the row); the name takes what is left and wraps if it must */
+  .award-list li > span:first-child { flex: 1 1 auto; min-width: 0; }
+  .award-list li > span:last-child { flex-shrink: 0; max-width: 55%; text-align: right; }
+
+  .media-tabs { justify-content: space-between; gap: 0; }
+  .media-tab { font-size: 16px; padding: 7px 0; }
+  .media-tab.is-active { padding: 7px 12px; }
+  .media-panels { margin-top: calc(20px - 30px); padding: 0; }   /* 20px under the rule */
+  .media-grid { gap: 48px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cover .cover-cap { display: none; }
+
+  /* swipe sideways to spin the ring; vertical swipes still scroll the page */
+  .memory-field { touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+  .memory-cap { top: calc(100% + 15px / var(--k, 1)); left: calc(-40px / var(--k, 1)); right: calc(-40px / var(--k, 1)); font-size: calc(16px / var(--k, 1)); }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .hl-armed .hl .fill { clip-path: none; }

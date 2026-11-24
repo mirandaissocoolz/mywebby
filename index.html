@@ -21,10 +21,12 @@
   // --page-w is the layout width at that zoom, and --off is how far it differs from 1440 on
   // each side. Wider layouts fill the window (120px side margins, unicorn flush right).
   (function () {
-    var MIN = 1330, FOLD = 651 + 40, FLOOR = 0.6; // unicorn bottom: 42 top + 118 header + 57 + 435 hero − 1
+    var MIN = 1330, FOLD = 673 + 40, FLOOR = 0.6; // unicorn bottom: 64 top + 118 header + 57 + 435 hero − 1
     function fit() {
       var de = document.documentElement, r = de.style;
       var w = de.clientWidth, h = innerHeight;
+      // phones and narrow windows get the mobile layout (styles.css, max-width: 800px) unzoomed
+      if (w <= 800) { r.setProperty("--s", 1); r.removeProperty("--page-w"); r.setProperty("--off", "0px"); return; }
       var s = Math.max(FLOOR, Math.min(1, w / MIN, h / FOLD));
       var layout = Math.max(w / s, MIN);
       r.setProperty("--s", s);
@@ -40,6 +42,7 @@
 <div class="page home">
 
   <header class="top">
+    <a class="logo" href="/" aria-label="Home"><span class="logo-mark"></span></a>
     <div class="hello">
       <h1>Designing the magical, fun and delightful :)</h1>
     </div>
