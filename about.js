@@ -211,8 +211,12 @@ loadMe().catch((e) => console.warn("me photos", e));
   // outermost orbs just reach the field's edges, which sit on the page's 120px side padding.
   const RY = 175, CY = 330;
   let RX = 480, CX = 600;
-  // K shrinks the whole ring on narrow screens (phones): orbs, ring and field all scale together
-  let K = 1;
+  // K scales the whole ring (orbs, ring and field together). Laptops draw it at full size in the
+  // content column. Phones keep the laptop's proportions but draw the ring twice as wide as the
+  // screen, with its centre on the screen's right edge, so only its left half shows: orbs come out
+  // from the right edge, sweep round the curve and go back off it (cropped by the field).
+  let K = 1, phone = false;
+  const narrow = matchMedia("(max-width: 800px)");
   const TIP = (-7 * Math.PI) / 180, COS = Math.cos(TIP), SIN = Math.sin(TIP);
   // size by depth: every orb on the front half of the ring is the same size (none swells as it
   // passes the middle); along the back half they ease down to half that at the very back
@@ -228,12 +232,14 @@ loadMe().catch((e) => console.warn("me photos", e));
     return m;
   };
   const fit = () => {
-    const w = field.clientWidth;
-    K = w < 700 ? w / 684 : 1; // a 342px phone column draws the ring at half size
+    phone = narrow.matches;
+    field.classList.toggle("is-cropped", phone);
+    const w = field.clientWidth; // on phones the field runs edge to edge (about.css)
+    const half = phone ? w : w / 2; // phones: the ring is 2 × the screen, centred on its right edge
+    K = phone ? (2 * w) / 1200 : 1; // the same proportions as the 1200px laptop ring
     field.style.setProperty("--k", K);
-    field.style.height = K < 1 ? `${Math.round(660 * K)}px` : "";
-    const half = w / 2;
-    CX = half;
+    field.style.height = K !== 1 ? `${Math.round(660 * K)}px` : "";
+    CX = phone ? w : half;
     RX = Math.max(0, half - 125 * K);
     for (let i = 0; i < 4; i++) RX = Math.max(0, RX - (reach(RX) - half));
   };
@@ -276,8 +282,11 @@ loadMe().catch((e) => console.warn("me photos", e));
       const x = CX + ex * COS - ey * SIN - SIZE / 2, y = CY * K + ex * SIN + ey * COS - SIZE / 2;
       o.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) scale(${scale.toFixed(4)})`;
       o.style.opacity = (1 - back * (1 - DIM)).toFixed(3);
-      const blur = on ? 0 : (1 - d) * DEPTH_BLUR + back * BLUR;
+      // Phones skip the blur: mobile browsers clip a blurred element's soft glow at a hard edge,
+      // which showed up as stray pink lines. Orbs further back fade a little instead.
+      const blur = on || phone ? 0 : (1 - d) * DEPTH_BLUR + back * BLUR;
       o.style.filter = blur > 0.05 ? `blur(${blur.toFixed(2)}px)` : "none";
+      if (phone) o.style.opacity = ((1 - back * (1 - DIM)) * (0.55 + 0.45 * d)).toFixed(3);
       o.style.zIndex = on ? 200 : Math.round(10 + d * 100);
       o.style.setProperty("--sheen", `${((t * SHIMMER * 90 + i * 47) % 360).toFixed(1)}deg`);
     });

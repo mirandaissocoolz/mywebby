@@ -11,7 +11,10 @@
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="about.css">
 <script>
-  try { if (localStorage.getItem("theme") === "dark") document.documentElement.dataset.theme = "dark"; } catch (e) {}
+  // Dark mode is the default; light only if the visitor switched to it (the moon on Home).
+  var light = false;
+  try { light = localStorage.getItem("theme") === "light"; } catch (e) {}
+  if (!light) document.documentElement.dataset.theme = "dark";
 </script>
 <script>
   // Same 1440px grid as Home, zoomed out (never in) so the layout is at least MIN px wide.
@@ -58,7 +61,7 @@
     <section class="intro">
       <div class="intro-text">
         <h1 class="hl-title">
-          <span class="hl" style="left:63px;top:20px;width:164px;height:9px"><span class="fill" style="inset:-122% -3.54% -105.12% -4.92%"><img class="hl-light" src="assets/about/hl-miranda.svg" alt=""><img class="hl-dark" src="assets/about/hl-miranda-dark.svg" alt=""></span></span>
+          <span class="hl" style="left:81px;top:14px;width:90px;height:9px"><span class="fill" style="inset:-122.01% -6.44% -105.3% -9.13%"><img class="hl-light" src="assets/about/hl-miranda.svg" alt=""><img class="hl-dark" src="assets/about/hl-miranda-dark.svg" alt=""></span></span>
           <span class="hl-text">hi i’m miranda!</span>
         </h1>
         <div class="intro-body">
@@ -66,7 +69,6 @@
             <p>My love for design started in Grade 8, when my teacher asked me to make a video for a school-wide assembly. Time flew by every time I went onto iMovie.</p>
             <p>In high school, I did a lot of graphic design for clubs and organizations. Today, I study design at the University of Waterloo and looking to break into product!</p>
           </div>
-          <hr class="intro-rule">
           <div class="prose">
             <p>Outside of design, I really love eating good food, while watching a cozy show. I also love taking hikes and long runs in nature.</p>
             <p>I love spending my time with family and friends. They are what inspire me to create more</p>
@@ -77,7 +79,7 @@
 
     <section class="memories">
       <h2 class="hl-title">
-        <span class="hl" style="left:52.88px;top:14.7px;width:87.844px;height:11.252px"><span class="fill" style="inset:-59.47% -7.14% -70.42% -8.57%"><img class="hl-light" src="assets/about/hl-core.svg" alt=""><img class="hl-dark" src="assets/about/hl-core-dark.svg" alt=""></span></span>
+        <span class="hl" style="left:42px;top:9px;width:50px;height:11px"><span class="fill" style="inset:-60.8% -12.85% -72.04% -15.14%"><img class="hl-light" src="assets/about/hl-core.svg" alt=""><img class="hl-dark" src="assets/about/hl-core-dark.svg" alt=""></span></span>
         <span class="hl-text">my core memories</span>
       </h2>
       <div class="memory-field">
@@ -215,20 +217,34 @@
 
     <section class="awards">
       <h2 class="hl-title">
-        <span class="hl" style="left:63px;top:20px;width:94.512px;height:8.865px"><span class="fill" style="inset:-123.87% -6.14% -106.91% -8.69%"><img class="hl-light" src="assets/about/hl-awards.svg" alt=""><img class="hl-dark" src="assets/about/hl-awards-dark.svg" alt=""></span></span>
+        <span class="hl" style="left:46px;top:14px;width:81px;height:9px"><span class="fill" style="inset:-122.01% -7.13% -105.35% -10.16%"><img class="hl-light" src="assets/about/hl-awards.svg" alt=""><img class="hl-dark" src="assets/about/hl-awards-dark.svg" alt=""></span></span>
         <span class="hl-text">my awards</span>
       </h2>
+      <!-- hover an award → a caret slides in before its name; click it (or the name) and a row of
+           photo boxes folds open under the line (Figma "hover" 577:1895). toggle.js does the opening. -->
       <ul class="award-list">
-        <li><span>Uoft Design Jam</span><span>2nd Place</span></li>
-        <li><span>GBDA Society</span><span>1st Place</span></li>
-        <li><span>Figma Waterloo x SFU Surge</span><span>1st Place</span></li>
-        <li><span>UW/UX Waterloo x UW Blueprint</span><span>Organizer’s Choice</span></li>
+        <li class="award">
+          <button class="award-row" type="button" aria-expanded="false" aria-controls="award-1"><span><span class="award-caret" aria-hidden="true"><span></span></span>Uoft Design Jam</span><span>2nd Place</span></button>
+          <div class="fold" id="award-1" inert><div class="fold-inner"><div class="award-photos"><div class="award-photo"></div><div class="award-photo"></div><div class="award-photo"></div></div></div></div>
+        </li>
+        <li class="award">
+          <button class="award-row" type="button" aria-expanded="false" aria-controls="award-2"><span><span class="award-caret" aria-hidden="true"><span></span></span>GBDA Society</span><span>1st Place</span></button>
+          <div class="fold" id="award-2" inert><div class="fold-inner"><div class="award-photos"><div class="award-photo"></div><div class="award-photo"></div><div class="award-photo"></div></div></div></div>
+        </li>
+        <li class="award">
+          <button class="award-row" type="button" aria-expanded="false" aria-controls="award-3"><span><span class="award-caret" aria-hidden="true"><span></span></span>Figma Waterloo x SFU Surge</span><span>1st Place</span></button>
+          <div class="fold" id="award-3" inert><div class="fold-inner"><div class="award-photos"><div class="award-photo"></div><div class="award-photo"></div><div class="award-photo"></div></div></div></div>
+        </li>
+        <li class="award">
+          <button class="award-row" type="button" aria-expanded="false" aria-controls="award-4"><span><span class="award-caret" aria-hidden="true"><span></span></span>UW/UX Waterloo x UW Blueprint</span><span>Organizer’s Choice</span></button>
+          <div class="fold" id="award-4" inert><div class="fold-inner"><div class="award-photos"><div class="award-photo"></div><div class="award-photo"></div><div class="award-photo"></div></div></div></div>
+        </li>
       </ul>
     </section>
 
     <section class="awards experience">
       <h2 class="hl-title">
-        <span class="hl" style="left:55.85px;top:19.09px;width:176.862px;height:11.392px"><span class="fill" style="inset:-106.45% -0.25% -99.54% -5.91%"><img class="hl-light" src="assets/about/hl-experience.svg" alt=""><img class="hl-dark" src="assets/about/hl-experience-dark.svg" alt=""></span></span>
+        <span class="hl" style="left:46px;top:12px;width:125px;height:11px"><span class="fill" style="inset:-110.05% -0.49% -103.09% -8.33%"><img class="hl-light" src="assets/about/hl-experience.svg" alt=""><img class="hl-dark" src="assets/about/hl-experience-dark.svg" alt=""></span></span>
         <span class="hl-text">my experience</span>
       </h2>
       <ul class="award-list">
@@ -241,7 +257,7 @@
 
     <section class="media">
       <h2 class="hl-title hl-title--faded">
-        <span class="hl" style="left:64.49px;top:13.56px;width:165.515px;height:21.938px"><span class="fill" style="inset:-37.25% 0 -35.27% -5.43%"><img class="hl-light" src="assets/about/hl-media.svg" alt=""><img class="hl-dark" src="assets/about/hl-media-dark.svg" alt=""></span></span>
+        <span class="hl" style="left:50px;top:7px;width:118px;height:22px"><span class="fill" style="inset:-37.14% -0.57% -35.1% -7.69%"><img class="hl-light" src="assets/about/hl-media.svg" alt=""><img class="hl-dark" src="assets/about/hl-media-dark.svg" alt=""></span></span>
         <span class="hl-text">my media gems</span>
       </h2>
 
@@ -313,5 +329,6 @@
 <script type="module" src="contact.js"></script>
 <script type="module" src="header.js"></script>
 <script type="module" src="about.js"></script>
+<script type="module" src="toggle.js"></script>
 </body>
 </html>

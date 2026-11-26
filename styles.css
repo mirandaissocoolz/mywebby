@@ -20,11 +20,12 @@
   --font-display: "Brawler", Georgia, serif;
   --font-body: "Instrument Sans", "Helvetica Neue", Arial, sans-serif;
 
-  /* Type scale, from Figma */
-  --fs-display: 48px;   /* headline */
-  --fs-title: 18px;     /* Work / Play (Figma "larger text") */
-  --fs-text: 16px;      /* intro line, welcome text */
-  --fs-footer: 16px;    /* nav and footer text (Figma "nav-and-footer") */
+  /* Type scale, from Figma variables (phones get their own, in the max-width: 800px block) */
+  --fs-display: 35px;   /* headline (Figma "header") */
+  --fs-heading: 24px;   /* About section titles (Figma "smaller header") */
+  --fs-title: 16px;     /* Work / Play, media tabs (Figma "larger text") */
+  --fs-text: 14px;      /* body text: welcome, intro, lists, captions (Figma "text") */
+  --fs-footer: 14px;    /* nav and footer text (Figma "text") */
   }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -69,7 +70,7 @@ p, h1, h2 { margin: 0; font-weight: 400; }
 /* ---- Home spacing (Figma "Home — Dark Mode" 472:304) -------------------
    hero → Work and Play → footer are 100px apart (the page's 50px gap + 50). */
 .home .projects, .home .footer { margin-top: 50px; }
-.home .nav { gap: 32px; } /* Home · About · Contact sit 32px apart on Home */
+.nav { gap: 24px; } /* Work · About · Contact sit 24px apart (Figma "smaller header" spacing) */
 
 /* ---- header ---------------------------------------------------------- */
 /* the unicorn (Figma "Nav Bar (NEW)" 504:1055), drawn in the ink colour so it flips with the theme */
@@ -86,10 +87,10 @@ p, h1, h2 { margin: 0; font-weight: 400; }
 
 .home .logo { display: none; } /* Home has its headline there instead; the logo shows on phones */
 .top { position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: flex-start; padding: 0 var(--pad); }
-.hello { width: 551px; }
+.hello { width: 428px; }
 .hello h1 { font: 400 var(--fs-display)/normal var(--font-display); }
 
-.nav { display: flex; align-items: center; gap: 41px; font-size: var(--fs-footer); line-height: normal; }
+.nav { display: flex; align-items: center; font-size: var(--fs-footer); line-height: normal; }
 /* The link itself never moves (so hover can't flicker off); its text lifts instead. The 8px
    padding (cancelled by the margin) gives a taller, easier hover area. */
 .nav a { color: var(--ink-soft); transition: color 0.2s ease; display: inline-flex; flex-direction: column; align-items: center; padding: 8px 0; margin: -8px 0; }
@@ -148,8 +149,8 @@ p, h1, h2 { margin: 0; font-weight: 400; }
 .btn--green  { --btn-from: #b6ff00; --btn-to: #ffffff; --btn-glow: #b6ff00; --btn-ink: #35613b; }
 .btn--orange { --btn-from: #fea662; --btn-to: #ffd683; --btn-glow: #ffd683; --btn-ink: #fff; }
 .btn--purple { --btn-from: #9977fe; --btn-to: #e0d6fe; --btn-glow: #e0d6fe; --btn-ink: #fff; }
-/* Figma "Button/Style7" (445:1592) hugs the 16px label: 7px/14px padding + 2px border */
-.contact-toggle { padding: 7px 14px; font-size: inherit; line-height: inherit; }
+/* Figma nav bar (567:525): Contact hugs its 14px label with 5px top / 6px bottom / 11px side padding + 2px border */
+.contact-toggle { padding: 5px 11px 6px; font-size: inherit; line-height: inherit; }
 .btn { cursor: pointer; }
 .btn, .btn:hover { color: var(--btn-ink); }
 
@@ -236,97 +237,121 @@ p, h1, h2 { margin: 0; font-weight: 400; }
 }
 
 /* ---- projects ------------------------------------------------------------ */
-.projects { padding: 0 var(--pad); display: flex; flex-direction: column; gap: 50px; }
-.work { display: flex; flex-direction: column; gap: 40px; }
-.section-title { display: flex; align-items: center; gap: 20px; font-size: var(--fs-title); line-height: normal; }
-.section-title { color: var(--ink-50); }
+.projects { padding: 0 var(--pad); display: flex; flex-direction: column; gap: 100px; } /* Work → Play: 100px */
+.work { display: flex; flex-direction: column; }
+.section-title { font-size: var(--fs-title); line-height: normal; }
+/* Work / Play toggle (Figma "Work" 567:784 / 567:829, "Play" 567:990 / 567:992).
+   Open (Default): the caret points down at 65% and the title is at 50%. Closed: the caret turns to
+   point right and both go full strength. toggle.js flips aria-expanded. */
+.section-toggle {
+  display: flex; align-items: center; gap: 20px; padding: 0; border: 0; background: none;
+  font: inherit; color: var(--ink); cursor: pointer;
+}
+.section-toggle > :not(.caret), .section-toggle { transition: color 0.3s ease; }
+.section-toggle[aria-expanded="true"] { color: var(--ink-50); }
+.section-toggle:hover { color: var(--ink); }
+.section-toggle:focus-visible { outline: 2px solid var(--pink); outline-offset: 4px; border-radius: 2px; }
 .caret { width: 13.272px; height: 8.848px; display: flex; align-items: center; justify-content: center; }
-.caret > span { width: 13.272px; height: 8.848px; background: var(--caret); -webkit-mask: url("assets/caret.svg") 0 0 / 100% 100% no-repeat; mask: url("assets/caret.svg") 0 0 / 100% 100% no-repeat; }
-.caret--closed { width: 8.848px; height: 13.272px; }
-.caret--closed > span { transform: rotate(-90deg); }
+.caret > span {
+  width: 13.272px; height: 8.848px; background: var(--ink);
+  -webkit-mask: url("assets/caret.svg") 0 0 / 100% 100% no-repeat; mask: url("assets/caret.svg") 0 0 / 100% 100% no-repeat;
+  transform: rotate(-90deg);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.3s ease;
+}
+[aria-expanded="true"] > .caret > span { transform: none; background: var(--caret); }
+.section-toggle:hover .caret > span { background: var(--ink); }
+
+/* A fold opens and shuts its contents smoothly: the grid row eases between 0 and the content's full
+   height. Used by Work / Play here and the award photos on About. */
+.fold { display: grid; grid-template-rows: 1fr; transition: grid-template-rows 0.45s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease; }
+.fold-inner { min-height: 0; overflow: hidden; }
+[aria-expanded="false"] + .fold, :has(> [aria-expanded="false"]) + .fold { grid-template-rows: 0fr; opacity: 0; }
+.work .fold-inner > .gallery { margin-top: 25px; } /* heading → cards: 25px, and nothing under a closed title */
 
 .gallery { display: grid; grid-template-columns: 1fr 1fr; column-gap: 50px; row-gap: 50px; } /* 575px cards at 1440 */
-.card { height: 405px; background: var(--card); border-radius: 10px; }
+.card { aspect-ratio: 552 / 331.2; min-height: 0; background: var(--card); border-radius: 5.816px; } /* Figma "project card" */
 
 /* ---- footer -------------------------------------------------------------- */
-.footer { padding: 0 var(--pad); display: flex; flex-direction: column; gap: 32px; }
+.footer { padding: 0 var(--pad); display: flex; flex-direction: column; gap: 25px; }
 .footer-line { width: 100%; height: 1px; background: var(--line); }
 .footer-row { display: flex; justify-content: space-between; align-items: stretch; font-size: var(--fs-footer); line-height: normal; }
-/* Footer (Figma "Footer!" 350:1084): each column's three rows spread over the 81px height of the unicorn. */
+/* Footer (Figma "footer" 567:1083): each column's three rows spread over the 64px height of the unicorn. */
 .find { display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; }
 .find-me { opacity: 0.5; }
-/* Figma's 21.6px icons scaled down 15% at the designer's request; drawn as masks in currentColor
-   so they follow the theme */
-.socials { display: flex; align-items: center; gap: 9.88px; opacity: 0.5; color: var(--ink); }
+/* drawn as masks in currentColor so they follow the theme */
+.socials { display: flex; align-items: center; gap: 8.721px; opacity: 0.5; color: var(--ink); }
 .socials a { display: flex; }
 .socials span { display: block; background: currentColor; -webkit-mask: var(--icon) 0 0 / 100% 100% no-repeat; mask: var(--icon) 0 0 / 100% 100% no-repeat; }
-.socials .linkedin { --icon: url("assets/linkedin.svg"); width: 18.357px; height: 18.357px; }
-.socials .x { --icon: url("assets/x.svg"); width: 15.54px; height: 16.958px; }
-.socials .instagram { --icon: url("assets/instagram.svg"); width: 18.357px; height: 18.357px; }
+.socials .linkedin { --icon: url("assets/linkedin.svg"); width: 16.197px; height: 16.197px; }
+.socials .x { --icon: url("assets/x.svg"); width: 13.71px; height: 14.96px; }
+.socials .instagram { --icon: url("assets/instagram.svg"); width: 16.197px; height: 16.197px; }
 .footer-links { width: 77px; display: flex; flex-direction: column; justify-content: space-between; color: var(--ink-soft); }
 .footer-links a { transition: color 0.2s ease; }
 .footer-links a:hover { color: var(--ink); }
 .footer-mark { display: flex; align-items: center; }
-.footer-mark img { width: 111.035px; height: 80.567px; }
+.footer-mark img { width: 88.942px; height: 64px; }
 
 /* ---- phones and narrow windows (Figma "Home — Dark Mode" mobile 556:585, 402px frame) ----------
    index.html stops zooming at 800px and below; the page is laid out at the device width instead.
-   24px top, 20px sides, sections 48px apart. The nav is just the unicorn and Contact; the hero
-   (nav + headline + welcome) is 400px tall, with the gradient behind it at 62.5% and no big
-   unicorn. Work is one column of cards, and the footer stacks with the big unicorn at the bottom. */
+   24px top, 20px sides, sections 100px apart. The nav is the unicorn, About and Contact; the
+   header (nav + headline + welcome) is 400px tall, with the gradient behind it at 62.5% and no
+   big unicorn. Work is one column of cards, and the footer stacks with the big unicorn at the
+   bottom, as wide as the content. */
 @media (max-width: 800px) {
-  :root { --pad: 20px; }
-  .page { width: auto; zoom: 1; padding: 24px 0 0; gap: 48px; }
+  :root { --pad: 20px; --fs-display: 30px; --fs-text: 12px; --fs-footer: 12px; }
+  .page { width: auto; zoom: 1; padding: 24px 0 0; gap: 100px; }
   .wide-only { display: none; }
 
-  .top { display: grid; grid-template-columns: auto 1fr; align-items: center; row-gap: 48px; }
+  .top { display: grid; grid-template-columns: auto 1fr; align-items: center; align-content: start; row-gap: 25px; }
   .logo, .home .logo { display: block; width: 33.647px; height: 24.418px; }
   .logo, .nav { grid-row: 1; }
-  .nav { grid-column: 2; justify-self: end; gap: 0; }
-  .nav > a { display: none; }
+  .nav { grid-column: 2; justify-self: end; gap: 25px; font-size: 11px; }
+  .nav > a:first-child { display: none; } /* Work goes; About and Contact stay */
   .hello { grid-row: 2; grid-column: 1 / -1; width: auto; }
-  .hello h1 { font-size: 32px; }
 
-  /* Contact: 25px tall with 10px type, and its pink glow always on (there's no hover on touch) */
+  /* Contact: 11px type, 4px / 8px padding, and its pink glow always on (there's no hover on touch) */
   .contact-toggle {
-    height: 25px; padding: 0 13.516px; border-width: 1.5px; border-radius: 26.067px;
-    font-size: 10px; line-height: normal;
+    padding: 4px 8px; border-width: 1.5px; border-radius: 26.067px;
+    font-size: 11px; line-height: normal;
   }
   .contact-toggle, .contact:hover .contact-toggle { box-shadow: 0 0.965px 12.31px var(--btn-glow); }
   .contact-toggle::after { border-radius: 26.067px; box-shadow: inset 8.689px 3.862px 6.758px rgba(255, 255, 255, 0.25); }
   .contact-toggle .copied-label { gap: 6px; }
   .contact-toggle .mail { width: 10.5px; height: 11.08px; -webkit-mask-size: 100% 100%; mask-size: 100% 100%; }
 
-  .hero { height: 201px; margin-top: 0; }   /* nav + 48 + headline + 48 + this = 400px */
-  .welcome { left: var(--pad); right: var(--pad); width: auto; gap: 20px; }
+  /* the header is 400px tall (Figma 556:588): nav and headline at the top, the welcome text
+     pinned to its bottom. The hero has no height of its own and pulls up over the header's
+     bottom edge, so the welcome sits there however many lines the headline wraps to. */
+  .home .top { min-height: calc(400px); pointer-events: none; }
+  .home .top > * { pointer-events: auto; }
+  .hero { height: 0; margin-top: -100px; }
+  .welcome { left: var(--pad); right: var(--pad); width: auto; gap: 19.972px; }
   .small-things { height: 16px; }
   .shooting-star { display: none; }
   .moon { width: 16px; height: 16px; }
   .moon span { left: 1.9px; top: 1.16px; width: 12.94px; height: 12.94px; }
   .unicorn { display: none; }
   /* the same three ribbons as desktop, scaled to Figma's 781 × 324 and placed 76px below the
-     top of the nav, 216px off the left of the content */
-  .gradient { left: calc(var(--pad) - 216px); top: var(--grad-top, -123px); transform: scale(0.6252); transform-origin: 0 0; }
+     top of the nav (400 − 76 = 324px above the header's bottom), 216px off the left of the content */
+  .gradient { left: calc(var(--pad) - 216px); top: -324px; transform: scale(0.6252); transform-origin: 0 0; }
 
   .home .projects, .home .footer { margin-top: 0; }
-  .projects { gap: 48px; }
-  .work { gap: 25px; }
   .gallery { grid-template-columns: 1fr; gap: 50px; }
-  .card { height: auto; aspect-ratio: 575 / 405; border-radius: 5px; }
 
-  /* footer: everything stacks, the big unicorn last, running off the right edge */
+  /* footer (Figma "Footer!" 577:2780): everything stacks 30px apart, the big unicorn last, as wide
+     as the content */
   .footer-row { flex-direction: column; gap: 30px; }
-  .find { gap: 10px; justify-content: flex-start; }
+  .find { height: 60px; }
   .socials { gap: 12px; }
   .socials .linkedin, .socials .instagram { width: 17.277px; height: 17.277px; }
   .socials .x { width: 14.624px; height: 15.958px; }
-  .footer-links { width: auto; gap: 10px; justify-content: flex-start; }
-  .footer-mark { margin-top: -3px; }   /* 27px under the links */
-  .footer-mark img { width: 351.311px; height: 254.912px; }
+  .footer-links { width: auto; height: 55px; }
+  .footer-mark img { width: 100%; height: auto; aspect-ratio: 88.942 / 64; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .nav a, .nav a > span, .btn, .shooting-star, .moon, .shooting-star > span, .moon > span { transition: none; }
+  .fold, .caret > span, .section-toggle { transition: none; }
   /* with Reduce Motion on, the ribbons simply fade in (the SVGs skip the brush too) */
   .gradient img { animation-duration: 1.2s; }
 }

@@ -10,8 +10,11 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Brawler&family=Instrument+Sans:wght@400;500&display=swap">
 <link rel="stylesheet" href="styles.css">
 <script>
-  // Dark mode remembered from a previous visit, applied before the page paints.
-  try { if (localStorage.getItem("theme") === "dark") document.documentElement.dataset.theme = "dark"; } catch (e) {}
+  // Applied before the page paints, so there's no flash of the other theme.
+  // Dark mode is the default; light only if the visitor switched to it (the moon on Home).
+  var light = false;
+  try { light = localStorage.getItem("theme") === "light"; } catch (e) {}
+  if (!light) document.documentElement.dataset.theme = "dark";
 </script>
 <script>
   // Laid out on the Figma frame's 1440px grid and zoomed out (never in) by --s so that:
@@ -77,15 +80,32 @@
   </section>
 
   <section class="projects">
+    <!-- Work and Play open and close like Notion toggles (Figma "Work" / "Play": Default and Closed);
+         toggle.js flips aria-expanded and the gallery folds away -->
     <div class="work" id="work">
-      <h2 class="section-title"><span class="caret"><span></span></span>Work</h2>
-      <div class="gallery">
-        <div class="card"></div><div class="card"></div>
-        <div class="card"></div><div class="card"></div>
-        <div class="card"></div><div class="card"></div>
+      <h2 class="section-title"><button class="section-toggle" type="button" aria-expanded="true" aria-controls="work-gallery"><span class="caret"><span></span></span>Work</button></h2>
+      <div class="fold" id="work-gallery">
+        <div class="fold-inner">
+          <div class="gallery">
+            <div class="card"></div><div class="card"></div>
+            <div class="card"></div><div class="card"></div>
+            <div class="card"></div><div class="card"></div>
+          </div>
+        </div>
       </div>
     </div>
-    <h2 class="section-title play" id="play"><span class="caret caret--closed"><span></span></span>Play</h2>
+    <div class="work" id="play">
+      <h2 class="section-title"><button class="section-toggle" type="button" aria-expanded="false" aria-controls="play-gallery"><span class="caret"><span></span></span>Play</button></h2>
+      <div class="fold" id="play-gallery" inert>
+        <div class="fold-inner">
+          <div class="gallery">
+            <div class="card"></div><div class="card"></div>
+            <div class="card"></div><div class="card"></div>
+            <div class="card"></div><div class="card"></div>
+          </div>
+        </div>
+      </div>
+    </div>
   </section>
 
   <footer class="footer">
@@ -112,5 +132,6 @@
 <script type="module" src="sfx.js"></script>
 <script type="module" src="contact.js"></script>
 <script type="module" src="header.js"></script>
+<script type="module" src="toggle.js"></script>
 </body>
 </html>
